@@ -50,10 +50,28 @@ class SpaceImage {
   + isVideo(): boolean
 }
 
+class Bookmark {
+  - bookmarkId: String
+  - dateAdded: String
+  + getBookmarkId(): String
+  + getDateAdded(): String
+}
+
 SpaceEntity <|-- Planet
 SpaceEntity <|-- Mission
 SpaceEntity <|-- Astronaut
 
 Planet "1" *-- "1" CelestialDetails : has-details >
 Mission "1" o-- "1..*" Astronaut : assigns >
+
+' Mission knows which planet it is exploring
+Mission "*" o-- "0..1" Planet : explores >
+
+' Every SpaceEntity can have a gallery of images
+SpaceEntity "1" *-- "*" SpaceImage : gallery >
+
+' Bookmarks can save an entity or a specific image
+Bookmark "1..*" --> "1" SpaceEntity : references >
+Bookmark "1..*" --> "1" SpaceImage : references >
+
 @enduml
