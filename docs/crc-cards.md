@@ -11,6 +11,16 @@
 
 <br>
 
+### Class: SpaceEntity <<Abstract>>
+| Responsibilities | Collaborators |
+| :--- | :--- |
+| Acts as the base template for all physical space objects. | `SpaceImage` |
+| Maintains common universal identifiers (ID, Name). | |
+| Enforces a strict contract requiring all subclasses to provide a summary. | |
+| Owns and manages a gallery of associated media. | |
+
+<br>
+
 ### Class: CelestialDetails
 | Responsibilities | Collaborators |
 | :--- | :--- |

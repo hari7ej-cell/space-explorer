@@ -76,4 +76,4 @@ After applying the filters, these are the core domain classes that will be imple
 4. **Astronaut** (Core entity for crew members)
 5. **SpaceImage** (Core entity for APOD and media)
 6. **Bookmark** (Core entity representing a saved item for a registered user)
-7. **SpaceEntity** ()
+7. **SpaceEntity** (Acts as base tempelate)
