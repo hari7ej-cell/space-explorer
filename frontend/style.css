@@ -1,0 +1,1094 @@
+/* =========================================
+   BASIC RESET
+========================================= */
+
+* {
+    box-sizing: border-box;
+}
+
+html {
+    scroll-behavior: smooth;
+}
+
+body {
+
+    margin: 0;
+
+    background:
+        #050505;
+
+    color:
+        white;
+
+    font-family:
+        Arial,
+        Helvetica,
+        sans-serif;
+}
+
+
+/* =========================================
+   HEADER
+========================================= */
+
+.main-header {
+
+    height: 96px;
+
+    width: 100%;
+
+    background:
+        #050505;
+
+    border-top:
+        1px solid
+        #555;
+
+    border-bottom:
+        1px solid
+        #252525;
+
+    display:
+        grid;
+
+    grid-template-columns:
+        1fr auto 1fr;
+
+    align-items:
+        center;
+
+    position:
+        relative;
+
+    z-index:
+        1000;
+
+}
+
+
+/* =========================================
+   LEFT SIDE
+========================================= */
+
+.header-left {
+
+    display:
+        flex;
+
+    align-items:
+        center;
+
+    gap:
+        38px;
+
+    padding-left:
+        40px;
+
+}
+
+
+/* =========================================
+   EXPLORE
+========================================= */
+
+.dropdown {
+
+    position:
+        relative;
+
+}
+
+
+.nav-button {
+
+    background:
+        transparent;
+
+    border:
+        none;
+
+    color:
+        #ffffff;
+
+    font-size:
+        22px;
+
+    font-weight:
+        700;
+
+    cursor:
+        pointer;
+
+    display:
+        flex;
+
+    align-items:
+        center;
+
+    gap:
+        10px;
+
+    padding:
+        8px 0;
+
+}
+
+
+.chevron {
+
+    font-size:
+        20px;
+
+    font-weight:
+        normal;
+
+    transition:
+        transform 0.2s ease;
+
+}
+
+
+.dropdown.active
+.chevron {
+
+    transform:
+        rotate(180deg);
+
+}
+
+
+/* =========================================
+   SEARCH
+========================================= */
+
+.search-container {
+
+    width:
+        310px;
+
+    height:
+        42px;
+
+    border:
+        1px solid
+        #59616a;
+
+    display:
+        flex;
+
+    align-items:
+        center;
+
+    background:
+        #080808;
+
+}
+
+
+.search-icon {
+
+    width:
+        19px;
+
+    height:
+        19px;
+
+    margin-left:
+        12px;
+
+    margin-right:
+        8px;
+
+    stroke:
+        #9aa3ad;
+
+    fill:
+        none;
+
+    stroke-width:
+        1.8;
+
+}
+
+
+.search-container input {
+
+    width:
+        100%;
+
+    height:
+        100%;
+
+    background:
+        transparent;
+
+    border:
+        none;
+
+    outline:
+        none;
+
+    color:
+        white;
+
+    font-size:
+        17px;
+
+    padding:
+        0 10px 0 0;
+
+}
+
+
+.search-container input::placeholder {
+
+    color:
+        #84909c;
+
+}
+
+
+/* =========================================
+   CENTER LOGO
+========================================= */
+
+.header-logo {
+
+    display:
+        flex;
+
+    justify-content:
+        center;
+
+    align-items:
+        center;
+
+}
+
+
+.header-logo a {
+
+    display:
+        flex;
+
+    align-items:
+        center;
+
+    justify-content:
+        center;
+
+}
+
+
+.header-logo img {
+
+    width:
+        70px;
+
+    height:
+        70px;
+
+    object-fit:
+        cover;
+
+    border-radius:
+        50%;
+
+}
+
+
+/* =========================================
+   RIGHT SIDE
+========================================= */
+
+.header-right {
+
+    display:
+        flex;
+
+    justify-content:
+        flex-end;
+
+    align-items:
+        center;
+
+    padding-right:
+        38px;
+
+}
+
+
+/* =========================================
+   ACCOUNT BUTTON
+========================================= */
+
+.account-button {
+
+    background:
+        transparent;
+
+    border:
+        none;
+
+    color:
+        white;
+
+    cursor:
+        pointer;
+
+    text-align:
+        left;
+
+    padding:
+        8px 0;
+
+}
+
+
+.account-greeting {
+
+    font-size:
+        14px;
+
+    font-weight:
+        600;
+
+    margin-bottom:
+        1px;
+
+}
+
+
+.account-title {
+
+    font-size:
+        18px;
+
+    font-weight:
+        700;
+
+    display:
+        flex;
+
+    align-items:
+        center;
+
+    gap:
+        8px;
+
+}
+
+
+.account-title .chevron {
+
+    font-size:
+        17px;
+
+}
+
+
+/* =========================================
+   DROPDOWN MENU
+========================================= */
+
+.dropdown-menu {
+
+    position:
+        absolute;
+
+    top:
+        calc(100% + 12px);
+
+    background:
+        #111;
+
+    border:
+        1px solid
+        #444;
+
+    box-shadow:
+        0 12px 35px
+        rgba(0,0,0,0.6);
+
+    min-width:
+        250px;
+
+    display:
+        none;
+
+}
+
+
+.dropdown.active
+.dropdown-menu {
+
+    display:
+        block;
+
+}
+
+
+/* =========================================
+   EXPLORE MENU
+========================================= */
+
+.explore-menu {
+
+    left:
+        -15px;
+
+    padding:
+        8px 0;
+
+}
+
+
+.explore-menu a {
+
+    display:
+        block;
+
+    padding:
+        13px 20px;
+
+    color:
+        #eeeeee;
+
+    text-decoration:
+        none;
+
+    font-size:
+        15px;
+
+}
+
+
+.explore-menu a:hover {
+
+    background:
+        #252525;
+
+    color:
+        white;
+
+}
+
+
+/* =========================================
+   ACCOUNT MENU
+========================================= */
+
+.account-menu {
+
+    right:
+        0;
+
+    padding:
+        12px 0;
+
+    min-width:
+        285px;
+
+}
+
+
+/* EMAIL */
+
+.account-email {
+
+    padding:
+        8px 20px 14px;
+
+    display:
+        flex;
+
+    flex-direction:
+        column;
+
+    gap:
+        4px;
+
+}
+
+
+.account-menu-label {
+
+    font-size:
+        13px;
+
+    color:
+        #aeb6bf;
+
+}
+
+
+.account-email-value {
+
+    font-size:
+        14px;
+
+    color:
+        #ffffff;
+
+    word-break:
+        break-all;
+
+}
+
+
+/* DIVIDER */
+
+.menu-divider {
+
+    height:
+        1px;
+
+    background:
+        #333;
+
+    margin:
+        3px 0 7px;
+
+}
+
+
+/* ACCOUNT OPTIONS */
+
+.account-menu a {
+
+    display:
+        flex;
+
+    align-items:
+        center;
+
+    gap:
+        12px;
+
+    padding:
+        13px 20px;
+
+    color:
+        #eeeeee;
+
+    text-decoration:
+        none;
+
+    font-size:
+        15px;
+
+}
+
+
+.account-menu a:hover {
+
+    background:
+        #252525;
+
+}
+
+
+.menu-icon {
+
+    width:
+        20px;
+
+    font-size:
+        20px;
+
+    color:
+        #cbd5df;
+
+}
+
+
+/* =========================================
+   HOME PLACEHOLDER
+========================================= */
+
+.home-placeholder {
+
+    min-height:
+        calc(100vh - 96px);
+
+    display:
+        flex;
+
+    flex-direction:
+        column;
+
+    align-items:
+        center;
+
+    justify-content:
+        center;
+
+    text-align:
+        center;
+
+    background:
+
+        radial-gradient(
+            circle at 50% 30%,
+            rgba(50, 100, 150, 0.15),
+            transparent 40%
+        ),
+
+        #05070b;
+
+}
+
+
+.home-placeholder p {
+
+    color:
+        #9ebbd4;
+
+    letter-spacing:
+        4px;
+
+    font-size:
+        12px;
+
+}
+
+
+.home-placeholder h1 {
+
+    font-size:
+        clamp(40px, 6vw, 75px);
+
+    font-weight:
+        400;
+
+    margin:
+        10px 0;
+
+}
+
+
+/* =========================================
+   RESPONSIVE
+========================================= */
+
+@media (max-width: 900px) {
+
+    .main-header {
+
+        grid-template-columns:
+            1fr auto;
+
+        padding:
+            0 20px;
+
+    }
+
+
+    .header-logo {
+
+        grid-column:
+            2;
+
+        grid-row:
+            1;
+
+    }
+
+
+    .header-left {
+
+        padding-left:
+            0;
+
+        gap:
+            20px;
+
+    }
+
+
+    .search-container {
+
+        width:
+            220px;
+
+    }
+
+
+    .header-right {
+
+        display:
+            none;
+
+    }
+
+}
+
+
+@media (max-width: 600px) {
+
+    .main-header {
+
+        height:
+            75px;
+
+    }
+
+
+    .nav-button {
+
+        font-size:
+            17px;
+
+    }
+
+
+    .search-container {
+
+        width:
+            150px;
+
+        height:
+            36px;
+
+    }
+
+
+    .search-container input {
+
+        font-size:
+            14px;
+
+    }
+
+
+    .header-logo img {
+
+        width:
+            50px;
+
+        height:
+            50px;
+
+    }
+
+}
+/* =========================================
+   FOOTER
+========================================= */
+
+.site-footer {
+
+    background:
+        #050505;
+
+    border-top:
+        1px solid
+        #252525;
+
+    margin-top:
+        10px;
+
+}
+
+
+/* =========================================
+   FOOTER MAIN
+========================================= */
+
+.footer-main {
+
+    max-width:
+        1400px;
+
+    margin:
+        0 auto;
+
+    padding:
+        75px 40px 65px;
+
+    display:
+        grid;
+
+    grid-template-columns:
+        2.2fr 1fr 1fr 1fr;
+
+    gap:
+        70px;
+
+}
+
+
+/* =========================================
+   BRAND
+========================================= */
+
+.footer-brand {
+
+    max-width:
+        470px;
+
+}
+
+
+.footer-logo-link {
+
+    display:
+        inline-block;
+
+    margin-bottom:
+        22px;
+
+}
+
+
+.footer-logo {
+
+    width:
+        70px;
+
+    height:
+        70px;
+
+    object-fit:
+        cover;
+
+    border-radius:
+        50%;
+
+}
+
+
+.footer-brand h2 {
+
+    font-size:
+        30px;
+
+    margin:
+        0 0 25px;
+
+    font-weight:
+        600;
+
+}
+
+
+.footer-mission {
+
+    color:
+        #aeb8c3;
+
+    font-size:
+        15px;
+
+    line-height:
+        1.7;
+
+    margin:
+        0 0 18px;
+
+    max-width:
+        450px;
+
+}
+
+
+/* =========================================
+   FOOTER COLUMNS
+========================================= */
+
+.footer-column {
+
+    display:
+        flex;
+
+    flex-direction:
+        column;
+
+    align-items:
+        flex-start;
+
+}
+
+
+.footer-column h3 {
+
+    margin:
+        0 0 25px;
+
+    font-size:
+        18px;
+
+    font-weight:
+        700;
+
+    color:
+        #ffffff;
+
+}
+
+
+.footer-column a {
+
+    color:
+        #c7ced6;
+
+    text-decoration:
+        none;
+
+    font-size:
+        15px;
+
+    margin-bottom:
+        16px;
+
+    transition:
+        color 0.2s ease,
+        transform 0.2s ease;
+
+}
+
+
+.footer-column a:hover {
+
+    color:
+        #ffffff;
+
+    transform:
+        translateX(3px);
+
+}
+
+
+/* =========================================
+   SOCIAL LINKS
+========================================= */
+
+.social-link {
+
+    display:
+        flex !important;
+
+    align-items:
+        center;
+
+    gap:
+        13px;
+
+}
+
+
+.social-icon {
+
+    width:
+        28px;
+
+    height:
+        28px;
+
+    border:
+        1px solid
+        #555;
+
+    border-radius:
+        50%;
+
+    display:
+        flex;
+
+    justify-content:
+        center;
+
+    align-items:
+        center;
+
+    color:
+        #ffffff;
+
+    font-size:
+        14px;
+
+}
+
+
+/* =========================================
+   FOOTER BOTTOM
+========================================= */
+
+.footer-bottom {
+
+    border-top:
+        1px solid
+        #252525;
+
+    max-width:
+        1400px;
+
+    margin:
+        0 auto;
+
+    padding:
+        25px 40px;
+
+}
+
+
+.footer-bottom p {
+
+    margin:
+        0;
+
+    color:
+        #7f8994;
+
+    font-size:
+        13px;
+
+    letter-spacing:
+        0.3px;
+
+}
+
+
+/* =========================================
+   RESPONSIVE FOOTER
+========================================= */
+
+@media (max-width: 900px) {
+
+    .footer-main {
+
+        grid-template-columns:
+            1fr 1fr;
+
+        gap:
+            50px;
+
+    }
+
+}
+
+
+@media (max-width: 600px) {
+
+    .footer-main {
+
+        grid-template-columns:
+            1fr;
+
+        padding:
+            55px 25px;
+
+        gap:
+            40px;
+
+    }
+
+
+    .footer-bottom {
+
+        padding:
+            22px 25px;
+
+    }
+
+}
