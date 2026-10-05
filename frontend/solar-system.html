@@ -1,0 +1,2340 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Space Explorer - Solar System</title>
+
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            overflow: hidden;
+            background: #000;
+            font-family: Arial, Helvetica, sans-serif;
+            color: white;
+        }
+
+        #scene-container {
+            position: fixed;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+        }
+
+        #loading {
+            position: fixed;
+            inset: 0;
+
+            display: flex;
+            align-items: center;
+            justify-content: center;
+
+            background: #000;
+            color: white;
+
+            font-size: 20px;
+
+            z-index: 100;
+        }
+
+        #loading.hidden {
+            display: none;
+        }
+
+        #tooltip {
+            position: fixed;
+
+            display: none;
+
+            padding: 8px 14px;
+
+            background: rgba(0, 0, 0, 0.85);
+
+            border: 1px solid rgba(255, 255, 255, 0.3);
+
+            border-radius: 8px;
+
+            color: white;
+
+            font-size: 14px;
+
+            pointer-events: none;
+
+            z-index: 20;
+
+            backdrop-filter: blur(6px);
+        }
+
+        #info {
+            position: fixed;
+
+            left: 25px;
+            bottom: 25px;
+
+            min-width: 230px;
+
+            padding: 16px 20px;
+
+            background: rgba(0, 0, 0, 0.65);
+
+            border: 1px solid rgba(255, 255, 255, 0.2);
+
+            border-radius: 12px;
+
+            backdrop-filter: blur(8px);
+
+            z-index: 10;
+        }
+
+        #info h2 {
+            margin-bottom: 6px;
+            font-size: 20px;
+        }
+
+        #info p {
+            color: #d0d5dc;
+            font-size: 13px;
+            line-height: 1.5;
+        }
+
+        #hint {
+            position: fixed;
+
+            right: 25px;
+            bottom: 25px;
+
+            padding: 10px 14px;
+
+            background: rgba(0, 0, 0, 0.55);
+
+            border-radius: 8px;
+
+            color: #aaa;
+
+            font-size: 12px;
+
+            z-index: 10;
+        }
+    </style>
+
+
+    <script type="importmap">
+
+    {
+        "imports": {
+
+            "three":
+            "https://cdn.jsdelivr.net/npm/three@0.180.0/build/three.module.js",
+
+            "three/addons/":
+            "https://cdn.jsdelivr.net/npm/three@0.180.0/examples/jsm/"
+        }
+    }
+
+    </script>
+
+</head>
+
+
+<body>
+
+
+    <div id="scene-container"></div>
+
+
+    <div id="loading">
+        Loading Solar System...
+    </div>
+
+
+    <div id="tooltip"></div>
+
+
+    <div id="info">
+
+        <h2 id="selected-name">
+            Solar System
+        </h2>
+
+        <p id="selected-info">
+            Click the Sun or a planet
+        </p>
+
+    </div>
+
+
+    <div id="hint">
+
+        Drag = Rotate
+        &nbsp; | &nbsp;
+
+        Scroll = Zoom
+        &nbsp; | &nbsp;
+
+        Click = Select
+
+    </div>
+
+
+
+    <script type="module">
+
+
+        /* =====================================================
+           IMPORTS
+        ===================================================== */
+
+        import * as THREE
+            from "three";
+
+        import {
+            OrbitControls
+        }
+            from "three/addons/controls/OrbitControls.js";
+
+
+
+        /* =====================================================
+           HTML ELEMENTS
+        ===================================================== */
+
+        const container =
+            document.getElementById(
+                "scene-container"
+            );
+
+        const tooltip =
+            document.getElementById(
+                "tooltip"
+            );
+
+        const selectedName =
+            document.getElementById(
+                "selected-name"
+            );
+
+        const selectedInfo =
+            document.getElementById(
+                "selected-info"
+            );
+
+        const loading =
+            document.getElementById(
+                "loading"
+            );
+
+
+
+        /* =====================================================
+           SCENE
+        ===================================================== */
+
+        const scene =
+            new THREE.Scene();
+
+        scene.background =
+            new THREE.Color(
+                0x000000
+            );
+
+
+
+        /* =====================================================
+           CAMERA
+        ===================================================== */
+
+        const camera =
+            new THREE.PerspectiveCamera(
+
+                55,
+
+                window.innerWidth /
+                window.innerHeight,
+
+                0.1,
+
+                2000
+
+            );
+
+
+        camera.position.set(
+            -180,
+            80,
+            100
+        );
+
+
+
+        /* =====================================================
+           RENDERER
+        ===================================================== */
+
+        const renderer =
+            new THREE.WebGLRenderer({
+
+                antialias: true
+
+            });
+
+
+        renderer.setSize(
+            window.innerWidth,
+            window.innerHeight
+        );
+
+
+        renderer.setPixelRatio(
+
+            Math.min(
+                window.devicePixelRatio,
+                2
+            )
+
+        );
+
+
+        renderer.outputColorSpace =
+            THREE.SRGBColorSpace;
+
+
+        renderer.toneMapping =
+            THREE.ACESFilmicToneMapping;
+
+
+        renderer.toneMappingExposure =
+            1.55;
+
+
+        /*
+            Shadow maps disabled.
+        */
+
+        renderer.shadowMap.enabled =
+            false;
+
+
+        container.appendChild(
+            renderer.domElement
+        );
+
+
+
+        /* =====================================================
+           CAMERA CONTROLS
+        ===================================================== */
+
+        const controls =
+            new OrbitControls(
+
+                camera,
+
+                renderer.domElement
+
+            );
+
+
+        controls.enableDamping =
+            true;
+
+
+        controls.dampingFactor =
+            0.05;
+
+
+        controls.minDistance =
+            25;
+
+
+        controls.maxDistance =
+            500;
+
+
+        controls.target.set(
+            0,
+            0,
+            0
+        );
+
+
+
+        /* =====================================================
+           TEXTURE LOADER
+        ===================================================== */
+
+        const textureLoader =
+            new THREE.TextureLoader();
+
+
+        function loadTexture(path) {
+
+            const texture =
+                textureLoader.load(
+
+                    path,
+
+                    undefined,
+
+                    undefined,
+
+                    function (error) {
+
+                        console.error(
+                            "Texture failed:",
+                            path,
+                            error
+                        );
+
+                    }
+
+                );
+
+
+            texture.colorSpace =
+                THREE.SRGBColorSpace;
+
+
+            texture.anisotropy =
+                renderer
+                    .capabilities
+                    .getMaxAnisotropy();
+
+
+            return texture;
+        }
+
+
+
+        /* =====================================================
+           MILKY WAY
+        ===================================================== */
+
+        function createMilkyWayBackground() {
+
+            const texture =
+                loadTexture(
+                    "textures/stars_milky_way.jpg"
+                );
+
+
+            const geometry =
+                new THREE.SphereGeometry(
+                    900,
+                    64,
+                    64
+                );
+
+
+            const material =
+                new THREE.MeshBasicMaterial({
+
+                    map: texture,
+
+                    side:
+                        THREE.BackSide
+
+                });
+
+
+            const background =
+                new THREE.Mesh(
+                    geometry,
+                    material
+                );
+
+
+            scene.add(
+                background
+            );
+        }
+
+
+        createMilkyWayBackground();
+
+
+
+        /* =====================================================
+           EXTRA STARS
+        ===================================================== */
+
+        function createStars() {
+
+            const count =
+                5000;
+
+
+            const positions =
+                new Float32Array(
+                    count * 3
+                );
+
+
+            for (
+                let i = 0;
+                i < count;
+                i++
+            ) {
+
+                const radius =
+                    500 +
+                    Math.random() * 700;
+
+
+                const theta =
+                    Math.random() *
+                    Math.PI * 2;
+
+
+                const phi =
+                    Math.acos(
+                        2 *
+                        Math.random() -
+                        1
+                    );
+
+
+                positions[i * 3] =
+                    radius *
+                    Math.sin(phi) *
+                    Math.cos(theta);
+
+
+                positions[i * 3 + 1] =
+                    radius *
+                    Math.cos(phi);
+
+
+                positions[i * 3 + 2] =
+                    radius *
+                    Math.sin(phi) *
+                    Math.sin(theta);
+
+            }
+
+
+            const geometry =
+                new THREE.BufferGeometry();
+
+
+            geometry.setAttribute(
+
+                "position",
+
+                new THREE.BufferAttribute(
+                    positions,
+                    3
+                )
+
+            );
+
+
+            const material =
+                new THREE.PointsMaterial({
+
+                    color:
+                        0xffffff,
+
+                    size:
+                        0.65,
+
+                    sizeAttenuation:
+                        true
+
+                });
+
+
+            const stars =
+                new THREE.Points(
+
+                    geometry,
+
+                    material
+
+                );
+
+
+            stars.frustumCulled =
+                false;
+
+
+            scene.add(
+                stars
+            );
+        }
+
+
+        createStars();
+
+
+
+        /* =====================================================
+           SUN
+        ===================================================== */
+
+        const sunGeometry =
+            new THREE.SphereGeometry(
+
+                8,
+
+                96,
+
+                96
+
+            );
+
+
+        const sunTexture =
+            loadTexture(
+                "textures/sun.jpg"
+            );
+
+
+        const sunMaterial =
+            new THREE.MeshBasicMaterial({
+
+                map:
+                    sunTexture,
+
+                toneMapped:
+                    false
+
+            });
+
+
+        const sun =
+            new THREE.Mesh(
+
+                sunGeometry,
+
+                sunMaterial
+
+            );
+
+
+        sun.name =
+            "Sun";
+
+
+        scene.add(
+            sun
+        );
+
+
+
+        /* =====================================================
+           SUN GLOW
+        ===================================================== */
+
+        const glowGeometry =
+            new THREE.SphereGeometry(
+
+                8.8,
+
+                64,
+
+                64
+
+            );
+
+
+        const glowMaterial =
+            new THREE.MeshBasicMaterial({
+
+                color:
+                    0xffa52f,
+
+                transparent:
+                    true,
+
+                opacity:
+                    0.20,
+
+                blending:
+                    THREE.AdditiveBlending,
+
+                side:
+                    THREE.BackSide
+
+            });
+
+
+        const sunGlow =
+            new THREE.Mesh(
+
+                glowGeometry,
+
+                glowMaterial
+
+            );
+
+
+        sun.add(
+            sunGlow
+        );
+
+
+
+        /* =====================================================
+           SUN LIGHT
+        ===================================================== */
+
+        const sunLight =
+            new THREE.PointLight(
+
+                0xffffff,
+
+                50,
+
+                0,
+
+                1.0
+
+            );
+
+
+        sunLight.position.set(
+            0,
+            0,
+            0
+        );
+
+
+        scene.add(
+            sunLight
+        );
+
+
+
+        /* =====================================================
+           AMBIENT LIGHT
+        ===================================================== */
+
+        const ambientLight =
+            new THREE.AmbientLight(
+
+                0x293448,
+
+                1
+
+            );
+
+
+        scene.add(
+            ambientLight
+        );
+
+
+
+        /* =====================================================
+           PLANET DATA
+        ===================================================== */
+
+        const planetData = [
+
+            {
+                name: "Mercury",
+
+                radius: 1.5,
+
+                distance: 18,
+
+                speed: 0.045,
+
+                rotationSpeed: 0.010,
+
+                startAngle: 0.4,
+
+                texture:
+                    "textures/mercury.jpg"
+            },
+
+
+            {
+                name: "Venus",
+
+                radius: 2.2,
+
+                distance: 27,
+
+                speed: 0.035,
+
+                rotationSpeed: 0.004,
+
+                startAngle: 2.1,
+
+                texture:
+                    "textures/venus_surface.jpg"
+            },
+
+
+            {
+                name: "Earth",
+
+                radius: 2.5,
+
+                distance: 37,
+
+                speed: 0.028,
+
+                rotationSpeed: 0.018,
+
+                startAngle: 4.5,
+
+                texture:
+                    "textures/earth_daymap.jpg",
+
+                nightTexture:
+                    "textures/earth_nightmap.jpg",
+
+                clouds:
+                    "textures/earth_clouds.jpg"
+            },
+
+
+            {
+                name: "Mars",
+
+                radius: 2.0,
+
+                distance: 48,
+
+                speed: 0.023,
+
+                rotationSpeed: 0.016,
+
+                startAngle: 5.7,
+
+                texture:
+                    "textures/mars.jpg"
+            },
+
+
+            {
+                name: "Jupiter",
+
+                radius: 5.2,
+
+                distance: 66,
+
+                speed: 0.016,
+
+                rotationSpeed: 0.030,
+
+                startAngle: 1.3,
+
+                texture:
+                    "textures/jupiter.jpg"
+            },
+
+
+            {
+                name: "Saturn",
+
+                radius: 4.5,
+
+                distance: 84,
+
+                speed: 0.012,
+
+                rotationSpeed: 0.027,
+
+                startAngle: 3.4,
+
+                texture:
+                    "textures/saturn.jpg",
+
+                rings: true
+            },
+
+
+            {
+                name: "Uranus",
+
+                radius: 3.2,
+
+                distance: 103,
+
+                speed: 0.009,
+
+                rotationSpeed: 0.020,
+
+                startAngle: 5.0,
+
+                texture:
+                    "textures/uranus.jpg"
+            },
+
+
+            {
+                name: "Neptune",
+
+                radius: 3.1,
+
+                distance: 122,
+
+                speed: 0.007,
+
+                rotationSpeed: 0.018,
+
+                startAngle: 2.7,
+
+                texture:
+                    "textures/neptune.jpg"
+            }
+
+        ];
+
+
+
+        /* =====================================================
+           CLICKABLE OBJECTS
+        ===================================================== */
+
+        const clickableObjects = [];
+
+
+        clickableObjects.push(
+            sun
+        );
+
+
+
+        /* =====================================================
+           PLANETS
+        ===================================================== */
+
+        const planets = [];
+
+
+        planetData.forEach(
+            data => {
+
+
+                /* =============================================
+                   ORBIT GROUP
+        
+                   EVERYTHING is in the same XZ plane.
+        
+                   NO X rotation.
+                   NO Z rotation.
+                ============================================= */
+
+                const orbitGroup =
+                    new THREE.Group();
+
+
+                scene.add(
+                    orbitGroup
+                );
+
+
+
+                /* =============================================
+                   ORBIT PIVOT
+                ============================================= */
+
+                const planetPivot =
+                    new THREE.Group();
+
+
+                orbitGroup.add(
+                    planetPivot
+                );
+
+
+                /*
+                    Initial angle.
+        
+                    The planet will start at a different
+                    position on its circular orbit.
+                */
+
+                planetPivot.rotation.y =
+                    data.startAngle;
+
+
+
+                /* =============================================
+                   ORBIT LINE
+                ============================================= */
+
+                const orbitPoints = [];
+
+                const segments = 256;
+
+
+                for (
+                    let i = 0;
+                    i <= segments;
+                    i++
+                ) {
+
+                    const angle =
+                        (i / segments) *
+                        Math.PI *
+                        2;
+
+
+                    orbitPoints.push(
+
+                        new THREE.Vector3(
+
+                            Math.cos(angle) *
+                            data.distance,
+
+                            0,
+
+                            Math.sin(angle) *
+                            data.distance
+
+                        )
+
+                    );
+
+                }
+
+
+                const orbitGeometry =
+                    new THREE.BufferGeometry()
+                        .setFromPoints(
+                            orbitPoints
+                        );
+
+
+                const orbitMaterial =
+                    new THREE.LineBasicMaterial({
+
+                        color:
+                            0x667085,
+
+                        transparent:
+                            true,
+
+                        opacity:
+                            0.45
+
+                    });
+
+
+                const orbit =
+                    new THREE.LineLoop(
+
+                        orbitGeometry,
+
+                        orbitMaterial
+
+                    );
+
+
+                /*
+                    Orbit stays stationary.
+        
+                    Only the planet moves around it.
+                */
+
+                orbitGroup.add(
+                    orbit
+                );
+
+
+
+                /* =============================================
+                   PLANET GEOMETRY
+                ============================================= */
+
+                const geometry =
+                    new THREE.SphereGeometry(
+
+                        data.radius,
+
+                        64,
+
+                        64
+
+                    );
+
+
+
+                /* =============================================
+                   PLANET MATERIAL
+                ============================================= */
+
+                const material =
+                    new THREE.MeshStandardMaterial({
+
+                        map:
+                            loadTexture(
+                                data.texture
+                            ),
+
+                        roughness:
+                            0.65,
+
+                        metalness:
+                            0,
+
+                        envMapIntensity:
+                            1.2
+
+                    });
+
+
+
+                /* =============================================
+                   PLANET
+                ============================================= */
+
+                const planet =
+                    new THREE.Mesh(
+
+                        geometry,
+
+                        material
+
+                    );
+
+
+                planet.name =
+                    data.name;
+
+
+                /*
+                    Planet is placed exactly at
+                    the same radius as its orbit.
+                */
+
+                planet.position.set(
+
+                    data.distance,
+
+                    0,
+
+                    0
+
+                );
+
+
+                planet.castShadow =
+                    false;
+
+
+                planet.receiveShadow =
+                    false;
+
+
+                planetPivot.add(
+                    planet
+                );
+
+
+
+                /* =============================================
+                   EARTH
+                ============================================= */
+
+                if (
+                    data.name === "Earth"
+                ) {
+
+
+                    /* =========================================
+                       NIGHT LIGHTS
+                    ========================================= */
+
+                    const nightTexture =
+                        loadTexture(
+
+                            data.nightTexture
+
+                        );
+
+
+                    const nightMaterial =
+                        new THREE.MeshBasicMaterial({
+
+                            map:
+                                nightTexture,
+
+                            transparent:
+                                true,
+
+                            opacity:
+                                0.55,
+
+                            blending:
+                                THREE.AdditiveBlending,
+
+                            depthWrite:
+                                false
+
+                        });
+
+
+                    const nightSphere =
+                        new THREE.Mesh(
+
+                            new THREE.SphereGeometry(
+
+                                data.radius *
+                                1.002,
+
+                                64,
+
+                                64
+
+                            ),
+
+                            nightMaterial
+
+                        );
+
+
+                    planet.add(
+                        nightSphere
+                    );
+
+
+
+                    /* =========================================
+                       CLOUDS
+                    ========================================= */
+
+                    const cloudTexture =
+                        loadTexture(
+                            data.clouds
+                        );
+
+
+                    const cloudMaterial =
+                        new THREE.MeshStandardMaterial({
+
+                            map:
+                                cloudTexture,
+
+                            transparent:
+                                true,
+
+                            opacity:
+                                0.48,
+
+                            depthWrite:
+                                false,
+
+                            roughness:
+                                0.9,
+
+                            metalness:
+                                0
+
+                        });
+
+
+                    const clouds =
+                        new THREE.Mesh(
+
+                            new THREE.SphereGeometry(
+
+                                data.radius *
+                                1.015,
+
+                                64,
+
+                                64
+
+                            ),
+
+                            cloudMaterial
+
+                        );
+
+
+                    planet.add(
+                        clouds
+                    );
+
+
+                    planet.userData.clouds =
+                        clouds;
+
+
+
+                    /* =========================================
+                       ATMOSPHERE
+                    ========================================= */
+
+                    const atmosphere =
+                        new THREE.Mesh(
+
+                            new THREE.SphereGeometry(
+
+                                data.radius *
+                                1.065,
+
+                                64,
+
+                                64
+
+                            ),
+
+                            new THREE.MeshBasicMaterial({
+
+                                color:
+                                    0x3d8dff,
+
+                                transparent:
+                                    true,
+
+                                opacity:
+                                    0.13,
+
+                                side:
+                                    THREE.BackSide,
+
+                                blending:
+                                    THREE.AdditiveBlending
+
+                            })
+
+                        );
+
+
+                    planet.add(
+                        atmosphere
+                    );
+
+                }
+
+
+
+/* =====================================================
+   SATURN RINGS
+===================================================== */
+
+if (data.rings) {
+
+    /*
+        Your file:
+
+        textures/saturn_ring_alpha.png
+
+        is 1024 x 63.
+
+        It is a horizontal alpha strip.
+        Therefore we use it ONLY to determine
+        which radial parts of the ring are visible.
+    */
+
+    const ringTexture =
+        loadTexture(
+            "textures/saturn_ring_alpha.png"
+        );
+
+
+    /* =================================================
+       RING GEOMETRY
+    ================================================= */
+
+    const innerRadius =
+        data.radius * 1.25;
+
+    const outerRadius =
+        data.radius * 2.45;
+
+    const radialSegments = 180;
+
+    const angularSegments = 256;
+
+
+    const positions = [];
+
+    const normals = [];
+
+    const uvs = [];
+
+    const indices = [];
+
+
+    /*
+        Create concentric circular ring vertices.
+
+        Each radial position gets a U coordinate
+        from 0 -> 1.
+
+        This is the important fix.
+    */
+
+    for (
+        let r = 0;
+        r <= radialSegments;
+        r++
+    ) {
+
+        const radialProgress =
+            r / radialSegments;
+
+
+        const radius =
+            innerRadius +
+            (outerRadius - innerRadius) *
+            radialProgress;
+
+
+        /*
+            U tells the texture which part of
+            the horizontal 1024px strip to use.
+        */
+
+        const u =
+            radialProgress;
+
+
+        for (
+            let i = 0;
+            i <= angularSegments;
+            i++
+        ) {
+
+            const angle =
+                (i / angularSegments) *
+                Math.PI *
+                2;
+
+
+            const x =
+                Math.cos(angle) *
+                radius;
+
+
+            const z =
+                Math.sin(angle) *
+                radius;
+
+
+            /*
+                Ring initially lies in XY plane.
+                We rotate it afterward.
+            */
+
+            positions.push(
+                x,
+                0,
+                z
+            );
+
+
+            normals.push(
+                0,
+                1,
+                0
+            );
+
+
+            /*
+                IMPORTANT:
+
+                U = radial position
+                V = center of the texture
+
+                Since the PNG is only 63 pixels high,
+                we sample its middle.
+            */
+
+            uvs.push(
+                u,
+                0.5
+            );
+
+        }
+
+    }
+
+
+    /* =================================================
+       TRIANGLES
+    ================================================= */
+
+    for (
+        let r = 0;
+        r < radialSegments;
+        r++
+    ) {
+
+        for (
+            let i = 0;
+            i < angularSegments;
+            i++
+        ) {
+
+            const current =
+                r *
+                (angularSegments + 1) +
+                i;
+
+
+            const next =
+                current +
+                angularSegments +
+                1;
+
+
+            indices.push(
+                current,
+                next,
+                current + 1
+            );
+
+
+            indices.push(
+                current + 1,
+                next,
+                next + 1
+            );
+
+        }
+
+    }
+
+
+    /* =================================================
+       BUFFER GEOMETRY
+    ================================================= */
+
+    const ringGeometry =
+        new THREE.BufferGeometry();
+
+
+    ringGeometry.setAttribute(
+
+        "position",
+
+        new THREE.Float32BufferAttribute(
+            positions,
+            3
+        )
+
+    );
+
+
+    ringGeometry.setAttribute(
+
+        "normal",
+
+        new THREE.Float32BufferAttribute(
+            normals,
+            3
+        )
+
+    );
+
+
+    ringGeometry.setAttribute(
+
+        "uv",
+
+        new THREE.Float32BufferAttribute(
+            uvs,
+            2
+        )
+
+    );
+
+
+    ringGeometry.setIndex(
+        indices
+    );
+
+
+    ringGeometry.computeBoundingSphere();
+
+
+    /* =================================================
+       RING MATERIAL
+    ================================================= */
+
+    const ringMaterial =
+        new THREE.MeshBasicMaterial({
+
+            /*
+                Actual ring color.
+            */
+
+            color:
+                0xd8c39d,
+
+
+            /*
+                IMPORTANT:
+
+                The PNG is used as an ALPHA pattern,
+                not as the visible texture.
+            */
+
+            alphaMap:
+                ringTexture,
+
+
+            transparent:
+                true,
+
+
+            opacity:
+                0.95,
+
+
+            alphaTest:
+                0.02,
+
+
+            side:
+                THREE.DoubleSide,
+
+
+            depthWrite:
+                false
+
+        });
+
+
+    /* =================================================
+       CREATE RING
+    ================================================= */
+
+    const rings =
+        new THREE.Mesh(
+
+            ringGeometry,
+
+            ringMaterial
+
+        );
+
+
+    /*
+        Put the ring around Saturn.
+
+        The ring is initially in the XZ plane
+        because we created vertices using:
+
+        X
+        0
+        Z
+
+        Therefore NO rotation is actually required.
+    */
+
+    rings.rotation.x = 0;
+
+
+    /*
+        Keep ring slightly above Saturn.
+    */
+
+    rings.renderOrder =
+        2;
+
+
+    /*
+        Add ring to Saturn.
+
+        It follows Saturn automatically.
+    */
+
+    planet.add(
+        rings
+    );
+
+
+    /*
+        Save ring for animation.
+    */
+
+    planet.userData.rings =
+        rings;
+
+}                /* =============================================
+                   SAVE PLANET
+                ============================================= */
+
+                planets.push({
+
+                    mesh:
+                        planet,
+
+                    pivot:
+                        planetPivot,
+
+                    orbit:
+                        orbit,
+
+                    data:
+                        data
+
+                });
+
+
+
+                /* =============================================
+                   CLICKABLE
+                ============================================= */
+
+                clickableObjects.push(
+                    planet
+                );
+
+            }
+        );
+
+
+
+        /* =====================================================
+           ASTEROID BELT
+        ===================================================== */
+
+        function createAsteroidBelt() {
+
+
+            const geometry =
+                new THREE.DodecahedronGeometry(
+
+                    0.12,
+
+                    0
+
+                );
+
+
+            for (
+                let i = 0;
+
+                i < 500;
+
+                i++
+            ) {
+
+
+                const material =
+                    new THREE.MeshStandardMaterial({
+
+                        color:
+                            0x555555,
+
+                        roughness:
+                            1,
+
+                        metalness:
+                            0
+
+                    });
+
+
+                const asteroid =
+                    new THREE.Mesh(
+
+                        geometry,
+
+                        material
+
+                    );
+
+
+                const angle =
+                    Math.random() *
+                    Math.PI *
+                    2;
+
+
+                const distance =
+                    53 +
+                    Math.random() *
+                    8;
+
+
+                /*
+                    Asteroids remain in the same
+                    2D orbital plane.
+                */
+
+                asteroid.position.set(
+
+                    Math.cos(angle) *
+                    distance,
+
+                    0,
+
+                    Math.sin(angle) *
+                    distance
+
+                );
+
+
+                asteroid.scale.setScalar(
+
+                    0.4 +
+                    Math.random() *
+                    1.4
+
+                );
+
+
+                asteroid.rotation.x =
+                    Math.random() *
+                    Math.PI;
+
+
+                asteroid.rotation.y =
+                    Math.random() *
+                    Math.PI;
+
+
+                asteroid.rotation.z =
+                    Math.random() *
+                    Math.PI;
+
+
+                asteroid.castShadow =
+                    false;
+
+
+                asteroid.receiveShadow =
+                    false;
+
+
+                scene.add(
+                    asteroid
+                );
+
+            }
+
+        }
+
+
+        createAsteroidBelt();
+
+
+
+        /* =====================================================
+           BACKGROUND ROCKS
+        ===================================================== */
+
+        function createBackgroundRocks() {
+
+
+            for (
+                let i = 0;
+
+                i < 100;
+
+                i++
+            ) {
+
+
+                const geometry =
+                    new THREE.IcosahedronGeometry(
+
+                        0.2 +
+                        Math.random() *
+                        0.4,
+
+                        0
+
+                    );
+
+
+                const material =
+                    new THREE.MeshStandardMaterial({
+
+                        color:
+                            0x333333,
+
+                        roughness:
+                            1
+
+                    });
+
+
+                const rock =
+                    new THREE.Mesh(
+
+                        geometry,
+
+                        material
+
+                    );
+
+
+                const radius =
+                    160 +
+                    Math.random() *
+                    300;
+
+
+                const angle =
+                    Math.random() *
+                    Math.PI *
+                    2;
+
+
+                /*
+                    Background rocks can still have
+                    different heights.
+                */
+
+                rock.position.set(
+
+                    Math.cos(angle) *
+                    radius,
+
+                    (Math.random() - 0.5) *
+                    150,
+
+                    Math.sin(angle) *
+                    radius
+
+                );
+
+
+                rock.castShadow =
+                    false;
+
+
+                rock.receiveShadow =
+                    false;
+
+
+                scene.add(
+                    rock
+                );
+
+            }
+
+        }
+
+
+        createBackgroundRocks();
+
+
+
+        /* =====================================================
+           RAYCASTER
+        ===================================================== */
+
+        const raycaster =
+            new THREE.Raycaster();
+
+
+        const mouse =
+            new THREE.Vector2();
+
+
+
+        /* =====================================================
+           MOUSE MOVE
+        ===================================================== */
+
+        window.addEventListener(
+
+            "mousemove",
+
+            event => {
+
+
+                mouse.x =
+
+                    (event.clientX /
+                        window.innerWidth) *
+                    2 -
+                    1;
+
+
+                mouse.y =
+
+                    -(event.clientY /
+                        window.innerHeight) *
+                    2 +
+                    1;
+
+
+                raycaster.setFromCamera(
+
+                    mouse,
+
+                    camera
+
+                );
+
+
+                const intersections =
+                    raycaster.intersectObjects(
+
+                        clickableObjects,
+
+                        false
+
+                    );
+
+
+                if (
+                    intersections.length > 0
+                ) {
+
+
+                    const object =
+                        intersections[0]
+                            .object;
+
+
+                    tooltip.style.display =
+                        "block";
+
+
+                    tooltip.textContent =
+                        object.name;
+
+
+                    tooltip.style.left =
+
+                        event.clientX +
+                        15 +
+                        "px";
+
+
+                    tooltip.style.top =
+
+                        event.clientY +
+                        15 +
+                        "px";
+
+
+                    document.body.style.cursor =
+                        "pointer";
+
+                }
+
+                else {
+
+
+                    tooltip.style.display =
+                        "none";
+
+
+                    document.body.style.cursor =
+                        "default";
+
+                }
+
+            }
+
+        );
+
+
+
+        /* =====================================================
+           CLICK
+        ===================================================== */
+
+        window.addEventListener(
+
+            "click",
+
+            () => {
+
+
+                raycaster.setFromCamera(
+
+                    mouse,
+
+                    camera
+
+                );
+
+
+                const intersections =
+                    raycaster.intersectObjects(
+
+                        clickableObjects,
+
+                        false
+
+                    );
+
+
+                if (
+                    intersections.length === 0
+                ) {
+
+                    return;
+
+                }
+
+
+                const object =
+                    intersections[0]
+                        .object;
+
+
+                selectedName.textContent =
+                    object.name;
+
+
+                if (
+                    object.name === "Sun"
+                ) {
+
+                    selectedInfo.textContent =
+
+                        "The star at the center of our Solar System.";
+
+                }
+
+                else {
+
+                    selectedInfo.textContent =
+
+                        "Selected planet: " +
+                        object.name;
+
+                }
+
+            }
+
+        );
+
+
+
+        /* =====================================================
+           ANIMATION
+        ===================================================== */
+
+        const clock =
+            new THREE.Clock();
+
+
+        function animate() {
+
+
+            requestAnimationFrame(
+                animate
+            );
+
+
+            const delta =
+                clock.getDelta();
+
+
+
+            /* =============================================
+               SUN ROTATION
+            ============================================= */
+
+            sun.rotation.y +=
+
+                delta *
+                0.025;
+
+
+
+            /* =============================================
+               PLANETS
+            ============================================= */
+
+            planets.forEach(
+
+                planetObject => {
+
+
+                    const planet =
+                        planetObject.mesh;
+
+
+                    const pivot =
+                        planetObject.pivot;
+
+
+                    const data =
+                        planetObject.data;
+
+
+                    /*
+                        ========================================
+                        ORBIT / REVOLUTION SPEED = 2X
+                        ========================================
+        
+                        This controls movement around the Sun.
+        
+                        The planet's own rotation below is
+                        NOT doubled.
+                    */
+
+                    pivot.rotation.y +=
+
+                        delta *
+                        data.speed *
+                        8;
+
+
+
+                    /*
+                        ========================================
+                        PLANET SELF ROTATION
+                        ========================================
+                    */
+
+                    planet.rotation.y +=
+
+                        delta *
+                        data.rotationSpeed*10;
+
+
+
+                    /*
+                        ========================================
+                        EARTH CLOUDS
+                        ========================================
+                    */
+
+                    if (
+                        planet.userData.clouds
+                    ) {
+
+                        planet.userData
+                            .clouds
+                            .rotation.y +=
+
+                            delta *
+                            0.013;
+
+                    }
+
+
+                    /*
+                        ========================================
+                        SATURN RING ROTATION
+                        ========================================
+                    */
+
+                    if (
+                        planet.userData.rings
+                    ) {
+
+                        planet.userData
+                            .rings
+                            .rotation.z +=
+
+                            delta *
+                            0.004;
+
+                    }
+
+                }
+
+            );
+
+
+
+            /* =============================================
+               CAMERA
+            ============================================= */
+
+            controls.update();
+
+
+
+            /* =============================================
+               RENDER
+            ============================================= */
+
+            renderer.render(
+
+                scene,
+
+                camera
+
+            );
+
+        }
+
+
+        animate();
+
+
+
+        /* =====================================================
+           RESIZE
+        ===================================================== */
+
+        window.addEventListener(
+
+            "resize",
+
+            () => {
+
+
+                camera.aspect =
+
+                    window.innerWidth /
+                    window.innerHeight;
+
+
+                camera.updateProjectionMatrix();
+
+
+                renderer.setSize(
+
+                    window.innerWidth,
+
+                    window.innerHeight
+
+                );
+
+
+                renderer.setPixelRatio(
+
+                    Math.min(
+
+                        window.devicePixelRatio,
+
+                        2
+
+                    )
+
+                );
+
+            }
+
+        );
+
+
+
+        /* =====================================================
+           LOADING
+        ===================================================== */
+
+        setTimeout(
+
+            () => {
+
+                loading.classList.add(
+                    "hidden"
+                );
+
+            },
+
+            1800
+
+        );
+
+
+    </script>
+
+</body>
+
+</html>

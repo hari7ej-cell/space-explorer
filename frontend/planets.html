@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Space Explorer - Planets & Space Entity</title>
+    <link rel="stylesheet" href="planets.css">
+</head>
+
+<body>
+<header class="main-header">
+    <div class="header-left">
+        <div class="dropdown">
+            <button class="nav-button" id="exploreButton">
+                <span>Explore</span>
+                <span class="chevron">⌄</span>
+            </button>
+
+            <div class="dropdown-menu explore-menu" id="exploreMenu">
+                <a href="index.html">Home</a>
+                <a href="planets.html">Planet &amp; Space Entity</a>
+                <a href="missions.html">Missions</a>
+                <a href="astronauts.html">Astronaut</a>
+                <a href="announcement.html">Announcement</a>
+            </div>
+        </div>
+
+        <div class="search-container">
+            <svg class="search-icon" viewBox="0 0 24 24" aria-hidden="true">
+                <circle cx="11" cy="11" r="7"></circle>
+                <line x1="16.5" y1="16.5" x2="21" y2="21"></line>
+            </svg>
+            <input id="searchInput" type="text" placeholder="Search..." autocomplete="off">
+        </div>
+    </div>
+
+    <div class="header-logo">
+        <a href="index.html">
+            <img src="assets/logo.jpeg" alt="Space Explorer">
+        </a>
+    </div>
+
+    <div class="header-right">
+        <div class="dropdown account-dropdown">
+            <button class="account-button" id="accountButton">
+                <div class="account-greeting">Hello, Dhrumil</div>
+                <div class="account-title">
+                    Account &amp; Lists
+                    <span class="chevron">⌄</span>
+                </div>
+            </button>
+
+            <div class="dropdown-menu account-menu" id="accountMenu">
+                <div class="account-email">
+                    <span class="account-menu-label">Your account</span>
+                    <span class="account-email-value">your-email@example.com</span>
+                </div>
+
+                <div class="menu-divider"></div>
+
+                <a href="#"><span class="menu-icon">☆</span>Bookmarks</a>
+                <a href="#"><span class="menu-icon">♡</span>Saved Images</a>
+            </div>
+        </div>
+    </div>
+</header>
+
+<main>
+    <div class="breadcrumb">
+        <a href="index.html">Home</a>
+        <span>/</span>
+        <strong>Planet &amp; Space Entity</strong>
+    </div>
+
+    <section class="solar-model-section">
+        <iframe
+            class="solar-model-frame"
+            src="solar-system.html"
+            title="Interactive Solar System 3D Model"
+            loading="eager">
+        </iframe>
+    </section>
+
+    <section class="space-content">
+        <div class="content-inner">
+
+            <section class="topic-section">
+                <div class="section-heading">
+                    <h2>Let's Know About the Solar System</h2>
+                    <span></span>
+                </div>
+
+                <p class="section-intro">
+                    Explore the Sun and the eight planets of our Solar System.
+                    Select a celestial body to discover its basic characteristics,
+                    position, and role in our cosmic neighborhood.
+                </p>
+
+                <div class="planet-grid">
+                    <a class="planet-card sun-card" href="#">
+                        <div class="planet-visual sun-visual"></div>
+                        <div class="planet-card-body">
+                            <h3>Sun</h3>
+                            <p>The star at the center of our Solar System.</p>
+                            <span class="card-tag">Star</span>
+                        </div>
+                    </a>
+
+                    <a class="planet-card" href="#">
+                        <div class="planet-visual mercury-visual"></div>
+                        <div class="planet-card-body">
+                            <h3>Mercury</h3>
+                            <p>The smallest planet and the closest to the Sun.</p>
+                            <span class="card-tag">Planet</span>
+                        </div>
+                    </a>
+
+                    <a class="planet-card" href="#">
+                        <div class="planet-visual venus-visual"></div>
+                        <div class="planet-card-body">
+                            <h3>Venus</h3>
+                            <p>A hot terrestrial planet with a thick atmosphere.</p>
+                            <span class="card-tag">Planet</span>
+                        </div>
+                    </a>
+
+                    <a class="planet-card" href="#">
+                        <div class="planet-visual earth-visual"></div>
+                        <div class="planet-card-body">
+                            <h3>Earth</h3>
+                            <p>Our home planet and the only known world with life.</p>
+                            <span class="card-tag">Planet</span>
+                        </div>
+                    </a>
+
+                    <a class="planet-card" href="#">
+                        <div class="planet-visual mars-visual"></div>
+                        <div class="planet-card-body">
+                            <h3>Mars</h3>
+                            <p>The red planet, explored extensively by robotic missions.</p>
+                            <span class="card-tag">Planet</span>
+                        </div>
+                    </a>
+
+                    <a class="planet-card" href="#">
+                        <div class="planet-visual jupiter-visual"></div>
+                        <div class="planet-card-body">
+                            <h3>Jupiter</h3>
+                            <p>The largest planet in the Solar System.</p>
+                            <span class="card-tag">Planet</span>
+                        </div>
+                    </a>
+
+                    <a class="planet-card" href="#">
+                        <div class="planet-visual saturn-visual"></div>
+                        <div class="planet-card-body">
+                            <h3>Saturn</h3>
+                            <p>A gas giant famous for its spectacular ring system.</p>
+                            <span class="card-tag">Planet</span>
+                        </div>
+                    </a>
+
+                    <a class="planet-card" href="#">
+                        <div class="planet-visual uranus-visual"></div>
+                        <div class="planet-card-body">
+                            <h3>Uranus</h3>
+                            <p>An ice giant rotating with an extreme axial tilt.</p>
+                            <span class="card-tag">Planet</span>
+                        </div>
+                    </a>
+
+                    <a class="planet-card" href="#">
+                        <div class="planet-visual neptune-visual"></div>
+                        <div class="planet-card-body">
+                            <h3>Neptune</h3>
+                            <p>The distant ice giant with powerful winds.</p>
+                            <span class="card-tag">Planet</span>
+                        </div>
+                    </a>
+                </div>
+            </section>
+
+            <section class="topic-section compact-topic">
+                <div class="section-heading">
+                    <h2>Latest Discovered Planet</h2>
+                    <span></span>
+                </div>
+
+                <div class="feature-card">
+                    <div class="feature-planet exoplanet-visual"></div>
+                    <div>
+                        <span class="eyebrow">EXOPLANET DISCOVERY</span>
+                        <h3>New worlds are still being discovered</h3>
+                        <p>
+                            Thousands of planets have been detected beyond our Solar System.
+                            This section is designed to connect with the space-data service
+                            so the newest confirmed discovery can be displayed here.
+                        </p>
+                        <a href="#" class="feature-link">Explore discoveries →</a>
+                    </div>
+                </div>
+            </section>
+
+            <section class="topic-section compact-topic">
+                <div class="section-heading">
+                    <h2>Interesting Planet</h2>
+                    <span></span>
+                </div>
+
+                <div class="feature-card interesting-card">
+                    <div class="feature-planet jupiter-visual large-feature-planet"></div>
+                    <div>
+                        <span class="eyebrow">JUPITER</span>
+                        <h3>A giant with a storm bigger than Earth</h3>
+                        <p>
+                            Jupiter is the largest planet in the Solar System. Its atmosphere
+                            contains enormous storms, including the famous Great Red Spot.
+                        </p>
+                        <a href="#" class="feature-link">View Jupiter →</a>
+                    </div>
+                </div>
+            </section>
+
+        </div>
+    </section>
+</main>
+
+<footer class="site-footer">
+    <div class="footer-main">
+        <div class="footer-brand">
+            <a href="index.html" class="footer-logo-link">
+                <img src="assets/logo.jpeg" alt="Space Explorer Logo" class="footer-logo">
+            </a>
+            <h2>Space Explorer</h2>
+
+            <p class="footer-mission">
+                Our mission is to present space information in a clear and structured
+                way, making it easier for everyone to explore, understand, and discover
+                the universe.
+            </p>
+
+            <p class="footer-mission">
+                Space Explorer aims to provide an engaging platform for people who are
+                curious about space and passionate about learning about planets,
+                missions, astronauts, and the wonders beyond Earth.
+            </p>
+        </div>
+
+        <div class="footer-column">
+            <h3>Explore</h3>
+            <a href="index.html">Home</a>
+            <a href="planets.html">Planet &amp; Space Entity</a>
+            <a href="missions.html">Missions</a>
+            <a href="astronauts.html">Astronaut</a>
+            <a href="announcement.html">Announcement</a>
+        </div>
+
+        <div class="footer-column">
+            <h3>Account</h3>
+            <a href="#">Your Account</a>
+            <a href="#">Bookmarks</a>
+            <a href="#">Saved Images</a>
+        </div>
+
+        <div class="footer-column footer-connect">
+            <h3>Connect</h3>
+            <a href="https://instagram.com/" target="_blank" rel="noopener noreferrer" class="social-link">
+                <span class="social-icon">◎</span>
+                Instagram
+            </a>
+            <a href="mailto:spaceexplorer@example.com" class="social-link">
+                <span class="social-icon">@</span>
+                Email
+            </a>
+            <a href="https://wa.me/919999999999" target="_blank" rel="noopener noreferrer" class="social-link">
+                <span class="social-icon">◉</span>
+                WhatsApp
+            </a>
+        </div>
+    </div>
+
+    <div class="footer-bottom">
+        <p>© 2026 Space Explorer | Explore. Discover. Understand.</p>
+    </div>
+</footer>
+
+<script>
+    const exploreButton = document.getElementById("exploreButton");
+    const exploreDropdown = exploreButton.closest(".dropdown");
+
+    const accountButton = document.getElementById("accountButton");
+    const accountDropdown = accountButton.closest(".dropdown");
+
+    exploreButton.addEventListener("click", event => {
+        event.stopPropagation();
+        exploreDropdown.classList.toggle("active");
+        accountDropdown.classList.remove("active");
+    });
+
+    accountButton.addEventListener("click", event => {
+        event.stopPropagation();
+        accountDropdown.classList.toggle("active");
+        exploreDropdown.classList.remove("active");
+    });
+
+    document.addEventListener("click", () => {
+        exploreDropdown.classList.remove("active");
+        accountDropdown.classList.remove("active");
+    });
+
+    const searchInput = document.getElementById("searchInput");
+
+    searchInput.addEventListener("keydown", event => {
+        if (event.key === "Enter") {
+            const value = searchInput.value.trim();
+
+            if (value) {
+                window.location.href =
+                    "index.html?search=" +
+                    encodeURIComponent(value);
+            }
+        }
+    });
+</script>
+</body>
+</html>

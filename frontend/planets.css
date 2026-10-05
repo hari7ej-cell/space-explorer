@@ -1,0 +1,630 @@
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+html {
+    scroll-behavior: smooth;
+}
+
+body {
+    background: #050505;
+    color: #ffffff;
+    font-family: Arial, Helvetica, sans-serif;
+}
+
+a {
+    color: inherit;
+    text-decoration: none;
+}
+
+/* =========================
+   HEADER
+========================= */
+
+.main-header {
+    height: 94px;
+    background: #050505;
+    border-bottom: 1px solid #17191d;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 28px;
+    position: relative;
+    z-index: 100;
+}
+
+.header-left,
+.header-right {
+    display: flex;
+    align-items: center;
+}
+
+.header-left {
+    gap: 40px;
+}
+
+.header-logo {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+}
+
+.header-logo img {
+    width: 58px;
+    height: 58px;
+    object-fit: contain;
+}
+
+.nav-button,
+.account-button {
+    background: none;
+    border: 0;
+    color: white;
+    cursor: pointer;
+    font-size: 22px;
+    font-weight: 700;
+}
+
+.nav-button {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.chevron {
+    font-size: 20px;
+    line-height: 1;
+}
+
+.search-container {
+    width: 250px;
+    height: 40px;
+    border: 1px solid #4c515a;
+    display: flex;
+    align-items: center;
+    padding: 0 11px;
+}
+
+.search-icon {
+    width: 20px;
+    height: 20px;
+    margin-right: 9px;
+    fill: none;
+    stroke: #9ca3af;
+    stroke-width: 1.7;
+}
+
+.search-container input {
+    width: 100%;
+    border: 0;
+    outline: 0;
+    background: transparent;
+    color: white;
+    font-size: 18px;
+}
+
+.search-container input::placeholder {
+    color: #777e88;
+}
+
+.account-button {
+    text-align: left;
+}
+
+.account-greeting {
+    font-size: 12px;
+    color: #a5a9b0;
+    margin-bottom: 2px;
+}
+
+.account-title {
+    font-size: 16px;
+}
+
+.dropdown {
+    position: relative;
+}
+
+.dropdown-menu {
+    position: absolute;
+    top: calc(100% + 16px);
+    left: 0;
+    min-width: 250px;
+    background: #111214;
+    border: 1px solid #30343b;
+    box-shadow: 0 15px 40px rgba(0,0,0,.5);
+    display: none;
+    padding: 8px 0;
+}
+
+.dropdown.active .dropdown-menu {
+    display: block;
+}
+
+.dropdown-menu a,
+.account-email {
+    display: block;
+    padding: 12px 17px;
+    font-size: 14px;
+}
+
+.dropdown-menu a:hover {
+    background: #1c1f24;
+}
+
+.account-menu {
+    left: auto;
+    right: 0;
+    min-width: 270px;
+}
+
+.account-email {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.account-menu-label {
+    color: #888f9a;
+    font-size: 12px;
+}
+
+.account-email-value {
+    color: white;
+    font-size: 14px;
+}
+
+.menu-divider {
+    height: 1px;
+    background: #292d33;
+    margin: 5px 0;
+}
+
+.menu-icon {
+    display: inline-block;
+    width: 24px;
+    color: #aeb4bd;
+}
+
+/* =========================
+   BREADCRUMB
+========================= */
+
+.breadcrumb {
+    height: 78px;
+    background: #17171b;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 0 48px;
+    color: #9098a5;
+    font-size: 16px;
+}
+
+.breadcrumb a:hover {
+    color: white;
+}
+
+.breadcrumb strong {
+    color: white;
+}
+
+/* =========================
+   3D MODEL
+========================= */
+
+.solar-model-section {
+    height: min(540px, calc(100vh - 172px));
+    min-height: 430px;
+    background: #000;
+    overflow: hidden;
+}
+
+.solar-model-frame {
+    width: 100%;
+    height: 100%;
+    display: block;
+    border: 0;
+}
+
+/* =========================
+   CONTENT
+========================= */
+
+.space-content {
+    background:
+        radial-gradient(circle at 50% 0%, rgba(50, 66, 95, 0.12), transparent 35%),
+        #0d0e10;
+    padding: 62px 0 85px;
+}
+
+.content-inner {
+    width: min(1400px, calc(100% - 70px));
+    margin: auto;
+}
+
+.topic-section {
+    margin-bottom: 78px;
+}
+
+.compact-topic {
+    margin-bottom: 72px;
+}
+
+.section-heading {
+    display: flex;
+    align-items: center;
+    gap: 18px;
+    margin-bottom: 18px;
+}
+
+.section-heading h2 {
+    font-size: clamp(28px, 3vw, 42px);
+    font-weight: 500;
+    white-space: nowrap;
+}
+
+.section-heading span {
+    height: 1px;
+    background: #343840;
+    flex: 1;
+}
+
+.section-intro {
+    color: #aeb4bd;
+    max-width: 900px;
+    font-size: 16px;
+    line-height: 1.7;
+    margin-bottom: 32px;
+}
+
+/* =========================
+   PLANET CARDS
+========================= */
+
+.planet-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 22px;
+}
+
+.planet-card {
+    min-height: 330px;
+    background: linear-gradient(145deg, #181a1d, #0d0e10);
+    border: 1px solid #303238;
+    border-radius: 20px;
+    overflow: hidden;
+    transition: transform .25s ease, border-color .25s ease, background .25s ease;
+}
+
+.planet-card:hover {
+    transform: translateY(-7px);
+    border-color: #68707d;
+    background: linear-gradient(145deg, #1c1f23, #101113);
+}
+
+.planet-visual {
+    height: 205px;
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    background: radial-gradient(circle, #25282d, #090a0b 68%);
+}
+
+.planet-visual::before {
+    content: "";
+    width: 145px;
+    height: 145px;
+    border-radius: 50%;
+    background-size: cover;
+    background-position: center;
+    box-shadow:
+        -18px -10px 30px rgba(255,255,255,.08) inset,
+        22px 20px 35px rgba(0,0,0,.62);
+}
+
+.sun-visual::before {
+    background-image: url("textures/sun.jpg");
+    box-shadow:
+        0 0 35px rgba(255,174,64,.35),
+        -18px -10px 30px rgba(255,255,255,.12) inset,
+        22px 20px 35px rgba(0,0,0,.5);
+}
+
+.mercury-visual::before { background-image: url("textures/mercury.jpg"); }
+.venus-visual::before { background-image: url("textures/venus_surface.jpg"); }
+.earth-visual::before { background-image: url("textures/earth_daymap.jpg"); }
+.mars-visual::before { background-image: url("textures/mars.jpg"); }
+.jupiter-visual::before { background-image: url("textures/jupiter.jpg"); }
+.saturn-visual::before { background-image: url("textures/saturn.jpg"); }
+.uranus-visual::before { background-image: url("textures/uranus.jpg"); }
+.neptune-visual::before { background-image: url("textures/neptune.jpg"); }
+
+.saturn-visual::after {
+    content: "";
+    position: absolute;
+    width: 210px;
+    height: 60px;
+    border: 7px solid rgba(216,195,157,.75);
+    border-radius: 50%;
+    transform: rotate(-18deg);
+    pointer-events: none;
+}
+
+.planet-card-body {
+    padding: 18px 20px 20px;
+}
+
+.planet-card h3 {
+    font-size: 22px;
+    margin-bottom: 8px;
+}
+
+.planet-card p {
+    min-height: 43px;
+    color: #9da4ae;
+    line-height: 1.45;
+    font-size: 14px;
+}
+
+.card-tag {
+    display: inline-block;
+    margin-top: 15px;
+    padding: 5px 10px;
+    border-radius: 20px;
+    background: #202b39;
+    color: #9ec7f5;
+    font-size: 11px;
+}
+
+/* =========================
+   FEATURE SECTIONS
+========================= */
+
+.feature-card {
+    min-height: 270px;
+    border: 1px solid #303238;
+    border-radius: 20px;
+    background: linear-gradient(145deg, #17191c, #0c0d0f);
+    padding: 30px;
+    display: grid;
+    grid-template-columns: 280px 1fr;
+    align-items: center;
+    gap: 38px;
+}
+
+.feature-planet {
+    height: 210px;
+    width: 210px;
+    margin: auto;
+    border-radius: 50%;
+    background-size: cover;
+    background-position: center;
+    box-shadow:
+        -22px -15px 35px rgba(255,255,255,.08) inset,
+        25px 25px 45px rgba(0,0,0,.65);
+}
+
+.exoplanet-visual {
+    background-image:
+        radial-gradient(circle at 35% 30%, rgba(255,255,255,.22), transparent 16%),
+        linear-gradient(145deg, #4a3a67, #18263b 48%, #090d17);
+    box-shadow:
+        0 0 35px rgba(77,128,255,.15),
+        -22px -15px 35px rgba(255,255,255,.08) inset,
+        25px 25px 45px rgba(0,0,0,.65);
+}
+
+.large-feature-planet {
+    width: 225px;
+    height: 225px;
+    background-image: url("textures/jupiter.jpg");
+}
+
+.eyebrow {
+    color: #7ea9d8;
+    font-size: 11px;
+    letter-spacing: .16em;
+    font-weight: 700;
+}
+
+.feature-card h3 {
+    font-size: 31px;
+    margin: 10px 0 13px;
+}
+
+.feature-card p {
+    color: #aeb4bd;
+    max-width: 760px;
+    line-height: 1.65;
+}
+
+.feature-link {
+    display: inline-block;
+    margin-top: 18px;
+    color: #8eb9eb;
+    font-weight: 600;
+}
+
+.feature-link:hover {
+    color: white;
+}
+
+/* =========================
+   FOOTER
+========================= */
+
+.site-footer {
+    background: #08090a;
+    border-top: 1px solid #202329;
+}
+
+.footer-main {
+    width: min(1400px, calc(100% - 70px));
+    margin: auto;
+    padding: 65px 0 55px;
+    display: grid;
+    grid-template-columns: 2.2fr 1fr 1fr 1fr;
+    gap: 55px;
+}
+
+.footer-logo {
+    width: 58px;
+    height: 58px;
+    object-fit: contain;
+}
+
+.footer-brand h2 {
+    margin: 14px 0 14px;
+    font-size: 25px;
+}
+
+.footer-mission {
+    max-width: 460px;
+    color: #9299a4;
+    font-size: 14px;
+    line-height: 1.65;
+    margin-bottom: 12px;
+}
+
+.footer-column {
+    display: flex;
+    flex-direction: column;
+    gap: 13px;
+}
+
+.footer-column h3 {
+    margin-bottom: 8px;
+    font-size: 16px;
+}
+
+.footer-column a {
+    color: #939aa4;
+    font-size: 14px;
+}
+
+.footer-column a:hover {
+    color: white;
+}
+
+.social-link {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+}
+
+.social-icon {
+    width: 20px;
+    color: #aeb4bd;
+}
+
+.footer-bottom {
+    border-top: 1px solid #202329;
+    padding: 20px;
+    text-align: center;
+    color: #737983;
+    font-size: 13px;
+}
+
+/* =========================
+   RESPONSIVE
+========================= */
+
+@media (max-width: 950px) {
+    .header-left {
+        gap: 18px;
+    }
+
+    .search-container {
+        width: 190px;
+    }
+
+    .planet-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .footer-main {
+        grid-template-columns: 1.5fr 1fr 1fr;
+    }
+
+    .footer-connect {
+        grid-column: 2 / 4;
+    }
+}
+
+@media (max-width: 700px) {
+    .main-header {
+        height: 76px;
+        padding: 0 15px;
+    }
+
+    .header-logo img {
+        width: 45px;
+        height: 45px;
+    }
+
+    .account-button {
+        display: none;
+    }
+
+    .header-left {
+        gap: 14px;
+    }
+
+    .nav-button {
+        font-size: 16px;
+    }
+
+    .search-container {
+        width: 150px;
+        height: 36px;
+    }
+
+    .breadcrumb {
+        height: 60px;
+        padding: 0 20px;
+        font-size: 13px;
+    }
+
+    .solar-model-section {
+        min-height: 360px;
+        height: 55vw;
+    }
+
+    .content-inner {
+        width: min(100% - 30px, 1400px);
+    }
+
+    .planet-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .feature-card {
+        grid-template-columns: 1fr;
+        text-align: center;
+    }
+
+    .feature-card p {
+        margin: auto;
+    }
+
+    .footer-main {
+        grid-template-columns: 1fr 1fr;
+        gap: 35px;
+        width: min(100% - 30px, 1400px);
+    }
+
+    .footer-brand {
+        grid-column: 1 / 3;
+    }
+
+    .footer-connect {
+        grid-column: auto;
+    }
+}
