@@ -1,230 +1,67 @@
 const cheerio = require("cheerio");
 
-const TOPIC_NAMES = [
-    "Overview",
-    "Physical Characteristics",
-    "Composition",
-    "Atmosphere",
-    "Surface and Structure",
-    "Orbit and Rotation",
-    "Moons and Satellites",
-    "Discovery and History",
-    "Exploration and Scientific Importance"
+const topicDefinitions = [
+    { id: "overview", title: "Overview", shortTitle: "Overview", keys: ["overview"] },
+    { id: "physical", title: "Physical Characteristics", shortTitle: "Physical", keys: ["physical characteristics", "physical properties"] },
+    { id: "composition", title: "Composition", shortTitle: "Composition", keys: ["composition", "internal structure"] },
+    { id: "atmosphere", title: "Atmosphere", shortTitle: "Atmosphere", keys: ["atmosphere"] },
+    { id: "surface", title: "Surface & Structure", shortTitle: "Surface", keys: ["surface", "geology", "surface features"] },
+    { id: "orbit", title: "Orbit & Rotation", shortTitle: "Orbit", keys: ["orbit", "rotation", "orbital characteristics"] },
+    { id: "moons", title: "Moons & Satellites", shortTitle: "Moons", keys: ["moons", "satellites"] },
+    { id: "discovery", title: "Discovery & History", shortTitle: "Discovery", keys: ["discovery", "history", "observation"] },
+    { id: "exploration", title: "Exploration & Scientific Importance", shortTitle: "Exploration", keys: ["exploration", "scientific importance", "research"] }
 ];
 
-function cleanText(text) {
-
-    return text
-        .replace(/\s+/g, " ")
-        .trim();
+function cleanText(value) {
+    return value.replace(/\s+/g, " ").trim();
 }
 
-function getSections(html) {
-
-    const $ = cheerio.load(html);
-
-    const sections = [];
-
-    $("h2, h3").each((index, heading) => {
-
-        const title =
-            $(heading)
-                .text()
-                .replace("[edit]", "")
-                .trim();
-
-        if (
-            title === "References" ||
-            title === "External links" ||
-            title === "See also" ||
-            title === "Notes"
-        ) {
-            return;
-        }
-
-        let information = "";
-
-        let current =
-            $(heading).next();
-
-        while (
-            current.length &&
-            !["h2", "h3"].includes(
-                current[0].name
-            )
-        ) {
-
-            const text =
-                current.text().trim();
-
-            if (text) {
-                information += " " + text;
-            }
-
-            current =
-                current.next();
-        }
-
-        if (information.trim()) {
-
-            sections.push({
-                title: title,
-                information:
-                    cleanText(information)
-            });
-        }
-    });
-
-    return sections;
+function normalizeHeading(value) {
+    return cleanText(value).toLowerCase().replace(/\[[^\]]*\]/g, "");
 }
 
-function findMatchingSection(
-    sections,
-    keywords
-) {
+function extractSection($, heading) {
+    const blocks = [];
+    let node = heading.next();
 
-    for (const section of sections) {
-
-        const title =
-            section.title.toLowerCase();
-
-        for (const keyword of keywords) {
-
-            if (title.includes(keyword)) {
-                return section.information;
-            }
+    while (node.length) {
+        const tag = (node[0].name || "").toLowerCase();
+        if (tag === "h2" || tag === "h3") break;
+        if (["p", "ul", "ol"].includes(tag)) {
+            const text = cleanText(node.text());
+            if (text) blocks.push(text);
         }
+        node = node.next();
     }
 
-    return "";
+    return blocks.join("\n\n");
 }
 
 function createTopics(html) {
+    const $ = cheerio.load(html || "");
+    const headings = $("h2, h3").toArray();
+    const topics = [];
 
-    const sections =
-        getSections(html);
-
-    return [
-
-        {
-            topic: "Overview",
-            information:
-                findMatchingSection(
-                    sections,
-                    [
-                        "overview",
-                        "introduction"
-                    ]
-                )
-        },
-
-        {
-            topic:
-                "Physical Characteristics",
-            information:
-                findMatchingSection(
-                    sections,
-                    [
-                        "physical",
-                        "properties"
-                    ]
-                )
-        },
-
-        {
-            topic: "Composition",
-            information:
-                findMatchingSection(
-                    sections,
-                    [
-                        "composition",
-                        "interior",
-                        "structure"
-                    ]
-                )
-        },
-
-        {
-            topic: "Atmosphere",
-            information:
-                findMatchingSection(
-                    sections,
-                    [
-                        "atmosphere"
-                    ]
-                )
-        },
-
-        {
-            topic:
-                "Surface and Structure",
-            information:
-                findMatchingSection(
-                    sections,
-                    [
-                        "surface",
-                        "geology"
-                    ]
-                )
-        },
-
-        {
-            topic:
-                "Orbit and Rotation",
-            information:
-                findMatchingSection(
-                    sections,
-                    [
-                        "orbit",
-                        "rotation"
-                    ]
-                )
-        },
-
-        {
-            topic:
-                "Moons and Satellites",
-            information:
-                findMatchingSection(
-                    sections,
-                    [
-                        "moon",
-                        "satellite"
-                    ]
-                )
-        },
-
-        {
-            topic:
-                "Discovery and History",
-            information:
-                findMatchingSection(
-                    sections,
-                    [
-                        "history",
-                        "discovery",
-                        "observation"
-                    ]
-                )
-        },
-
-        {
-            topic:
-                "Exploration and Scientific Importance",
-            information:
-                findMatchingSection(
-                    sections,
-                    [
-                        "exploration",
-                        "scientific",
-                        "research"
-                    ]
-                )
+    for (const definition of topicDefinitions) {
+        let content = "";
+        for (const heading of headings) {
+            const headingText = normalizeHeading($(heading).text());
+            if (definition.keys.some(key => headingText.includes(key))) {
+                content = extractSection($, $(heading));
+                if (content) break;
+            }
         }
+        topics.push({
+            id: definition.id,
+            title: definition.title,
+            shortTitle: definition.shortTitle,
+            content: content || "Information is not available in the matching Wikipedia section."
+        });
+    }
 
-    ];
+    const lead = $("p").first().text();
+    if (lead) topics[0].content = cleanText(lead) + "\n\n" + topics[0].content;
+    return topics;
 }
 
-module.exports = {
-    createTopics
-};
+module.exports = { createTopics };

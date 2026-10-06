@@ -1,462 +1,195 @@
 #include <iostream>
 #include <string>
 #include <vector>
+#include "simple_json.hpp"
 
 using namespace std;
-
-
-// ======================================================
-// TopicInfo
-// ======================================================
+using json = simplejson::json;
 
 class TopicInfo {
-
 private:
-
-    string topic;
-    string information;
-
+    string id, title, shortTitle, content;
 public:
-
-    // Constructor
-    TopicInfo(
-        string topic,
-        string information
-    ) {
-        this->topic = topic;
-        this->information = information;
+    TopicInfo() {}
+    TopicInfo(const string& id, const string& title, const string& shortTitle, const string& content) {
+        this->id = id; this->title = title; this->shortTitle = shortTitle; this->content = content;
     }
-
-    string getTopic() const {
-        return topic;
-    }
-
-    string getInformation() const {
-        return information;
+    string getId() const { return id; }
+    string getTitle() const { return title; }
+    string getShortTitle() const { return shortTitle; }
+    string getContent() const { return content; }
+    void setContent(const string& content) { this->content = content; }
+    json toJSON() const {
+        return json{{"id", id}, {"title", title}, {"shortTitle", shortTitle}, {"content", content}};
     }
 };
-
-
-// ======================================================
-// SpaceImage
-// ======================================================
 
 class SpaceImage {
-
 private:
-
-    string imageId;
-    string imageTitle;
-    string mediaUrl;
-    string description;
-    string category;
-    string source;
-    bool video;
-
+    string topicId, url, caption, source, sourceUrl;
 public:
-
-    // Constructor
-    SpaceImage(
-        string id,
-        string title,
-        string url,
-        string description,
-        string category,
-        string source,
-        bool video
-    ) {
-
-        this->imageId = id;
-        this->imageTitle = title;
-        this->mediaUrl = url;
-        this->description = description;
-        this->category = category;
-        this->source = source;
-        this->video = video;
+    SpaceImage() {}
+    SpaceImage(const string& topicId, const string& url, const string& caption,
+               const string& source, const string& sourceUrl) {
+        this->topicId = topicId; this->url = url; this->caption = caption;
+        this->source = source; this->sourceUrl = sourceUrl;
     }
-
-    string getId() const {
-        return imageId;
+    string getTopicId() const { return topicId; }
+    string getUrl() const { return url; }
+    string getCaption() const { return caption; }
+    string getSource() const { return source; }
+    string getSourceUrl() const { return sourceUrl; }
+    json toJSON() const {
+        return json{
+            {"topicId", topicId}, {"url", url}, {"caption", caption},
+            {"source", {{"name", source}, {"url", sourceUrl}}}
+        };
     }
-
-    string getTitle() const {
-        return imageTitle;
-    }
-
-    string getMediaUrl() const {
-        return mediaUrl;
-    }
-
-    string getDescription() const {
-        return description;
-    }
-
-    string getCategory() const {
-        return category;
-    }
-
-    string getSource() const {
-        return source;
-    }
-
-    bool isVideo() const {
-        return video;
-    }
-
-
-    // Operator Overloading
-    friend bool operator==(
-        const SpaceImage& image1,
-        const SpaceImage& image2
-    );
 };
-
-
-// Operator Overloading Implementation
-bool operator==(
-    const SpaceImage& image1,
-    const SpaceImage& image2
-) {
-
-    return image1.imageId ==
-           image2.imageId;
-}
-
-
-// ======================================================
-// CelestialDetails
-// ======================================================
 
 class CelestialDetails {
-
 private:
-
-    string atmosphere;
-    bool hasRings;
-    string composition;
-    string summary;
-
+    double mass, radius, distanceFromSun, gravity, temperature;
+    string atmosphere, composition;
+    bool rings;
+    double rotationPeriod, orbitalPeriod;
+    vector<string> moons;
 public:
+    CelestialDetails()
+        : mass(0), radius(0), distanceFromSun(0), gravity(0), temperature(0),
+          rings(false), rotationPeriod(0), orbitalPeriod(0) {}
 
-    // Constructor 1
-    CelestialDetails(
-        string atmosphere,
-        bool rings,
-        string composition,
-        string summary
-    ) {
-
-        this->atmosphere = atmosphere;
-        this->hasRings = rings;
-        this->composition = composition;
-        this->summary = summary;
+    CelestialDetails(double mass, double radius, double distanceFromSun, double gravity,
+                     double temperature, const string& atmosphere, const string& composition,
+                     bool rings, double rotationPeriod, double orbitalPeriod,
+                     const vector<string>& moons) {
+        this->mass = mass; this->radius = radius; this->distanceFromSun = distanceFromSun;
+        this->gravity = gravity; this->temperature = temperature;
+        this->atmosphere = atmosphere; this->composition = composition; this->rings = rings;
+        this->rotationPeriod = rotationPeriod; this->orbitalPeriod = orbitalPeriod; this->moons = moons;
     }
-
-
-    // Constructor 2
-    // Constructor Overloading
-    CelestialDetails(
-        bool rings,
-        string composition,
-        string summary
-    ) {
-
-        this->atmosphere =
-            "No atmosphere details available.";
-
-        this->hasRings = rings;
-        this->composition = composition;
-        this->summary = summary;
-    }
-
-
-    string getAtmosphere() const {
-        return atmosphere;
-    }
-
-    bool hasRingSystem() const {
-        return hasRings;
-    }
-
-    string getComposition() const {
-        return composition;
-    }
-
-    string getSummary() const {
-        return summary;
+    double getMass() const { return mass; }
+    double getRadius() const { return radius; }
+    double getDistanceFromSun() const { return distanceFromSun; }
+    double getGravity() const { return gravity; }
+    double getTemperature() const { return temperature; }
+    string getAtmosphere() const { return atmosphere; }
+    string getComposition() const { return composition; }
+    bool hasRings() const { return rings; }
+    double getRotationPeriod() const { return rotationPeriod; }
+    double getOrbitalPeriod() const { return orbitalPeriod; }
+    vector<string> getMoons() const { return moons; }
+    void addMoon(const string& moon) { moons.push_back(moon); }
+    json toJSON() const {
+        return json{
+            {"mass", mass}, {"radius", radius}, {"distanceFromSun", distanceFromSun},
+            {"gravity", gravity}, {"temperature", temperature}, {"atmosphere", atmosphere},
+            {"composition", composition}, {"rings", rings}, {"rotationPeriod", rotationPeriod},
+            {"orbitalPeriod", orbitalPeriod}, {"moons", moons}
+        };
     }
 };
-
-
-// ======================================================
-// Abstract Base Class: SpaceEntity
-// ======================================================
 
 class SpaceEntity {
-
 protected:
-
-    string id;
-    string name;
-
-    // Aggregation
-    vector<SpaceImage> gallery;
-
-    // Collection of topics
-    vector<TopicInfo> topics;
-
+    string type, summary;
 public:
-
-    SpaceEntity(
-        string id,
-        string name
-    ) {
-
-        this->id = id;
-        this->name = name;
-    }
-
-
-    // Virtual Destructor
-    virtual ~SpaceEntity() = default;
-
-
-    string getId() const {
-        return id;
-    }
-
-
-    string getName() const {
-        return name;
-    }
-
-
-    void addImage(
-        const SpaceImage& image
-    ) {
-
-        gallery.push_back(image);
-    }
-
-
-    void addTopic(
-        const TopicInfo& topic
-    ) {
-
-        topics.push_back(topic);
-    }
-
-
-    int getImageCount() const {
-
-        return static_cast<int>(
-            gallery.size()
-        );
-    }
-
-
-    const vector<TopicInfo>&
-    getTopics() const {
-
-        return topics;
-    }
-
-
-    // Pure Virtual Function
-    // Makes this class ABSTRACT
-    virtual string getSummary() const = 0;
+    SpaceEntity() {}
+    SpaceEntity(const string& type, const string& summary) { this->type = type; this->summary = summary; }
+    string getType() const { return type; }
+    string getSummary() const { return summary; }
+    void setType(const string& type) { this->type = type; }
+    void setSummary(const string& summary) { this->summary = summary; }
+    virtual void display() const = 0;
+    virtual ~SpaceEntity() {}
 };
-
-
-// ======================================================
-// Planet
-// ======================================================
 
 class Planet : public SpaceEntity {
-
 private:
-
-    double massKg;
-    double distanceFromSunKm;
-
-    // Composition
     CelestialDetails details;
-
-    string summary;
-
+    vector<TopicInfo> topics;
+    vector<SpaceImage> images;
 public:
-
-    // Constructor 1
-    Planet(
-        string id,
-        string name,
-        double mass,
-        double distance,
-        CelestialDetails details,
-        string summary
-    )
-        : SpaceEntity(id, name),
-          massKg(mass),
-          distanceFromSunKm(distance),
-          details(details),
-          summary(summary) {
+    Planet() : SpaceEntity() {}
+    Planet(const string& type, const string& summary, const CelestialDetails& details)
+        : SpaceEntity(type, summary) { this->details = details; }
+    Planet(const string& type, const string& summary) : SpaceEntity(type, summary) {}
+    void addTopic(const TopicInfo& topic) { topics.push_back(topic); }
+    void addImage(const SpaceImage& image) { images.push_back(image); }
+    void setDetails(const CelestialDetails& details) { this->details = details; }
+    CelestialDetails getDetails() const { return details; }
+    vector<TopicInfo> getTopics() const { return topics; }
+    vector<SpaceImage> getImages() const { return images; }
+    void display() const override {
+        cout << "Planet\nType: " << type << "\nSummary: " << summary << endl;
     }
-
-
-    // Constructor 2
-    // Constructor Overloading
-    Planet(
-        string id,
-        string name
-    )
-        : SpaceEntity(id, name),
-          massKg(0),
-          distanceFromSunKm(0),
-          details(
-              false,
-              "Unknown",
-              "Information not loaded."
-          ),
-          summary(
-              "Planet information is being loaded."
-          ) {
+    friend ostream& operator<<(ostream& output, const Planet& planet) {
+        output << "Type: " << planet.type << "\nSummary: " << planet.summary;
+        return output;
     }
-
-
-    double getMassKg() const {
-        return massKg;
+    bool operator==(const Planet& other) const {
+        return type == other.type && summary == other.summary;
     }
-
-
-    double getDistanceFromSunKm() const {
-        return distanceFromSunKm;
-    }
-
-
-    CelestialDetails getDetails() const {
-        return details;
-    }
-
-
-    // Function Overriding
-    string getSummary() const override {
-
-        return "Planet: " +
-               name +
-               "\n" +
-               summary;
+    json toJSON() const {
+        json topicArray = json::array();
+        for (const auto& topic : topics) topicArray.push_back(topic.toJSON());
+        json imageArray = json::array();
+        for (const auto& image : images) imageArray.push_back(image.toJSON());
+        return json{{"type", type}, {"summary", summary}, {"details", details.toJSON()},
+                    {"topics", topicArray}, {"images", imageArray}};
     }
 };
 
+Planet createPlanetFromJSON(const json& data) {
+    string type = data.value("type", std::string("Planet"));
+    string summary = data.value("summary", std::string(""));
+    json d = data.value("details", json::object());
 
-// ======================================================
-// Main
-// ======================================================
-
-int main(
-    int argc,
-    char* argv[]
-) {
-
-    // ------------------------------------------
-    // Planet name from Node.js
-    // ------------------------------------------
-
-    string planetName = "Earth";
-
-    if (argc > 1) {
-
-        planetName = argv[1];
+    vector<string> moons;
+    if (d.contains("moons") && d["moons"].is_array()) {
+        for (const auto& moon : d["moons"]) if (moon.is_string()) moons.push_back(moon.get<string>());
     }
 
-
-    // ------------------------------------------
-    // CelestialDetails
-    // ------------------------------------------
-
     CelestialDetails details(
-        "Nitrogen and Oxygen",
-        false,
-        "Rock and metal",
-        "Terrestrial planet"
+        d.value("mass", 0.0), d.value("radius", 0.0), d.value("distanceFromSun", 0.0),
+        d.value("gravity", 0.0), d.value("temperature", 0.0),
+        d.value("atmosphere", std::string("")), d.value("composition", std::string("")), d.value("rings", false),
+        d.value("rotationPeriod", 0.0), d.value("orbitalPeriod", 0.0), moons
     );
 
+    Planet planet(type, summary, details);
 
-    // ------------------------------------------
-    // Planet object
-    // ------------------------------------------
+    if (data.contains("topics") && data["topics"].is_array()) {
+        for (const auto& topic : data["topics"]) {
+            planet.addTopic(TopicInfo(
+                topic.value("id", std::string("")), topic.value("title", std::string("")),
+                topic.value("shortTitle", std::string("")), topic.value("content", std::string(""))
+            ));
+        }
+    }
 
-    Planet planet(
-        "P001",
-        planetName,
-        5.972e24,
-        149.6e6,
-        details,
-        "Planet information obtained from Wikipedia."
-    );
+    if (data.contains("images") && data["images"].is_array()) {
+        for (const auto& image : data["images"]) {
+            json source = image.value("source", json::object());
+            planet.addImage(SpaceImage(
+                image.value("topicId", std::string("")), image.value("url", std::string("")), image.value("caption", std::string("")),
+                source.value("name", std::string("NASA")), source.value("url", std::string(""))
+            ));
+        }
+    }
+    return planet;
+}
 
-
-    // ------------------------------------------
-    // Add Topics
-    // ------------------------------------------
-
-    planet.addTopic(
-        TopicInfo(
-            "Overview",
-            "Planetary overview."
-        )
-    );
-
-
-    planet.addTopic(
-        TopicInfo(
-            "Physical Characteristics",
-            "Physical characteristics."
-        )
-    );
-
-
-    // ------------------------------------------
-    // Polymorphism
-    // ------------------------------------------
-
-    SpaceEntity* entity =
-        &planet;
-
-
-    // ------------------------------------------
-    // Output
-    // ------------------------------------------
-
-    cout << "PLANET\n";
-    cout << "------\n";
-
-    cout << "Name: "
-         << entity->getName()
-         << "\n";
-
-    cout << "Summary: "
-         << entity->getSummary()
-         << "\n";
-
-    cout << "Mass: "
-         << planet.getMassKg()
-         << " kg\n";
-
-    cout << "Distance from Sun: "
-         << planet.getDistanceFromSunKm()
-         << " km\n";
-
-    cout << "Atmosphere: "
-         << planet
-                .getDetails()
-                .getAtmosphere()
-         << "\n";
-
-    cout << "Topics: "
-         << planet.getTopics().size()
-         << "\n";
-
-
-    return 0;
+int main() {
+    try {
+        string input, line;
+        while (getline(cin, line)) input += line;
+        if (input.empty()) { cerr << "No JSON input received." << endl; return 1; }
+        Planet planet = createPlanetFromJSON(json::parse(input));
+        cout << planet.toJSON().dump();
+        return 0;
+    } catch (const exception& error) {
+        cerr << "C++ ERROR: " << error.what() << endl;
+        return 1;
+    }
 }
