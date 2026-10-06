@@ -115,25 +115,6 @@
                                 <span class="card-tag">Star</span>
                             </div>
                         </a>
-
-                        <a class="planet-card" href="planet-detail.html?entity=Mercury">
-                            <div class="planet-visual mercury-visual"></div>
-                            <div class="planet-card-body">
-                                <h3>Mercury</h3>
-                                <p>The smallest planet and the closest to the Sun.</p>
-                                <span class="card-tag">Planet</span>
-                            </div>
-                        </a>
-
-                        <a class="planet-card" href="planet-detail.html?entity=Venus">
-                            <div class="planet-visual venus-visual"></div>
-                            <div class="planet-card-body">
-                                <h3>Venus</h3>
-                                <p>A hot terrestrial planet with a thick atmosphere.</p>
-                                <span class="card-tag">Planet</span>
-                            </div>
-                        </a>
-
                         <a class="planet-card" href="planet-detail.html?entity=Earth">
                             <div class="planet-visual earth-visual"></div>
                             <div class="planet-card-body">
@@ -152,7 +133,26 @@
                             </div>
                         </a>
 
-                        <a class="planet-card" href="planet-detail.html?entity=Jupiter">
+                        <a class="planet-card extra-planet" href="planet-detail.html?entity=Mercury">
+                            <div class="planet-visual mercury-visual"></div>
+                            <div class="planet-card-body">
+                                <h3>Mercury</h3>
+                                <p>The smallest planet and the closest to the Sun.</p>
+                                <span class="card-tag">Planet</span>
+                            </div>
+                        </a>
+
+                        <a class="planet-card extra-planet" href="planet-detail.html?entity=Venus">
+                            <div class="planet-visual venus-visual"></div>
+                            <div class="planet-card-body">
+                                <h3>Venus</h3>
+                                <p>A hot terrestrial planet with a thick atmosphere.</p>
+                                <span class="card-tag">Planet</span>
+                            </div>
+                        </a>
+
+
+                        <a class="planet-card extra-planet" href="planet-detail.html?entity=Jupiter">
                             <div class="planet-visual jupiter-visual"></div>
                             <div class="planet-card-body">
                                 <h3>Jupiter</h3>
@@ -161,7 +161,7 @@
                             </div>
                         </a>
 
-                        <a class="planet-card" href="planet-detail.html?entity=Saturn">
+                        <a class="planet-card extra-planet" href="planet-detail.html?entity=Saturn">
                             <div class="planet-visual saturn-visual"></div>
                             <div class="planet-card-body">
                                 <h3>Saturn</h3>
@@ -170,7 +170,7 @@
                             </div>
                         </a>
 
-                        <a class="planet-card" href="planet-detail.html?entity=Uranus">
+                        <a class="planet-card extra-planet" href="planet-detail.html?entity=Uranus">
                             <div class="planet-visual uranus-visual"></div>
                             <div class="planet-card-body">
                                 <h3>Uranus</h3>
@@ -179,7 +179,7 @@
                             </div>
                         </a>
 
-                        <a class="planet-card" href="planet-detail.html?entity=Neptune">
+                        <a class="planet-card extra-planet" href="planet-detail.html?entity=Neptune">
                             <div class="planet-visual neptune-visual"></div>
                             <div class="planet-card-body">
                                 <h3>Neptune</h3>
@@ -187,6 +187,12 @@
                                 <span class="card-tag">Planet</span>
                             </div>
                         </a>
+                    </div>
+                    <div class="learn-more-container">
+                        <button class="learn-more-btn" id="learnMoreBtn">
+                            Show More
+                            <span>↓</span>
+                        </button>
                     </div>
                 </section>
 
@@ -329,6 +335,25 @@
                         "index.html?search=" +
                         encodeURIComponent(value);
                 }
+            }
+        });
+        const learnMoreBtn = document.getElementById("learnMoreBtn");
+        const extraPlanets = document.querySelectorAll(".extra-planet");
+
+        let expanded = false;
+
+        learnMoreBtn.addEventListener("click", () => {
+
+            expanded = !expanded;
+
+            extraPlanets.forEach(planet => {
+                planet.classList.toggle("show", expanded);
+            });
+
+            if (expanded) {
+                learnMoreBtn.innerHTML = 'Show Less <span>↑</span>';
+            } else {
+                learnMoreBtn.innerHTML = 'Show More <span>↓</span>';
             }
         });
     </script>

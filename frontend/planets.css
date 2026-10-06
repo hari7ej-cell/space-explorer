@@ -702,3 +702,53 @@ a {
         grid-column: auto;
     }
 }
+
+/* =========================
+   SHOW MORE PLANETS
+========================= */
+
+.extra-planet {
+    display: none;
+}
+
+.extra-planet.show {
+    display: block;
+    animation: planetAppear 0.45s ease;
+}
+
+@keyframes planetAppear {
+    from {
+        opacity: 0;
+        transform: translateY(15px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.learn-more-container {
+    text-align: center;
+    margin-top: 35px;
+}
+
+.learn-more-btn {
+    padding: 12px 24px;
+    border: 1px solid rgba(255, 255, 255, 0.25);
+    border-radius: 25px;
+    background: rgba(255, 255, 255, 0.06);
+    color: white;
+    font-size: 14px;
+    cursor: pointer;
+    transition: 0.3s ease;
+}
+
+.learn-more-btn:hover {
+    background: rgba(255, 255, 255, 0.12);
+    transform: translateY(-2px);
+}
+
+.learn-more-btn span {
+    margin-left: 8px;
+}
