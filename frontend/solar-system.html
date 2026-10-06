@@ -124,6 +124,16 @@
 
             z-index: 10;
         }
+        .unable{
+            position: absolute;
+            top: 0;
+            width: 12.5%;
+            height: 100vh;
+            background-color: rgba(0, 0, 0, 0);
+            z-index: 10;
+        }
+        .left{left:0;}
+        .right{right:0;}
     </style>
 
 
@@ -170,6 +180,8 @@
 
     </div>
 
+    <div class="unable left"></div>
+    <div class="unable right"></div>
 
 
     <script type="module">
@@ -608,7 +620,6 @@
 
         sun.name =
             "Sun";
-
 
         scene.add(
             sun

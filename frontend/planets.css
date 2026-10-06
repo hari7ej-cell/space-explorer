@@ -196,7 +196,7 @@ a {
 
 .breadcrumb {
     height: 78px;
-    background: #17171b;
+    background: #010005;
     display: flex;
     align-items: center;
     gap: 14px;
@@ -218,6 +218,7 @@ a {
 ========================= */
 
 .solar-model-section {
+    position: relative;
     height: min(540px, calc(100vh - 172px));
     min-height: 430px;
     background: #000;
@@ -231,6 +232,79 @@ a {
     border: 0;
 }
 
+
+/* =========================
+   3D MODEL OVERLAY
+========================= */
+
+.solar-model-overlay {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+
+    height: 350px;
+
+    display: flex;
+    align-items: flex-end;
+
+    padding: 0 70px 42px;
+
+    background: linear-gradient(
+        to bottom,
+        rgba(1, 0, 5, 0) 0%,
+        rgba(1, 0, 5, 0.08) 15%,
+        rgba(1, 0, 5, 0.22) 30%,
+        rgba(1, 0, 5, 0.45) 48%,
+        rgba(1, 0, 5, 0.70) 65%,
+        rgba(1, 0, 5, 0.88) 82%,
+        #010005 100%
+    );
+    z-index: 5;
+
+    transition:
+        opacity 0.35s ease,
+        transform 0.35s ease;
+}
+
+
+/* Text inside overlay */
+
+.solar-overlay-content {
+    width: min(1400px, 100%);
+    margin: 0 auto;
+}
+
+.solar-overlay-content h2 {
+    margin: 0 0 12px;
+
+    font-size: clamp(30px, 3.2vw, 46px);
+    font-weight: 500;
+    letter-spacing: -1px;
+
+    color: #ffffff;
+}
+
+.solar-overlay-content p {
+    max-width: 850px;
+
+    margin: 0;
+
+    color: #aeb4bd;
+
+    font-size: 15px;
+    line-height: 1.65;
+}
+
+
+/* Hover over overlay:
+   remove it completely */
+
+.solar-model-section:hover .solar-model-overlay {
+    opacity: 0;
+    transform: translateY(25px);
+    pointer-events: none;
+}
 /* =========================
    CONTENT
 ========================= */
@@ -238,7 +312,7 @@ a {
 .space-content {
     background:
         radial-gradient(circle at 50% 0%, rgba(50, 66, 95, 0.12), transparent 35%),
-        #0d0e10;
+        #010005;
     padding: 62px 0 85px;
 }
 
