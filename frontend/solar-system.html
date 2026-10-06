@@ -158,20 +158,6 @@
 
     <div id="tooltip"></div>
 
-
-    <div id="info">
-
-        <h2 id="selected-name">
-            Solar System
-        </h2>
-
-        <p id="selected-info">
-            Click the Sun or a planet
-        </p>
-
-    </div>
-
-
     <div id="hint">
 
         Drag = Rotate
@@ -1315,352 +1301,352 @@
 
 
 
-/* =====================================================
-   SATURN RINGS
-===================================================== */
+                /* =====================================================
+                   SATURN RINGS
+                ===================================================== */
 
-if (data.rings) {
+                if (data.rings) {
 
-    /*
-        Your file:
+                    /*
+                        Your file:
+                
+                        textures/saturn_ring_alpha.png
+                
+                        is 1024 x 63.
+                
+                        It is a horizontal alpha strip.
+                        Therefore we use it ONLY to determine
+                        which radial parts of the ring are visible.
+                    */
 
-        textures/saturn_ring_alpha.png
+                    const ringTexture =
+                        loadTexture(
+                            "textures/saturn_ring_alpha.png"
+                        );
 
-        is 1024 x 63.
 
-        It is a horizontal alpha strip.
-        Therefore we use it ONLY to determine
-        which radial parts of the ring are visible.
-    */
+                    /* =================================================
+                       RING GEOMETRY
+                    ================================================= */
 
-    const ringTexture =
-        loadTexture(
-            "textures/saturn_ring_alpha.png"
-        );
+                    const innerRadius =
+                        data.radius * 1.25;
 
+                    const outerRadius =
+                        data.radius * 2.45;
 
-    /* =================================================
-       RING GEOMETRY
-    ================================================= */
+                    const radialSegments = 180;
 
-    const innerRadius =
-        data.radius * 1.25;
+                    const angularSegments = 256;
 
-    const outerRadius =
-        data.radius * 2.45;
 
-    const radialSegments = 180;
+                    const positions = [];
 
-    const angularSegments = 256;
+                    const normals = [];
 
+                    const uvs = [];
 
-    const positions = [];
+                    const indices = [];
 
-    const normals = [];
 
-    const uvs = [];
+                    /*
+                        Create concentric circular ring vertices.
+                
+                        Each radial position gets a U coordinate
+                        from 0 -> 1.
+                
+                        This is the important fix.
+                    */
 
-    const indices = [];
+                    for (
+                        let r = 0;
+                        r <= radialSegments;
+                        r++
+                    ) {
 
+                        const radialProgress =
+                            r / radialSegments;
 
-    /*
-        Create concentric circular ring vertices.
 
-        Each radial position gets a U coordinate
-        from 0 -> 1.
+                        const radius =
+                            innerRadius +
+                            (outerRadius - innerRadius) *
+                            radialProgress;
 
-        This is the important fix.
-    */
 
-    for (
-        let r = 0;
-        r <= radialSegments;
-        r++
-    ) {
+                        /*
+                            U tells the texture which part of
+                            the horizontal 1024px strip to use.
+                        */
 
-        const radialProgress =
-            r / radialSegments;
+                        const u =
+                            radialProgress;
 
 
-        const radius =
-            innerRadius +
-            (outerRadius - innerRadius) *
-            radialProgress;
+                        for (
+                            let i = 0;
+                            i <= angularSegments;
+                            i++
+                        ) {
 
+                            const angle =
+                                (i / angularSegments) *
+                                Math.PI *
+                                2;
 
-        /*
-            U tells the texture which part of
-            the horizontal 1024px strip to use.
-        */
 
-        const u =
-            radialProgress;
+                            const x =
+                                Math.cos(angle) *
+                                radius;
 
 
-        for (
-            let i = 0;
-            i <= angularSegments;
-            i++
-        ) {
+                            const z =
+                                Math.sin(angle) *
+                                radius;
 
-            const angle =
-                (i / angularSegments) *
-                Math.PI *
-                2;
 
+                            /*
+                                Ring initially lies in XY plane.
+                                We rotate it afterward.
+                            */
 
-            const x =
-                Math.cos(angle) *
-                radius;
+                            positions.push(
+                                x,
+                                0,
+                                z
+                            );
 
 
-            const z =
-                Math.sin(angle) *
-                radius;
+                            normals.push(
+                                0,
+                                1,
+                                0
+                            );
 
 
-            /*
-                Ring initially lies in XY plane.
-                We rotate it afterward.
-            */
+                            /*
+                                IMPORTANT:
+                
+                                U = radial position
+                                V = center of the texture
+                
+                                Since the PNG is only 63 pixels high,
+                                we sample its middle.
+                            */
 
-            positions.push(
-                x,
-                0,
-                z
-            );
+                            uvs.push(
+                                u,
+                                0.5
+                            );
 
+                        }
 
-            normals.push(
-                0,
-                1,
-                0
-            );
+                    }
 
 
-            /*
-                IMPORTANT:
+                    /* =================================================
+                       TRIANGLES
+                    ================================================= */
 
-                U = radial position
-                V = center of the texture
+                    for (
+                        let r = 0;
+                        r < radialSegments;
+                        r++
+                    ) {
 
-                Since the PNG is only 63 pixels high,
-                we sample its middle.
-            */
+                        for (
+                            let i = 0;
+                            i < angularSegments;
+                            i++
+                        ) {
 
-            uvs.push(
-                u,
-                0.5
-            );
+                            const current =
+                                r *
+                                (angularSegments + 1) +
+                                i;
 
-        }
 
-    }
+                            const next =
+                                current +
+                                angularSegments +
+                                1;
 
 
-    /* =================================================
-       TRIANGLES
-    ================================================= */
+                            indices.push(
+                                current,
+                                next,
+                                current + 1
+                            );
 
-    for (
-        let r = 0;
-        r < radialSegments;
-        r++
-    ) {
 
-        for (
-            let i = 0;
-            i < angularSegments;
-            i++
-        ) {
+                            indices.push(
+                                current + 1,
+                                next,
+                                next + 1
+                            );
 
-            const current =
-                r *
-                (angularSegments + 1) +
-                i;
+                        }
 
+                    }
 
-            const next =
-                current +
-                angularSegments +
-                1;
 
+                    /* =================================================
+                       BUFFER GEOMETRY
+                    ================================================= */
 
-            indices.push(
-                current,
-                next,
-                current + 1
-            );
+                    const ringGeometry =
+                        new THREE.BufferGeometry();
 
 
-            indices.push(
-                current + 1,
-                next,
-                next + 1
-            );
+                    ringGeometry.setAttribute(
 
-        }
+                        "position",
 
-    }
+                        new THREE.Float32BufferAttribute(
+                            positions,
+                            3
+                        )
 
+                    );
 
-    /* =================================================
-       BUFFER GEOMETRY
-    ================================================= */
 
-    const ringGeometry =
-        new THREE.BufferGeometry();
+                    ringGeometry.setAttribute(
 
+                        "normal",
 
-    ringGeometry.setAttribute(
+                        new THREE.Float32BufferAttribute(
+                            normals,
+                            3
+                        )
 
-        "position",
+                    );
 
-        new THREE.Float32BufferAttribute(
-            positions,
-            3
-        )
 
-    );
+                    ringGeometry.setAttribute(
 
+                        "uv",
 
-    ringGeometry.setAttribute(
+                        new THREE.Float32BufferAttribute(
+                            uvs,
+                            2
+                        )
 
-        "normal",
+                    );
 
-        new THREE.Float32BufferAttribute(
-            normals,
-            3
-        )
 
-    );
+                    ringGeometry.setIndex(
+                        indices
+                    );
 
 
-    ringGeometry.setAttribute(
+                    ringGeometry.computeBoundingSphere();
 
-        "uv",
 
-        new THREE.Float32BufferAttribute(
-            uvs,
-            2
-        )
+                    /* =================================================
+                       RING MATERIAL
+                    ================================================= */
 
-    );
+                    const ringMaterial =
+                        new THREE.MeshBasicMaterial({
 
+                            /*
+                                Actual ring color.
+                            */
 
-    ringGeometry.setIndex(
-        indices
-    );
+                            color:
+                                0xd8c39d,
 
 
-    ringGeometry.computeBoundingSphere();
+                            /*
+                                IMPORTANT:
+                
+                                The PNG is used as an ALPHA pattern,
+                                not as the visible texture.
+                            */
 
+                            alphaMap:
+                                ringTexture,
 
-    /* =================================================
-       RING MATERIAL
-    ================================================= */
 
-    const ringMaterial =
-        new THREE.MeshBasicMaterial({
+                            transparent:
+                                true,
 
-            /*
-                Actual ring color.
-            */
 
-            color:
-                0xd8c39d,
+                            opacity:
+                                0.95,
 
 
-            /*
-                IMPORTANT:
+                            alphaTest:
+                                0.02,
 
-                The PNG is used as an ALPHA pattern,
-                not as the visible texture.
-            */
 
-            alphaMap:
-                ringTexture,
+                            side:
+                                THREE.DoubleSide,
 
 
-            transparent:
-                true,
+                            depthWrite:
+                                false
 
+                        });
 
-            opacity:
-                0.95,
 
+                    /* =================================================
+                       CREATE RING
+                    ================================================= */
 
-            alphaTest:
-                0.02,
+                    const rings =
+                        new THREE.Mesh(
 
+                            ringGeometry,
 
-            side:
-                THREE.DoubleSide,
+                            ringMaterial
 
+                        );
 
-            depthWrite:
-                false
 
-        });
+                    /*
+                        Put the ring around Saturn.
+                
+                        The ring is initially in the XZ plane
+                        because we created vertices using:
+                
+                        X
+                        0
+                        Z
+                
+                        Therefore NO rotation is actually required.
+                    */
 
+                    rings.rotation.x = 0;
 
-    /* =================================================
-       CREATE RING
-    ================================================= */
 
-    const rings =
-        new THREE.Mesh(
+                    /*
+                        Keep ring slightly above Saturn.
+                    */
 
-            ringGeometry,
+                    rings.renderOrder =
+                        2;
 
-            ringMaterial
 
-        );
+                    /*
+                        Add ring to Saturn.
+                
+                        It follows Saturn automatically.
+                    */
 
+                    planet.add(
+                        rings
+                    );
 
-    /*
-        Put the ring around Saturn.
 
-        The ring is initially in the XZ plane
-        because we created vertices using:
+                    /*
+                        Save ring for animation.
+                    */
 
-        X
-        0
-        Z
+                    planet.userData.rings =
+                        rings;
 
-        Therefore NO rotation is actually required.
-    */
-
-    rings.rotation.x = 0;
-
-
-    /*
-        Keep ring slightly above Saturn.
-    */
-
-    rings.renderOrder =
-        2;
-
-
-    /*
-        Add ring to Saturn.
-
-        It follows Saturn automatically.
-    */
-
-    planet.add(
-        rings
-    );
-
-
-    /*
-        Save ring for animation.
-    */
-
-    planet.userData.rings =
-        rings;
-
-}                /* =============================================
+                }                /* =============================================
                    SAVE PLANET
                 ============================================= */
 
@@ -2077,33 +2063,10 @@ if (data.rings) {
 
 
                 const object =
-                    intersections[0]
-                        .object;
+                    intersections[0].object;
 
-
-                selectedName.textContent =
-                    object.name;
-
-
-                if (
-                    object.name === "Sun"
-                ) {
-
-                    selectedInfo.textContent =
-
-                        "The star at the center of our Solar System.";
-
-                }
-
-                else {
-
-                    selectedInfo.textContent =
-
-                        "Selected planet: " +
-                        object.name;
-
-                }
-
+                window.parent.location.href =
+                    `planet-detail.html?entity=${object.name}`;
             }
 
         );
@@ -2191,7 +2154,7 @@ if (data.rings) {
                     planet.rotation.y +=
 
                         delta *
-                        data.rotationSpeed*10;
+                        data.rotationSpeed * 10;
 
 
 
