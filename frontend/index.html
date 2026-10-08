@@ -45,23 +45,23 @@
 
                 <div class="dropdown-menu explore-menu" id="exploreMenu">
 
-                    <a href="#">
+                    <a href="index.html">
                         Home
                     </a>
 
-                    <a href="#">
+                    <a href="planets.html">
                         Planet &amp; Space Entity
                     </a>
 
-                    <a href="#">
+                    <a href="missions.html">
                         Missions
                     </a>
 
-                    <a href="#">
+                    <a href="astronauts.html">
                         Astronaut
                     </a>
 
-                    <a href="#">
+                    <a href="announcements.html">
                         Announcement
                     </a>
 
@@ -182,24 +182,66 @@
 
     <main id="home">
 
-        <!--
-            HOME PAGE CONTENT WILL BE
-            BUILT HERE NEXT.
-        -->
+    <!-- HERO (interactive) -->
+    <section class="hero" id="hero">
+        <canvas id="starfield"></canvas>
+        <div class="hero-glow"></div>
 
-        <section class="home-placeholder">
+        <div class="hero-stage" id="heroStage">
+<button class="planet-btn" id="planetBtn" aria-label="Show next planet"><canvas id="planetCanvas"></canvas></button>
+</div>
 
-            <p>
-                SPACE EXPLORER
-            </p>
+        <div class="hero-copy">
+            <h1>Explore the Universe</h1>
+            <p class="hero-sub">Planets, missions and astronauts, all in one place.</p>
+            <div class="hero-actions">
+                <a href="planets.html" class="btn btn-primary">Explore planets</a>
+                <a href="#missions" class="btn btn-ghost">View missions</a>
+            </div>
+            <p class="hero-hint">Move your mouse and click the planet to switch worlds. Now viewing: <b id="planetName">Mars</b>. <span id="moonInfo"></span></p>
+        </div>
+    </section>
 
-            <h1>
-                Explore the Universe
-            </h1>
+    <!-- IMAGE OF THE DAY -->
+    <section class="section reveal" id="apod">
+        <div class="section-head"><h2>Image of the day</h2><span class="line"></span></div>
+        <div class="apod-card" id="apodCard">
+            <div class="apod-media" id="apodMedia"><div class="skeleton"></div></div>
+            <div class="apod-text">
+                <h3 id="apodTitle">Loading today's image...</h3>
+                <p id="apodDesc"></p>
+                <small id="apodDate"></small>
+            </div>
+        </div>
+    </section>
 
-        </section>
+    <!-- MISSIONS -->
+    <section class="section reveal" id="missions">
+        <div class="section-head"><h2>Featured missions</h2><span class="line"></span></div>
+        <div class="card-grid" id="missionGrid"></div>
+    </section>
 
-    </main>
+    <!-- ASTRONAUTS -->
+    <section class="section reveal" id="astronauts">
+        <div class="section-head"><h2>Astronauts</h2><span class="line"></span></div>
+        <div class="card-grid" id="astronautGrid"></div>
+    </section>
+
+    <!-- UPDATES -->
+    <section class="section reveal" id="announcements">
+        <div class="section-head"><h2>Latest updates</h2><span class="line"></span></div>
+        <ul class="updates" id="updateList"></ul>
+    </section>
+
+    <!-- CTA -->
+    <section class="section reveal cta">
+        <h2>Looking for something specific?</h2>
+        <p>Search any planet, mission or astronaut.</p>
+        <button class="btn btn-primary" id="ctaSearch">Start searching</button>
+    </section>
+
+</main>
+
 
     <!-- =========================================
      FOOTER
@@ -268,19 +310,19 @@
                     Home
                 </a>
 
-                <a href="#">
+                <a href="planets.html">
                     Planet &amp; Space Entity
                 </a>
 
-                <a href="#">
+                <a href="missions.html">
                     Missions
                 </a>
 
-                <a href="#">
+                <a href="astronauts.html">
                     Astronaut
                 </a>
 
-                <a href="#">
+                <a href="announcements.html">
                     Announcement
                 </a>
 

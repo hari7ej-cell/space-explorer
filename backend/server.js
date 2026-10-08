@@ -97,6 +97,25 @@ app.get(
 );
 
 
+// NASA Astronomy Picture of the Day (cached per day)
+let apodCache = { date: "", data: null };
+app.get("/api/apod", async (req, res) => {
+    try {
+        const today = new Date().toISOString().slice(0, 10);
+        if (apodCache.data && apodCache.date === today) return res.json(apodCache.data);
+        const key = process.env.NASA_API_KEY || "RAYf28bqdR9Qi81URJabhEds0sh7ftOzpa86KUVZ";
+        const r = await fetch("https://api.nasa.gov/planetary/apod?api_key=" + key);
+        if (!r.ok) throw new Error("NASA API returned " + r.status);
+        const d = await r.json();
+        apodCache = { date: today, data: d };
+        res.json(d);
+    } catch (e) {
+        console.error(e);
+        res.status(502).json({ error: e.message });
+    }
+});
+
+
 app.listen(
     3000,
     () => {

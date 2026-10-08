@@ -1092,3 +1092,144 @@ body {
     }
 
 }
+
+/* =========================================
+   FRONT PAGE
+========================================= */
+:root{--c1:#e98a5b;--c2:#b8431f;--c3:#4a1608;--accent:#7cc4ff;--glass:rgba(255,255,255,.05);--edge:rgba(255,255,255,.12)}
+
+/* ---------- HERO ---------- */
+.hero{position:relative;min-height:calc(100vh - 96px);overflow:hidden;display:grid;place-items:center;
+  background:radial-gradient(ellipse at 50% 40%,#0d1a2b 0%,#05070b 70%)}
+#starfield{position:absolute;inset:0;width:100%;height:100%}
+.hero-glow{position:absolute;width:60vmin;height:60vmin;border-radius:50%;left:50%;top:38%;
+  transform:translate(-50%,-50%);background:radial-gradient(circle,var(--c1),transparent 65%);opacity:.22;
+  filter:blur(40px);transition:background .8s}
+.hero-stage{position:relative;width:min(46vmin,380px);aspect-ratio:1;margin-top:-6vh;
+  transition:transform .15s ease-out;transform-style:preserve-3d}
+.planet-orb{all:unset;position:absolute;inset:12%;border-radius:50%;cursor:pointer;overflow:hidden;
+  background:radial-gradient(circle at 32% 30%,var(--c1),var(--c2) 55%,var(--c3));
+  box-shadow:0 0 80px -10px var(--c1),inset -30px -30px 60px rgba(0,0,0,.6);
+  transition:transform .3s,background .8s,box-shadow .8s}
+.planet-orb:hover{transform:scale(1.05)}
+.planet-orb:active{transform:scale(.95)}
+.planet-orb:focus-visible{outline:2px solid var(--accent);outline-offset:6px}
+.planet-bands{position:absolute;inset:-20%;opacity:.28;animation:spin 40s linear infinite;
+  background:repeating-linear-gradient(100deg,transparent 0 22px,rgba(255,255,255,.35) 22px 30px,transparent 30px 58px)}
+.planet-shade{position:absolute;inset:0;border-radius:50%;
+  background:radial-gradient(circle at 70% 70%,rgba(0,0,0,.55),transparent 60%)}
+.orbit{position:absolute;inset:0;border:1px dashed rgba(255,255,255,.18);border-radius:50%;animation:spin 18s linear infinite}
+.orbit-2{inset:-9%;border-style:solid;border-color:rgba(255,255,255,.07);animation-duration:34s;animation-direction:reverse}
+.moon{position:absolute;top:-7px;left:50%;width:14px;height:14px;border-radius:50%;background:#dfe6ee;box-shadow:0 0 12px #fff}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+.hero-copy{position:absolute;bottom:6vh;left:0;right:0;text-align:center;padding:0 20px;z-index:2}
+.hero-copy h1{font-size:clamp(38px,6vw,76px);font-weight:400;margin:0 0 8px;letter-spacing:-1px}
+.hero-sub{color:#b9c6d3;font-size:clamp(15px,2vw,19px);margin:0 0 22px}
+.hero-actions{display:flex;gap:14px;justify-content:center;flex-wrap:wrap}
+.hero-hint{color:#7f8994;font-size:13px;margin:20px 0 0}
+.hero-hint b{color:#fff;font-weight:600}
+
+.btn{display:inline-block;padding:13px 28px;border-radius:999px;font-size:15px;font-weight:600;text-decoration:none;
+  cursor:pointer;border:1px solid transparent;transition:transform .2s,box-shadow .2s,background .2s}
+.btn:hover{transform:translateY(-2px)}
+.btn-primary{background:#fff;color:#05070b;box-shadow:0 0 0 0 rgba(255,255,255,.4)}
+.btn-primary:hover{box-shadow:0 8px 30px -6px rgba(124,196,255,.6)}
+.btn-ghost{color:#fff;border-color:var(--edge);background:var(--glass);backdrop-filter:blur(8px)}
+.btn-ghost:hover{background:rgba(255,255,255,.12)}
+
+/* ---------- SECTIONS ---------- */
+.section{max-width:1300px;margin:0 auto;padding:90px 40px 0}
+.section-head{display:flex;align-items:center;gap:24px;margin-bottom:34px}
+.section-head h2{font-size:clamp(26px,3.4vw,40px);font-weight:400;margin:0;white-space:nowrap}
+.line{flex:1;height:1px;background:linear-gradient(90deg,var(--edge),transparent)}
+.reveal{opacity:0;transform:translateY(24px);transition:opacity .8s,transform .8s}
+.reveal.in{opacity:1;transform:none}
+
+/* APOD */
+.apod-card{display:grid;grid-template-columns:1.4fr 1fr;gap:34px;padding:22px;border-radius:26px;
+  background:var(--glass);border:1px solid var(--edge);backdrop-filter:blur(10px)}
+.apod-media{border-radius:18px;overflow:hidden;min-height:320px;background:#0b111a}
+.apod-media img,.apod-media iframe{width:100%;height:100%;min-height:320px;object-fit:cover;border:0;display:block;transition:transform .8s}
+.apod-media:hover img{transform:scale(1.05)}
+.apod-text{display:flex;flex-direction:column;justify-content:center;gap:12px}
+.apod-text h3{font-size:26px;font-weight:500;margin:0}
+.apod-text p{color:#aeb8c3;line-height:1.7;margin:0;max-height:190px;overflow:auto}
+.apod-text small{color:#7f8994}
+.skeleton{height:100%;min-height:320px;background:linear-gradient(90deg,#0b111a,#17212e,#0b111a);background-size:200%;animation:shine 1.5s infinite}
+@keyframes shine{to{background-position:-200% 0}}
+
+/* PLANETS */
+.planet-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:22px}
+.planet-card{position:relative;padding:30px 20px 24px;text-align:center;border-radius:24px;cursor:pointer;
+  background:var(--glass);border:1px solid var(--edge);transition:transform .25s,border-color .25s,box-shadow .25s;
+  transform-style:preserve-3d}
+.planet-card:hover{border-color:var(--p1);box-shadow:0 20px 50px -20px var(--p1)}
+.mini-planet{width:92px;height:92px;margin:0 auto 18px;border-radius:50%;
+  background:radial-gradient(circle at 32% 30%,var(--p1),var(--p2) 65%,#000);
+  box-shadow:0 0 30px -6px var(--p1),inset -10px -10px 24px rgba(0,0,0,.5);transition:transform .4s}
+.planet-card:hover .mini-planet{transform:scale(1.14) rotate(12deg)}
+.planet-card h3{margin:0 0 6px;font-size:20px;font-weight:500}
+.planet-card p{margin:0;color:#9aa6b3;font-size:14px;line-height:1.5}
+
+/* MISSIONS / ASTRONAUTS */
+.card-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:22px}
+.info-card{padding:26px;border-radius:24px;background:linear-gradient(160deg,rgba(255,255,255,.07),rgba(255,255,255,.02));
+  border:1px solid var(--edge);transition:transform .25s,border-color .25s}
+.info-card:hover{transform:translateY(-6px);border-color:rgba(124,196,255,.5)}
+.info-card h3{margin:0 0 8px;font-size:21px;font-weight:500}
+.info-card p{margin:0 0 16px;color:#9aa6b3;font-size:14px;line-height:1.6}
+.badge{display:inline-block;padding:4px 12px;border-radius:999px;font-size:12px;background:rgba(124,196,255,.14);color:var(--accent)}
+.avatar{width:54px;height:54px;border-radius:50%;margin-bottom:16px;display:grid;place-items:center;font-size:20px;
+  background:linear-gradient(135deg,#2a4a6d,#7cc4ff)}
+
+/* UPDATES */
+.updates{list-style:none;margin:0;padding:0;border-left:1px solid var(--edge)}
+.updates li{position:relative;padding:4px 0 26px 28px}
+.updates li::before{content:"";position:absolute;left:-5px;top:9px;width:9px;height:9px;border-radius:50%;
+  background:var(--accent);box-shadow:0 0 12px var(--accent)}
+.updates time{color:#7f8994;font-size:13px}
+.updates h3{margin:4px 0;font-size:18px;font-weight:500}
+.updates p{margin:0;color:#9aa6b3;font-size:14px}
+
+/* CTA */
+.cta{text-align:center;padding-bottom:40px}
+.cta h2{font-size:clamp(28px,4vw,46px);font-weight:400;margin:0 0 10px}
+.cta p{color:#9aa6b3;margin:0 0 26px}
+.cta{background:radial-gradient(ellipse at center,rgba(124,196,255,.1),transparent 65%)}
+
+/* ---------- RESPONSIVE ---------- */
+@media(max-width:1000px){.planet-grid{grid-template-columns:repeat(2,1fr)}.card-grid{grid-template-columns:1fr 1fr}.apod-card{grid-template-columns:1fr}}
+@media(max-width:600px){.section{padding:64px 22px 0}.planet-grid,.card-grid{grid-template-columns:1fr}.hero-copy{bottom:3vh}}
+@media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}.reveal{opacity:1;transform:none}}
+
+
+/* =========================================
+   SOFTER HEADER CONTROLS + HERO PLANET
+========================================= */
+.nav-button{padding:10px 20px;border:1px solid var(--edge);border-radius:999px;background:var(--glass);font-size:18px;transition:background .2s,border-color .2s}
+.nav-button:hover,.dropdown.active .nav-button{background:rgba(255,255,255,.12);border-color:rgba(255,255,255,.3)}
+.search-container{border-radius:999px;border-color:var(--edge);background:var(--glass);backdrop-filter:blur(8px);transition:width .3s,border-color .2s,box-shadow .2s}
+.search-container:focus-within{width:350px;border-color:var(--accent);box-shadow:0 0 0 3px rgba(124,196,255,.18)}
+.search-icon{margin-left:16px}
+.account-button{padding:8px 20px;border:1px solid var(--edge);border-radius:20px;background:var(--glass);transition:background .2s}
+.account-button:hover{background:rgba(255,255,255,.12)}
+.dropdown-menu{border-radius:18px;background:rgba(14,18,26,.94);backdrop-filter:blur(14px);border-color:var(--edge);animation:pop .18s ease-out}
+.explore-menu{left:0;padding:8px}
+.account-menu{padding:10px 8px}
+.explore-menu a,.account-menu a{margin:0;border-radius:12px}
+@keyframes pop{from{opacity:0;transform:translateY(-6px)}}
+@media(max-width:900px){.search-container:focus-within{width:240px}}
+@media(max-width:600px){.search-container:focus-within{width:190px}}
+
+.hero{display:flex;flex-direction:column;justify-content:center;align-items:center;gap:10px;padding:24px 0 40px}
+.hero-glow{top:36%}
+.hero-stage{width:min(58vmin,520px);margin-top:0}
+.planet-btn{all:unset;display:block;width:100%;cursor:pointer;border-radius:50%}
+.planet-btn:focus-visible{outline:2px solid var(--accent)}
+#planetCanvas{position:static;width:100%;height:auto;display:block}
+.hero-copy{position:relative;bottom:auto}
+
+.blank{min-height:100vh;display:grid;place-content:center;justify-items:center;gap:14px;text-align:center;background:#05070b}
+.blank h1{font-weight:400;margin:0;font-size:clamp(30px,5vw,56px)}
+.blank p{color:#9aa6b3;margin:0 0 10px}
