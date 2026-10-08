@@ -472,6 +472,27 @@ a {
     align-items: center;
     gap: 38px;
 }
+.latest-discovery-card {
+    text-decoration: none;
+    color: inherit;
+    cursor: pointer;
+}
+
+.latest-discovery-card:hover {
+    transform: translateY(-5px);
+    border-color: #68707d;
+}
+
+.latest-discovery-visual {
+    background-position: center;
+    background-size: cover;
+    background-repeat: no-repeat;
+    background-color: #101216;
+}
+
+.discovery-content {
+    min-width: 0;
+}
 
 .feature-planet {
     height: 210px;
@@ -502,8 +523,10 @@ a {
 }
 
 .eyebrow {
+    display: block;
+    margin-bottom: 10px;
     color: #7ea9d8;
-    font-size: 11px;
+    font-size: 12px;
     letter-spacing: .16em;
     font-weight: 700;
 }
@@ -751,4 +774,103 @@ a {
 
 .learn-more-btn span {
     margin-left: 8px;
+}
+/* =========================================
+   LATEST DISCOVERY VISUAL
+========================================= */
+
+.latest-discovery-visual {
+    width: 260px;
+    height: 200px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: transparent;
+}
+
+.latest-discovery-visual::before {
+    content: "";
+    width: 100%;
+    height: 100%;
+
+    background-position: center;
+    background-size: contain;
+    background-repeat: no-repeat;
+}
+
+.latest-discovery-visual.planet-default::before {
+    background-image: url("assets/default-planet.png");
+}
+
+.latest-discovery-visual.asteroid-default::before {
+    background-image: url("assets/default-asteroid.png");
+}
+
+.latest-discovery-visual.comet-default::before {
+    background-image: url("assets/default-comet.png");
+}
+
+.latest-discovery-visual.moon-default::before {
+    background-image: url("assets/default-moon.png");
+}
+
+.latest-discovery-visual.star-default::before {
+    background-image: url("assets/default-star.png");
+}
+/* Text */
+
+.discovery-content {
+    padding-right: 20px;
+}
+
+.discovery-content h3 {
+    margin: 0 0 14px;
+
+    font-size: clamp(28px, 4vw, 48px);
+    font-weight: 500;
+
+    color: #ffffff;
+}
+
+.discovery-content p {
+    max-width: 700px;
+
+    margin: 0 0 22px;
+
+    color: #aeb4bd;
+
+    line-height: 1.7;
+}
+
+.feature-link {
+    color: #ffffff;
+
+    font-size: 14px;
+
+    transition: opacity 0.25s ease;
+}
+
+.latest-discovery-card:hover .feature-link {
+    opacity: 0.7;
+}
+
+
+/* Mobile */
+
+@media (max-width: 700px) {
+
+    .latest-discovery-card {
+        grid-template-columns: 1fr;
+        gap: 22px;
+        padding: 20px;
+    }
+
+    .latest-discovery-visual {
+        width: 100%;
+        height: 200px;
+    }
+
+    .discovery-content {
+        padding-right: 0;
+    }
 }

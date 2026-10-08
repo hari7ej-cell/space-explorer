@@ -1,6 +1,8 @@
 const express = require("express");
 const cors = require("cors");
-
+const {
+    getLatestDiscovery
+} = require("./services/latestDiscovery");
 const { getWikipediaPage } = require("./services/wikipedia");
 const { createTopics } = require("./services/topicParser");
 const { getTopicImages } = require("./services/imageService");
@@ -209,7 +211,27 @@ app.get("/api/planet/:name", async (req, res) => {
         });
     }
 });
+app.get("/api/latest-discovery", async (req, res) => {
 
+    try {
+
+        const discovery =
+            await getLatestDiscovery();
+
+        res.json(discovery);
+
+    } catch (error) {
+
+        console.error(
+            "LATEST DISCOVERY ERROR:",
+            error
+        );
+
+        res.status(500).json({
+            error: error.message
+        });
+    }
+});
 
 /*
 ====================================================

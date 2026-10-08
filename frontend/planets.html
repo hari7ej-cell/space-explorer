@@ -197,26 +197,42 @@
                 </section>
 
                 <section class="topic-section compact-topic">
+
                     <div class="section-heading">
-                        <h2>Latest Discovered Planet</h2>
+                        <h2>Latest Discovered Space Entity</h2>
                         <span></span>
                     </div>
 
-                    <div class="feature-card">
-                        <div class="feature-planet exoplanet-visual"></div>
-                        <div>
-                            <span class="eyebrow">EXOPLANET DISCOVERY</span>
-                            <h3>New worlds are still being discovered</h3>
-                            <p>
-                                Thousands of planets have been detected beyond our Solar System.
-                                This section is designed to connect with the space-data service
-                                so the newest confirmed discovery can be displayed here.
-                            </p>
-                            <a href="#" class="feature-link">Explore discoveries →</a>
-                        </div>
-                    </div>
-                </section>
+                    <a class="feature-card latest-discovery-card" id="latestDiscoveryCard" href="#">
 
+                        <!-- Left image -->
+                        <div class="latest-discovery-visual" id="latestDiscoveryImage">
+                        </div>
+
+                        <!-- Right content -->
+                        <div class="discovery-content">
+
+                            <span class="eyebrow" id="latestDiscoveryType">
+                                LATEST DISCOVERY
+                            </span>
+
+                            <h3 id="latestDiscoveryName">
+                                Loading...
+                            </h3>
+
+                            <p id="latestDiscoveryCaption">
+                                Loading latest discovery...
+                            </p>
+
+                            <span class="feature-link">
+                                Explore →
+                            </span>
+
+                        </div>
+
+                    </a>
+
+                </section>
                 <section class="topic-section compact-topic">
                     <div class="section-heading">
                         <h2>Interesting Planet</h2>
@@ -356,6 +372,165 @@
                 learnMoreBtn.innerHTML = 'Show More <span>↓</span>';
             }
         });
+        // =========================
+        // LATEST SPACE ENTITY
+        // =========================
+
+        const latestDiscoveryCard =
+            document.getElementById("latestDiscoveryCard");
+
+        const latestDiscoveryImage =
+            document.getElementById("latestDiscoveryImage");
+
+        const latestDiscoveryType =
+            document.getElementById("latestDiscoveryType");
+
+        const latestDiscoveryName =
+            document.getElementById("latestDiscoveryName");
+
+        const latestDiscoveryCaption =
+            document.getElementById("latestDiscoveryCaption");
+
+
+        async function loadLatestDiscovery() {
+
+            try {
+
+                const response =
+                    await fetch(
+                        "http://localhost:3000/api/latest-discovery"
+                    );
+
+                if (!response.ok) {
+                    throw new Error(
+                        `API returned ${response.status}`
+                    );
+                }
+
+                const entity =
+                    await response.json();
+
+                console.log(
+                    "Latest discovery:",
+                    entity
+                );
+
+
+                // =========================
+                // TEXT
+                // =========================
+
+                latestDiscoveryName.textContent =
+                    entity.name;
+
+                latestDiscoveryType.textContent =
+                    "LATEST " +
+                    entity.type.toUpperCase();
+
+                latestDiscoveryCaption.textContent =
+                    entity.caption;
+
+
+                // =========================
+                // CARD LINK
+                // =========================
+
+                latestDiscoveryCard.href =
+                    "planet-detail.html?entity=" +
+                    encodeURIComponent(entity.name);
+
+
+                // =========================
+                // REMOVE OLD DEFAULT CLASSES
+                // =========================
+
+                latestDiscoveryImage.classList.remove(
+                    "planet-default",
+                    "asteroid-default",
+                    "comet-default",
+                    "moon-default",
+                    "star-default"
+                );
+
+
+                // =========================
+                // IMAGE / DEFAULT
+                // =========================
+
+                if (entity.image) {
+
+                    // API has a real image
+                    latestDiscoveryImage.style.backgroundImage =
+                        `url("${entity.image}")`;
+
+                } else {
+
+                    // No image from API.
+                    // Use default visual based on entity type.
+
+                    latestDiscoveryImage.classList.add(
+                        getDefaultClass(entity.type)
+                    );
+                }
+
+            } catch (error) {
+
+                console.error(
+                    "Latest discovery error:",
+                    error
+                );
+
+                latestDiscoveryName.textContent =
+                    "Unable to load discovery";
+
+                latestDiscoveryType.textContent =
+                    "SPACE ENTITY";
+
+                latestDiscoveryCaption.textContent =
+                    "Latest discovery data is currently unavailable.";
+            }
+        }
+
+
+        // =========================
+        // DEFAULT TYPE
+        // =========================
+
+        function getDefaultClass(type) {
+
+            const value =
+                type.toLowerCase();
+
+
+            if (value.includes("asteroid")) {
+                return "asteroid-default";
+            }
+
+            if (value.includes("comet")) {
+                return "comet-default";
+            }
+
+            if (value.includes("moon")) {
+                return "moon-default";
+            }
+
+            if (value.includes("star")) {
+                return "star-default";
+            }
+
+            if (value.includes("planet")) {
+                return "planet-default";
+            }
+
+            return "planet-default";
+        }
+
+
+        // =========================
+        // LOAD
+        // =========================
+
+        loadLatestDiscovery();
     </script>
 </body>
 
