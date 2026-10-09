@@ -5,7 +5,7 @@ const {
 } = require("./services/latestDiscovery");
 const { getWikipediaPage } = require("./services/wikipedia");
 const { createTopics } = require("./services/topicParser");
-const { getTopicImages } = require("./services/imageService");
+const { getHeroImage } = require("./services/imageService");
 const { extractStructuredData } = require("./services/structuredData");
 const { processPlanet } = require("./services/cppService");
 
@@ -235,6 +235,28 @@ app.get("/api/latest-discovery", async (req, res) => {
 
 /*
 ====================================================
+ENTITY TYPE HELPER
+====================================================
+*/
+
+function inferEntityType(title, summary) {
+    const value = `${title || ""} ${summary || ""}`.toLowerCase();
+    if (value.includes("black hole")) return "Black Hole";
+    if (value.includes("galaxy")) return "Galaxy";
+    if (value.includes("nebula")) return "Nebula";
+    if (value.includes("asteroid")) return "Asteroid";
+    if (value.includes("comet")) return "Comet";
+    if (value.includes("pulsar")) return "Pulsar";
+    if (value.includes("quasar")) return "Quasar";
+    if (value.includes("exoplanet")) return "Exoplanet";
+    if (value.includes("moon") || value.includes("natural satellite")) return "Natural Satellite";
+    if (value.includes("star")) return "Star";
+    if (value.includes("planet")) return "Planet";
+    return "Space Entity";
+}
+
+/*
+====================================================
 BUILD PLANET
 ====================================================
 */
@@ -285,9 +307,10 @@ async function buildPlanet(name) {
 
     const summary =
         (
-            overview?.content ||
+            overview?.text ||
+            overview?.content?.replace(/<[^>]*>/g, " ") ||
             "Space entity information."
-        ).slice(0, 700);
+        ).slice(0, 900);
 
     const details =
         extractStructuredData(wiki.html);
@@ -305,20 +328,28 @@ async function buildPlanet(name) {
 
     /*
     ====================================================
-    STEP 3: NASA IMAGES
+    STEP 3: HIGH-RESOLUTION HERO IMAGE
     ====================================================
     */
 
     const imageStart = Date.now();
 
-    const images =
-        await getTopicImages(
-            wiki.title,
-            topics
-        );
+    const heroImage = await getHeroImage(wiki.title, wiki.html);
+    const images = heroImage
+        ? [{
+            topicId: "overview",
+            url: heroImage.url,
+            title: heroImage.title || wiki.title,
+            caption: heroImage.caption || "",
+            source: heroImage.source || {
+                name: "Wikipedia",
+                url: wiki.url
+            }
+        }]
+        : [];
 
     console.log(
-        `NASA images: ${images.length} - ${
+        `Hero image: ${heroImage ? "available" : "not available"} - ${
             Date.now() - imageStart
         } ms`
     );
@@ -369,31 +400,25 @@ async function buildPlanet(name) {
 
         entity: {
             name: wiki.title,
-            type: "Planet"
+            type: inferEntityType(wiki.title, summary)
         },
 
-        wikipediaUrl:
-            wiki.url,
+        heroImage,
+        wikipediaUrl: wiki.url,
 
-        model3D: {
-
+        // This embed is currently known to be available for Mars only.
+        // Never show it for an unrelated entity.
+        model3D: /^mars$/i.test(wiki.title) ? {
             available: true,
-
             name: wiki.title,
-
-            url:
-                "https://science.nasa.gov/resource/planet-mars-3d-model/",
-
+            url: "https://mars.nasa.gov/gltf_embed/24881",
             format: "glTF",
-
             source: {
-
-                name:
-                    "NASA/JPL-Caltech",
-
-                url:
-                    "https://science.nasa.gov/resource/planet-mars-3d-model/"
+                name: "NASA/JPL-Caltech",
+                url: "https://science.nasa.gov/resource/planet-mars-3d-model/"
             }
+        } : {
+            available: false
         }
     };
 

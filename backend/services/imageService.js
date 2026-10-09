@@ -1,370 +1,174 @@
-const blockedWords = [
-    "costume",
-    "children",
-    "child",
-    "event",
-    "festival",
-    "school",
-    "party",
-    "parade",
-    "celebration",
-    "people",
-    "person",
-    "museum",
-    "artwork",
-    "poster",
-    "classroom",
-    "conference"
-];
-
-
-/*
-====================================================
-NASA IMAGE CACHE
-====================================================
-*/
-
 const imageCache = new Map();
-
 const IMAGE_CACHE_TTL = 30 * 60 * 1000;
 
+function cacheGet(key) {
+    const entry = imageCache.get(key);
+    if (!entry) return null;
+    if (Date.now() - entry.timestamp > IMAGE_CACHE_TTL) {
+        imageCache.delete(key);
+        return null;
+    }
+    return entry.data;
+}
+
+function cacheSet(key, data) {
+    imageCache.set(key, { data, timestamp: Date.now() });
+}
+
+async function fetchJson(url) {
+    const response = await fetch(url, {
+        headers: { "User-Agent": "SpaceExplorer/1.0 (educational project)" },
+        signal: AbortSignal.timeout(10000)
+    });
+    if (!response.ok) throw new Error(`Image service returned ${response.status}`);
+    return response.json();
+}
+
+function isUsableImage(url) {
+    return typeof url === "string" &&
+        /^https?:\/\//i.test(url) &&
+        !/\.svg(?:$|\?)/i.test(url);
+}
 
 /*
-====================================================
-IMAGE SCORING
-====================================================
-*/
+ * Prefer the article's own lead image, which is more likely to match
+ * the selected entity than a random image-search result.
+ */
+async function getHeroImage(entityName, articleHtml = "") {
+    const cacheKey = `hero:${String(entityName).toLowerCase()}`;
+    const cached = cacheGet(cacheKey);
+    if (cached) return cached;
 
-function scoreImage(item, keywords) {
+    let hero = null;
 
-    const metadata =
-        item.data?.[0] || {};
+    try {
+        const summary = await fetchJson(
+            `https://en.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(entityName)}`
+        );
+        const imageUrl =
+            summary.originalimage?.source ||
+            summary.thumbnail?.source;
 
-    const haystack =
-        (
-            (metadata.title || "") +
-            " " +
-            (metadata.description || "")
-        ).toLowerCase();
-
-
-    // Reject irrelevant human/event images.
-    if (
-        blockedWords.some(
-            word => haystack.includes(word)
-        )
-    ) {
-        return -1000;
+        if (isUsableImage(imageUrl)) {
+            hero = {
+                url: imageUrl,
+                title: summary.title || entityName,
+                caption: summary.description || "",
+                source: {
+                    name: "Wikipedia",
+                    url: summary.content_urls?.desktop?.page ||
+                        `https://en.wikipedia.org/wiki/${encodeURIComponent(summary.title || entityName)}`
+                }
+            };
+        }
+    } catch (error) {
+        console.warn("Wikipedia hero image lookup failed:", error.message);
     }
 
+    // Fallback to a large image already present in the fetched article.
+    if (!hero && articleHtml) {
+        const cheerio = require("cheerio");
+        const $ = cheerio.load(articleHtml);
+        const candidate = $("figure img, .infobox img, img").toArray()
+            .map(el => {
+                const src = $(el).attr("src") || $(el).attr("data-src") || "";
+                const width = Number($(el).attr("width")) || 0;
+                return { src, width, alt: $(el).attr("alt") || "" };
+            })
+            .filter(item => {
+                try {
+                    return isUsableImage(new URL(item.src, "https://en.wikipedia.org").href);
+                } catch {
+                    return false;
+                }
+            })
+            .sort((a, b) => b.width - a.width)[0];
 
-    let score = 0;
-
-
-    for (const keyword of keywords) {
-
-        if (
-            haystack.includes(
-                keyword.toLowerCase()
-            )
-        ) {
-            score += 10;
+        if (candidate) {
+            hero = {
+                url: new URL(candidate.src, "https://en.wikipedia.org").href,
+                title: candidate.alt || entityName,
+                caption: "",
+                source: {
+                    name: "Wikipedia",
+                    url: `https://en.wikipedia.org/wiki/${encodeURIComponent(entityName)}`
+                }
+            };
         }
     }
 
+    // Last fallback: NASA image search. Only use a result if it has a real image URL.
+    if (!hero) {
+        try {
+            const nasa = await searchNASAImages(entityName, 1);
+            if (nasa[0]) hero = nasa[0];
+        } catch (error) {
+            console.warn("NASA hero image lookup failed:", error.message);
+        }
+    }
 
+    cacheSet(cacheKey, hero);
+    return hero;
+}
+
+const blockedWords = [
+    "costume", "children", "child", "event", "festival", "school",
+    "party", "parade", "celebration", "museum", "poster", "classroom",
+    "conference", "merchandise"
+];
+
+function scoreImage(item, keywords) {
+    const metadata = item.data?.[0] || {};
+    const haystack = `${metadata.title || ""} ${metadata.description || ""}`.toLowerCase();
+    if (blockedWords.some(word => haystack.includes(word))) return -1000;
+
+    let score = 0;
+    for (const keyword of keywords) {
+        if (keyword.length > 2 && haystack.includes(keyword.toLowerCase())) score += 10;
+    }
     return score;
 }
 
+async function searchNASAImages(searchTerm, limit = 1) {
+    const cacheKey = `nasa:${searchTerm.toLowerCase()}:${limit}`;
+    const cached = cacheGet(cacheKey);
+    if (cached) return cached;
 
-/*
-====================================================
-SEARCH NASA
-====================================================
-*/
+    const url = `https://images-api.nasa.gov/search?q=${encodeURIComponent(searchTerm)}&media_type=image`;
+    const data = await fetchJson(url);
+    const items = data?.collection?.items || [];
+    const keywords = searchTerm.toLowerCase().split(/\s+/).filter(Boolean);
 
-async function searchNASAImages(
-    searchTerm,
-    limit = 1
-) {
+    const results = items
+        .map(item => ({ item, score: scoreImage(item, keywords) }))
+        .filter(entry => entry.score > -1000)
+        .sort((a, b) => b.score - a.score)
+        .slice(0, limit)
+        .map(({ item }) => {
+            const metadata = item.data?.[0] || {};
+            const imageLink = item.links?.find(link => link.render === "image");
+            return {
+                title: metadata.title || "NASA image",
+                description: metadata.description || "",
+                url: imageLink?.href || "",
+                nasaId: metadata.nasa_id || "",
+                date: metadata.date_created || "",
+                source: { name: "NASA", url: "https://images.nasa.gov/" }
+            };
+        })
+        .filter(item => isUsableImage(item.url));
 
-    /*
-    ------------------------------------------------
-    CHECK CACHE
-    ------------------------------------------------
-    */
-
-    const cacheKey =
-        searchTerm.toLowerCase();
-
-    const cached =
-        imageCache.get(cacheKey);
-
-
-    if (cached) {
-
-        const age =
-            Date.now() - cached.timestamp;
-
-        if (age < IMAGE_CACHE_TTL) {
-
-            return cached.data;
-        }
-
-        imageCache.delete(cacheKey);
-    }
-
-
-    /*
-    ------------------------------------------------
-    NASA REQUEST
-    ------------------------------------------------
-    */
-
-    const url =
-        "https://images-api.nasa.gov/search?q=" +
-        encodeURIComponent(searchTerm) +
-        "&media_type=image";
-
-
-    const response =
-        await fetch(url);
-
-
-    if (!response.ok) {
-
-        throw new Error(
-            "NASA Images API request failed"
-        );
-    }
-
-
-    const data =
-        await response.json();
-
-
-    const items =
-        data?.collection?.items || [];
-
-
-    const keywords =
-        searchTerm
-            .toLowerCase()
-            .split(/\s+/)
-            .filter(Boolean);
-
-
-    /*
-    ------------------------------------------------
-    RANK RESULTS
-    ------------------------------------------------
-    */
-
-    const ranked = items
-
-        .map(item => ({
-            item,
-            score:
-                scoreImage(
-                    item,
-                    keywords
-                )
-        }))
-
-        .filter(
-            entry =>
-                entry.score > -1000
-        )
-
-        .sort(
-            (a, b) =>
-                b.score - a.score
-        );
-
-
-    const result =
-        ranked
-            .slice(0, limit)
-            .map(({ item }) => {
-
-                const metadata =
-                    item.data?.[0] || {};
-
-                const imageLink =
-                    item.links?.find(
-                        link =>
-                            link.render === "image"
-                    );
-
-
-                return {
-
-                    title:
-                        metadata.title ||
-                        "NASA image",
-
-                    description:
-                        metadata.description ||
-                        "",
-
-                    url:
-                        imageLink?.href ||
-                        "",
-
-                    nasaId:
-                        metadata.nasa_id ||
-                        "",
-
-                    date:
-                        metadata.date_created ||
-                        "",
-
-                    source: {
-
-                        name: "NASA",
-
-                        url:
-                            "https://images.nasa.gov/"
-                    }
-                };
-            })
-
-            .filter(
-                image =>
-                    image.url
-            );
-
-
-    /*
-    ------------------------------------------------
-    SAVE TO CACHE
-    ------------------------------------------------
-    */
-
-    imageCache.set(
-        cacheKey,
-        {
-            data: result,
-            timestamp: Date.now()
-        }
-    );
-
-
-    return result;
+    cacheSet(cacheKey, results);
+    return results;
 }
 
-
 /*
-====================================================
-TOPIC IMAGES
-====================================================
-*/
-
-async function getTopicImages(
-    entityName,
-    topics
-) {
-
-    const terms = {
-
-        physical:
-            `${entityName} physical characteristics planet`,
-
-        composition:
-            `${entityName} composition geology planet`,
-
-        atmosphere:
-            `${entityName} atmosphere planet`,
-
-        surface:
-            `${entityName} surface terrain planet`,
-
-        orbit:
-            `${entityName} orbit rotation planet`,
-
-        moons:
-            `${entityName} moons satellites planet`,
-
-        discovery:
-            `${entityName} history discovery planet`,
-
-        exploration:
-            `${entityName} rover exploration planet`
-    };
-
-
-    /*
-    ====================================================
-    IMPORTANT:
-    ALL NASA REQUESTS RUN IN PARALLEL
-    ====================================================
-    */
-
-    const requests =
-        topics.map(async topic => {
-
-            const query =
-                terms[topic.id] ||
-                `${entityName} planet`;
-
-
-            try {
-
-                const images =
-                    await searchNASAImages(
-                        query,
-                        1
-                    );
-
-
-                if (!images[0]) {
-                    return null;
-                }
-
-
-                return {
-
-                    ...images[0],
-
-                    topicId:
-                        topic.id
-                };
-
-            } catch (error) {
-
-                console.error(
-                    `NASA image failed for ${topic.id}:`,
-                    error.message
-                );
-
-                return null;
-            }
-        });
-
-
-    /*
-    ------------------------------------------------
-    WAIT FOR ALL REQUESTS TO FINISH
-    ------------------------------------------------
-    */
-
-    const results =
-        await Promise.all(requests);
-
-
-    return results.filter(
-        Boolean
-    );
+ * Article images are preserved inline by topicParser. Do not make one NASA
+ * request per heading: it is slow and can attach unrelated pictures to text.
+ * This function remains exported for compatibility with the existing server.
+ */
+async function getTopicImages(entityName, topics) {
+    return [];
 }
 
-
-/*
-====================================================
-EXPORT
-====================================================
-*/
-
-module.exports = {
-    searchNASAImages,
-    getTopicImages
-};
+module.exports = { searchNASAImages, getTopicImages, getHeroImage };
