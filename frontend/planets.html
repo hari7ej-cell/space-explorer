@@ -196,6 +196,26 @@
                     </div>
                 </section>
 
+                <section class="topic-section interesting-entities-section">
+                    <div class="section-heading">
+                        <h2>Interesting Space Entities</h2>
+                        <span></span>
+                    </div>
+
+                    <p class="entities-intro">
+                        Explore extraordinary objects in our universe, from mysterious
+                        black holes to fascinating distant galaxies.
+                    </p>
+
+                    <div class="interesting-entities-grid" id="interestingEntitiesGrid"></div>
+
+
+                    <div class="entities-toggle-container">
+                        <button id="toggleEntitiesBtn" class="entities-toggle-btn">
+                            Explore More ↓
+                        </button>
+                    </div>
+                </section>
                 <section class="topic-section compact-topic">
 
                     <div class="section-heading">
@@ -231,30 +251,14 @@
                         </div>
 
                     </a>
+                </section>
+                <section class="section reveal cta">
+                    <h2>Looking for something specific?</h2>
+                    <p>Search any planet, mission or astronaut.</p>
+                    <button class="btn btn-primary" id="ctaSearch">Start searching</button>
+                </section>
 
-                    <section class="topic-section interesting-entities-section">
-                        <div class="section-heading">
-                            <h2>Interesting Space Entities</h2>
-                            <span></span>
-                        </div>
-
-                        <p class="entities-intro">
-                            Explore extraordinary objects in our universe, from mysterious
-                            black holes to fascinating distant galaxies.
-                        </p>
-
-                        <div class="interesting-entities-grid" id="interestingEntitiesGrid"></div>
-
-
-                        <div class="entities-toggle-container">
-                            <button id="toggleEntitiesBtn" class="entities-toggle-btn">
-                                Explore More ↓
-                            </button>
-                        </div>
             </div>
-        </section>
-
-        </div>
         </section>
     </main>
 
@@ -629,7 +633,15 @@
 
             }
         }
-
+        /* ---------- scroll reveal + CTA ---------- */
+        const io = new IntersectionObserver(es => es.forEach(e => {
+            if (e.isIntersecting) { e.target.classList.add("in"); io.unobserve(e.target); }
+        }), { threshold: 0.12 });
+        document.querySelectorAll(".reveal").forEach(el => io.observe(el));
+        document.getElementById("ctaSearch").addEventListener("click", () => {
+            window.scrollTo({ top: 0, behavior: "smooth" });
+            setTimeout(() => searchInput.focus(), 500);
+        });
     </script>
     <script src="interestingEntities.js"></script>
 </body>
