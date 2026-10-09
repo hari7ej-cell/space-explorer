@@ -232,28 +232,29 @@
 
                     </a>
 
-                </section>
-                <section class="topic-section compact-topic">
-                    <div class="section-heading">
-                        <h2>Interesting Planet</h2>
-                        <span></span>
-                    </div>
-
-                    <div class="feature-card interesting-card">
-                        <div class="feature-planet jupiter-visual large-feature-planet"></div>
-                        <div>
-                            <span class="eyebrow">JUPITER</span>
-                            <h3>A giant with a storm bigger than Earth</h3>
-                            <p>
-                                Jupiter is the largest planet in the Solar System. Its atmosphere
-                                contains enormous storms, including the famous Great Red Spot.
-                            </p>
-                            <a href="#" class="feature-link">View Jupiter →</a>
+                    <section class="topic-section interesting-entities-section">
+                        <div class="section-heading">
+                            <h2>Interesting Space Entities</h2>
+                            <span></span>
                         </div>
-                    </div>
-                </section>
 
+                        <p class="entities-intro">
+                            Explore extraordinary objects in our universe, from mysterious
+                            black holes to fascinating distant galaxies.
+                        </p>
+
+                        <div class="interesting-entities-grid" id="interestingEntitiesGrid"></div>
+
+
+                        <div class="entities-toggle-container">
+                            <button id="toggleEntitiesBtn" class="entities-toggle-btn">
+                                Explore More ↓
+                            </button>
+                        </div>
             </div>
+        </section>
+
+        </div>
         </section>
     </main>
 
@@ -531,7 +532,106 @@
         // =========================
 
         loadLatestDiscovery();
+        // =========================
+        // INTERESTING SPACE ENTITY
+        // =========================
+
+        const interestingEntityCard =
+            document.getElementById("interestingEntityCard");
+
+        const interestingEntityImage =
+            document.getElementById("interestingEntityImage");
+
+        const interestingEntityType =
+            document.getElementById("interestingEntityType");
+
+        const interestingEntityTitle =
+            document.getElementById("interestingEntityTitle");
+
+        const interestingEntityCaption =
+            document.getElementById("interestingEntityCaption");
+
+
+        async function loadInterestingEntity() {
+
+            try {
+
+                const response =
+                    await fetch(
+                        "http://localhost:3000/api/interesting-entity"
+                    );
+
+                if (!response.ok) {
+                    throw new Error(
+                        `API returned ${response.status}`
+                    );
+                }
+
+                const entity =
+                    await response.json();
+
+                console.log(
+                    "Interesting entity:",
+                    entity
+                );
+
+
+                // =========================
+                // TEXT
+                // =========================
+
+                interestingEntityType.textContent =
+                    entity.type.toUpperCase();
+
+                interestingEntityTitle.textContent =
+                    entity.title;
+
+                interestingEntityCaption.textContent =
+                    entity.caption;
+
+
+                // =========================
+                // IMAGE
+                // =========================
+
+                if (entity.image) {
+
+                    interestingEntityImage.style.backgroundImage =
+                        `url("${entity.image}")`;
+
+                }
+
+
+                // =========================
+                // CARD LINK
+                // =========================
+
+                interestingEntityCard.href =
+                    "planet-detail.html?entity=" +
+                    encodeURIComponent(entity.name);
+
+
+            } catch (error) {
+
+                console.error(
+                    "Interesting entity error:",
+                    error
+                );
+
+                interestingEntityType.textContent =
+                    "SPACE ENTITY";
+
+                interestingEntityTitle.textContent =
+                    "Unable to load";
+
+                interestingEntityCaption.textContent =
+                    "Interesting space entity data is currently unavailable.";
+
+            }
+        }
+
     </script>
+    <script src="interestingEntities.js"></script>
 </body>
 
 </html>
