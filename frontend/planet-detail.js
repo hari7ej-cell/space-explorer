@@ -1,3 +1,5 @@
+"use strict";
+
 const API_BASE = "http://localhost:3000";
 
 const params = new URLSearchParams(window.location.search);
@@ -6,7 +8,10 @@ const entity = (params.get("entity") || "Mars").trim();
 const app = document.getElementById("app");
 
 
-/* Escape HTML to prevent article content from breaking the page. */
+// ======================================================
+// HTML UTILITIES
+// ======================================================
+
 function escapeHTML(value) {
     return String(value ?? "").replace(/[&<>'"]/g, character => ({
         "&": "&amp;",
@@ -18,344 +23,344 @@ function escapeHTML(value) {
 }
 
 
-/* Return a compact navigation label. */
-function shortLabel(topic) {
-    const label = String(
-        topic.shortTitle || topic.title || "Topic"
-    ).trim();
+// ======================================================
+// TEXT UTILITIES
+// ======================================================
 
-    return label.split(/\s+/).slice(0, 2).join(" ");
+function normalizeText(value) {
+    return String(value ?? "")
+        .replace(/\r/g, "")
+        .trim();
 }
 
 
-/* Find the image belonging to a particular article section. */
+/*
+    Wikipedia sections may contain plain text with paragraphs
+    separated by newlines. Convert it to readable HTML.
+
+    If the backend supplies actual HTML, retain its formatting.
+*/
+
+function renderArticleContent(content) {
+    if (!content) {
+        return "";
+    }
+
+    const value = String(content).trim();
+
+    if (!value) {
+        return "";
+    }
+
+    // Backend currently supplies plain text from topicParser.js.
+    const looksLikeHTML = /<\/?(p|ul|ol|li|h[1-6]|table|blockquote|div|figure)\b/i.test(value);
+
+    if (looksLikeHTML) {
+        return cleanTopicHTML(value);
+    }
+
+    return value
+        .split(/\n\s*\n/)
+        .map(paragraph => paragraph.trim())
+        .filter(Boolean)
+        .map(paragraph => {
+            const escaped = escapeHTML(paragraph)
+                .replace(/\n/g, "<br>");
+
+            return `<p>${escaped}</p>`;
+        })
+        .join("");
+}
+
+
+/*
+    Remove unwanted administrative elements from article HTML,
+    without removing the article's useful text.
+*/
+
+function cleanTopicHTML(html) {
+    const wrapper = document.createElement("div");
+    wrapper.innerHTML = html;
+
+    wrapper.querySelectorAll(
+        ".mw-editsection, .reference, .reflist, " +
+        ".references, .mw-references-wrap, script, style"
+    ).forEach(element => element.remove());
+
+    return wrapper.innerHTML;
+}
+
+
+// ======================================================
+// IMAGE UTILITIES
+// ======================================================
+
+function isValidImageURL(url) {
+    if (!url || typeof url !== "string") {
+        return false;
+    }
+
+    try {
+        const parsed = new URL(url);
+
+        return (
+            parsed.protocol === "https:" ||
+            parsed.protocol === "http:"
+        );
+    } catch {
+        return false;
+    }
+}
+
+
+/*
+    Find an image belonging to a specific article topic.
+*/
+
 function mediaForTopic(images, topicId) {
-    return (images || []).find(
-        image => image.topicId === topicId && image.url
+    if (!Array.isArray(images)) {
+        return null;
+    }
+
+    return images.find(image =>
+        image &&
+        image.topicId === topicId &&
+        isValidImageURL(image.url)
     ) || null;
 }
 
 
-/* Use the best available hero image. */
+/*
+    Use the image returned by the backend as the hero image.
+
+    The overview image is preferred. If it is unavailable,
+    use the first available image.
+*/
+
 function getHeroImage(data) {
-    return data.heroImage ||
-        mediaForTopic(data.images, "overview") ||
-        (data.images || []).find(image => image.url) ||
-        null;
+    const images = Array.isArray(data.images)
+        ? data.images
+        : [];
+
+    if (data.heroImage && isValidImageURL(data.heroImage.url)) {
+        return data.heroImage;
+    }
+
+    return (
+        mediaForTopic(images, "overview") ||
+        images.find(image => isValidImageURL(image.url)) ||
+        null
+    );
 }
 
 
-/* Hero background image. */
-function renderHeroImage(hero) {
-    if (!hero || !hero.url) {
-        return "";
+/*
+    Extract a useful image directly from article HTML.
+
+    This is a fallback for sections where the image service
+    did not return a matching image.
+*/
+
+function extractImageFromContent(topic) {
+    if (!topic || !topic.content) {
+        return null;
     }
 
-    return `style="background-image: url('${escapeHTML(hero.url)}')"`;
-}
-
-
-/* Add the top-bar model link only when a model exists. */
-function setupModelTopLink(model) {
-    const topbar = document.querySelector(".topbar");
-
-    if (!topbar) return;
-
-    const existingLink = topbar.querySelector(".model-top-link");
-
-    if (existingLink) {
-        existingLink.remove();
-    }
-
-    if (!model || !model.available || !model.url) {
-        return;
-    }
-
-    const link = document.createElement("a");
-
-    link.className = "model-top-link";
-    link.href = "#entity-model";
-    link.textContent = "3D Model";
-
-    link.addEventListener("click", event => {
-        event.preventDefault();
-
-        const modelSection = document.getElementById("entity-model");
-
-        if (modelSection) {
-            modelSection.scrollIntoView({
-                behavior: "smooth",
-                block: "start"
-            });
-        }
-    });
-
-    topbar.appendChild(link);
-}
-
-
-/* Remove unnecessary article images from copied section HTML.
-   Section images are displayed separately in the alternating layout. */
-function cleanTopicContent(content) {
     const wrapper = document.createElement("div");
+    wrapper.innerHTML = String(topic.content);
 
-    wrapper.innerHTML = content || "";
+    const figure = wrapper.querySelector("figure");
 
-    wrapper.querySelectorAll(
-        "figure, .thumb, .mw-file-element, .mw-editsection"
-    ).forEach(element => element.remove());
+    const image =
+        figure?.querySelector("img") ||
+        wrapper.querySelector("img");
 
-    wrapper.querySelectorAll("img").forEach(image => image.remove());
+    if (!image) {
+        return null;
+    }
 
-    wrapper.querySelectorAll(
-        ".reference, .reflist, .references, .mw-references-wrap"
-    ).forEach(element => element.remove());
+    let url =
+        image.getAttribute("src") ||
+        image.getAttribute("data-src");
 
-    return wrapper.innerHTML.trim();
+    if (!url) {
+        return null;
+    }
+
+    try {
+        url = new URL(
+            url,
+            "https://en.wikipedia.org"
+        ).href;
+    } catch {
+        return null;
+    }
+
+    if (!isValidImageURL(url)) {
+        return null;
+    }
+
+    return {
+        topicId: topic.id,
+        title: topic.title || "Article image",
+        url,
+        alt: image.getAttribute("alt") || topic.title || "",
+        caption:
+            figure?.querySelector("figcaption")?.textContent?.trim() || "",
+        source: {
+            name: "Wikipedia",
+            url:
+                "https://en.wikipedia.org/wiki/" +
+                encodeURIComponent(topic.title || entity)
+        }
+    };
 }
 
 
-/* Render a section image and its caption. */
-function renderTopicImage(image, title) {
-    if (!image || !image.url) {
+/*
+    Find the best image available for a topic.
+
+    Priority:
+    1. Image service result.
+    2. Image inside the article.
+    3. Hero image for the overview section only.
+
+    Other sections do not reuse the same hero image.
+*/
+
+function getTopicImage(topic, images, hero) {
+    const serviceImage = mediaForTopic(images, topic.id);
+
+    if (serviceImage) {
+        return serviceImage;
+    }
+
+    const articleImage = extractImageFromContent(topic);
+
+    if (articleImage) {
+        return articleImage;
+    }
+
+    if (topic.id === "overview" && hero) {
+        return hero;
+    }
+
+    return null;
+}
+
+
+// ======================================================
+// IMAGE RENDERING
+// ======================================================
+
+function renderTopicImage(image, topicTitle) {
+    if (!image || !isValidImageURL(image.url)) {
         return "";
     }
 
-    const caption = image.caption
-        ? `<figcaption>${escapeHTML(image.caption)}</figcaption>`
-        : "";
+    const caption = normalizeText(
+        image.caption || image.description || ""
+    );
 
-    const source = image.source && image.source.url
-        ? `
-            <a
-                class="topic-image-source"
-                href="${escapeHTML(image.source.url)}"
-                target="_blank"
-                rel="noopener noreferrer">
-                Image source ↗
-            </a>
-        `
-        : "";
+    const sourceURL = image.source?.url || "";
+
+    const sourceName = image.source?.name || "Image source";
 
     return `
         <figure class="topic-media">
 
             <img
                 src="${escapeHTML(image.url)}"
-                alt="${escapeHTML(image.alt || title)}"
+                alt="${escapeHTML(image.alt || topicTitle)}"
                 loading="lazy"
-                referrerpolicy="no-referrer">
+                referrerpolicy="no-referrer"
+            >
 
-            ${caption}
+            ${
+                caption
+                    ? `
+                        <figcaption>
+                            ${escapeHTML(caption)}
+                        </figcaption>
+                    `
+                    : ""
+            }
 
-            ${source}
+            ${
+                sourceURL
+                    ? `
+                        <div class="topic-image-credit">
+
+                            <a
+                                href="${escapeHTML(sourceURL)}"
+                                target="_blank"
+                                rel="noopener noreferrer"
+                            >
+                                ${escapeHTML(sourceName)} ↗
+                            </a>
+
+                        </div>
+                    `
+                    : ""
+            }
 
         </figure>
     `;
 }
 
 
-/* Render the optional 3D model section. */
-function renderModel(data, name) {
-    const model = data.model3D;
+// ======================================================
+// HERO SECTION
+// ======================================================
 
-    if (!model || !model.available || !model.url) {
-        return "";
-    }
+function renderHero(data, name, hero) {
+    const summary = normalizeText(
+        data.summary || data.entity?.summary || ""
+    );
 
-    const credit = model.source && model.source.url
-        ? `
-            <p class="model-credit">
-                Source:
-                <a
-                    href="${escapeHTML(model.source.url)}"
-                    target="_blank"
-                    rel="noopener noreferrer">
-                    ${escapeHTML(model.source.name || "Source")}
-                </a>
-            </p>
-        `
+    const heroStyle = hero
+        ? `style="background-image: linear-gradient(
+            to bottom,
+            rgba(8,9,12,0.05) 10%,
+            rgba(8,9,12,0.96) 100%
+        ), url('${escapeHTML(hero.url)}')"`
         : "";
 
     return `
-        <section class="entity-model-section" id="entity-model">
+        <section class="hero entity-hero" ${heroStyle}>
 
-            <div class="model-header">
-                <span class="entity-kicker">
-                    INTERACTIVE EXPLORATION
-                </span>
+            ${
+                hero
+                    ? `
+                        <img
+                            class="hero-background-image"
+                            src="${escapeHTML(hero.url)}"
+                            alt="${escapeHTML(hero.alt || name)}"
+                            fetchpriority="high"
+                            referrerpolicy="no-referrer"
+                        >
+                    `
+                    : ""
+            }
 
-                <h2>${escapeHTML(name)} 3D Model</h2>
+            <div class="hero-content">
 
-                <p>
-                    Explore this interactive three-dimensional model.
-                </p>
-            </div>
-
-            <div class="entity-model-frame-wrap">
-                <iframe
-                    class="entity-model-frame"
-                    src="${escapeHTML(model.url)}"
-                    title="${escapeHTML(name)} 3D model"
-                    loading="lazy"
-                    allowfullscreen
-                    referrerpolicy="strict-origin-when-cross-origin">
-                </iframe>
-            </div>
-
-            ${credit}
-
-        </section>
-    `;
-}
-
-
-/* Main rendering function. */
-function render(data) {
-
-    const name = data.entity?.name || entity;
-
-    const topics = Array.isArray(data.topics)
-        ? data.topics
-        : [];
-
-    const images = Array.isArray(data.images)
-        ? data.images
-        : [];
-
-    const hero = getHeroImage(data);
-
-    const summary =
-        data.summary ||
-        topics.find(topic => topic.id === "overview")?.text ||
-        "";
-
-    document.title = `Space Explorer | ${name}`;
-
-    /*
-     * Keep sections with actual article content.
-     * The backend is responsible for removing administrative
-     * sections such as References and External links.
-     */
-    const usableTopics = topics.filter(topic =>
-        topic &&
-        topic.id &&
-        topic.title &&
-        (topic.content || topic.text)
-    );
-
-    /* Configure the optional model link. */
-    setupModelTopLink(data.model3D);
-
-
-    /* Build the horizontal topic navigation. */
-    const topicNavigation = usableTopics.map(topic => `
-        <a
-            href="#${escapeHTML(topic.id)}"
-            data-topic-id="${escapeHTML(topic.id)}">
-
-            ${escapeHTML(shortLabel(topic))}
-
-        </a>
-    `).join("");
-
-
-    /*
-     * Build article sections.
-     *
-     * Even-numbered sections:
-     * Text left, image right.
-     *
-     * Odd-numbered sections:
-     * Image left, text right.
-     */
-    const articleSections = usableTopics.map((topic, index) => {
-
-        const topicImage =
-            mediaForTopic(images, topic.id) ||
-            (index === 0 ? hero : null);
-
-        const rawContent = topic.content ||
-            `<p>${escapeHTML(topic.text || "")}</p>`;
-
-        const content = cleanTopicContent(rawContent);
-
-        const media = renderTopicImage(
-            topicImage,
-            topic.title
-        );
-
-        const imageOnLeft = index % 2 === 1;
-
-        const layoutClass = imageOnLeft
-            ? "media-left"
-            : "media-right";
-
-        return `
-            <section
-                class="topic-row ${layoutClass}"
-                id="${escapeHTML(topic.id)}">
-
-                <div class="topic-copy">
-
-                    <span class="topic-number">
-                        ${String(index + 1).padStart(2, "0")}
-                    </span>
-
-                    <h2>${escapeHTML(topic.title)}</h2>
-
-                    <div class="article-section-content">
-                        ${
-                            content ||
-                            `<p>${escapeHTML(topic.text || "")}</p>`
-                        }
-                    </div>
-
-                </div>
-
-                ${
-                    media
-                        ? `<div class="topic-visual">${media}</div>`
-                        : ""
-                }
-
-            </section>
-        `;
-    }).join("");
-
-
-    /* Source links. */
-    const heroSource =
-        hero?.source?.url ||
-        data.wikipediaUrl ||
-        "";
-
-
-    /* Build the entire page. */
-    app.innerHTML = `
-
-        <section
-            class="entity-hero"
-            ${renderHeroImage(hero)}>
-
-            <div class="entity-hero-content">
-
-                <span class="entity-kicker">
+                <span class="eyebrow">
                     ${escapeHTML(data.entity?.type || "SPACE ENTITY")}
                 </span>
 
-                <h1 class="entity-title">
+                <h1>
                     ${escapeHTML(name)}
                 </h1>
 
-                <p class="entity-intro">
+                <p class="hero-summary">
                     ${escapeHTML(summary)}
                 </p>
 
                 ${
                     hero?.caption
                         ? `
-                            <p class="hero-image-caption">
+                            <p class="hero-caption">
                                 ${escapeHTML(hero.caption)}
                             </p>
                         `
@@ -363,13 +368,14 @@ function render(data) {
                 }
 
                 ${
-                    heroSource
+                    hero?.source?.url
                         ? `
                             <a
                                 class="hero-source"
-                                href="${escapeHTML(heroSource)}"
+                                href="${escapeHTML(hero.source.url)}"
                                 target="_blank"
-                                rel="noopener noreferrer">
+                                rel="noopener noreferrer"
+                            >
                                 Image source ↗
                             </a>
                         `
@@ -379,39 +385,356 @@ function render(data) {
             </div>
 
         </section>
+    `;
+}
 
 
-        ${
-            topicNavigation
-                ? `
-                    <nav
-                        class="article-navigation"
-                        aria-label="Article topics">
+// ======================================================
+// TOPIC NAVIGATION
+// ======================================================
 
-                        <div class="article-navigation-inner">
-                            ${topicNavigation}
+function renderTopicNavigation(topics) {
+    if (!topics.length) {
+        return "";
+    }
+
+    return `
+        <nav class="topic-nav article-navigation"
+             aria-label="Article topics">
+
+            ${
+                topics.map(topic => {
+
+                    const label = (
+                        topic.shortTitle ||
+                        topic.title ||
+                        "Topic"
+                    ).trim();
+
+                    return `
+                        <a
+                            href="#${escapeHTML(topic.id)}"
+                            data-topic-id="${escapeHTML(topic.id)}"
+                        >
+                            ${escapeHTML(label)}
+                        </a>
+                    `;
+                }).join("")
+            }
+
+        </nav>
+    `;
+}
+
+
+// ======================================================
+// ARTICLE SECTIONS
+// ======================================================
+
+function renderTopicSection(topic, index, images, hero) {
+    const image = getTopicImage(topic, images, hero);
+
+    const content = renderArticleContent(
+        topic.content || topic.text || ""
+    );
+
+    /*
+        Alternate only when an image actually exists.
+
+        Image available:
+          Section 1: text left, image right
+          Section 2: image left, text right
+          Section 3: text left, image right
+
+        No image:
+          Text uses the full available width.
+    */
+
+    const hasImage = Boolean(image);
+
+    let layoutClass = "text-only";
+
+    if (hasImage) {
+        layoutClass = index % 2 === 0
+            ? "media-right"
+            : "media-left";
+    }
+
+    return `
+        <section
+            class="topic topic-row ${layoutClass}"
+            id="${escapeHTML(topic.id)}"
+        >
+
+            <div class="topic-copy">
+
+                <span class="eyebrow topic-eyebrow">
+                    TOPIC ${String(index + 1).padStart(2, "0")}
+                </span>
+
+                <h2>
+                    ${escapeHTML(topic.title || "Topic")}
+                </h2>
+
+                <div class="article-section-content">
+                    ${
+                        content ||
+                        "<p>Information is not available for this topic.</p>"
+                    }
+                </div>
+
+            </div>
+
+            ${
+                hasImage
+                    ? `
+                        <div class="topic-visual">
+                            ${renderTopicImage(image, topic.title)}
                         </div>
+                    `
+                    : ""
+            }
 
-                    </nav>
-                `
-                : ""
+        </section>
+    `;
+}
+
+
+// ======================================================
+// 3D MODEL
+// ======================================================
+
+function renderModel(data, name) {
+    const model = data.model3D;
+
+    if (
+        !model ||
+        model.available !== true ||
+        !isValidImageURL(model.url)
+    ) {
+        return "";
+    }
+
+    return `
+        <section
+            class="model-section entity-model-section"
+            id="entity-model"
+        >
+
+            <div class="model-header">
+
+                <span>
+                    INTERACTIVE 3D EXPERIENCE
+                </span>
+
+                <h2>
+                    Explore ${escapeHTML(name)} in 3D
+                </h2>
+
+                <p>
+                    Explore this interactive three-dimensional model.
+                </p>
+
+            </div>
+
+            <div class="mars-model-container">
+
+                <iframe
+                    class="entity-model-frame"
+                    src="${escapeHTML(model.url)}"
+                    title="${escapeHTML(name)} interactive 3D model"
+                    loading="lazy"
+                    allowfullscreen
+                    referrerpolicy="strict-origin-when-cross-origin"
+                ></iframe>
+
+            </div>
+
+            ${
+                model.source?.url
+                    ? `
+                        <div class="model-credit">
+
+                            Source:
+
+                            <a
+                                href="${escapeHTML(model.source.url)}"
+                                target="_blank"
+                                rel="noopener noreferrer"
+                            >
+                                ${escapeHTML(model.source.name || "Model source")}
+                            </a>
+
+                        </div>
+                    `
+                    : ""
+            }
+
+        </section>
+    `;
+}
+
+
+/*
+    Add the 3D Model button to the top bar only when the API
+    reports an actual available model.
+*/
+
+function setupModelTopLink(data) {
+    const topbar = document.querySelector(".topbar");
+
+    if (!topbar) {
+        return;
+    }
+
+    topbar.querySelector(".model-top-link")?.remove();
+
+    const model = data.model3D;
+
+    if (
+        !model ||
+        model.available !== true ||
+        !model.url
+    ) {
+        return;
+    }
+
+    const button = document.createElement("a");
+
+    button.className = "model-top-link";
+    button.href = "#entity-model";
+    button.textContent = "3D Model";
+
+    button.addEventListener("click", event => {
+        const section = document.getElementById("entity-model");
+
+        if (!section) {
+            event.preventDefault();
+            return;
         }
 
+        event.preventDefault();
 
-        <div class="article-layout">
+        section.scrollIntoView({
+            behavior: "smooth",
+            block: "start"
+        });
+    });
+
+    topbar.appendChild(button);
+}
+
+
+// ======================================================
+// ARTICLE NAVIGATION BEHAVIOR
+// ======================================================
+
+function setupTopicNavigation() {
+    const links = [
+        ...document.querySelectorAll(
+            ".article-navigation a"
+        )
+    ];
+
+    links.forEach(link => {
+        link.addEventListener("click", event => {
+            const target = document.querySelector(
+                link.getAttribute("href")
+            );
+
+            if (!target) {
+                return;
+            }
+
+            event.preventDefault();
+
+            target.scrollIntoView({
+                behavior: "smooth",
+                block: "start"
+            });
+
+            history.replaceState(
+                null,
+                "",
+                link.getAttribute("href")
+            );
+        });
+    });
+}
+
+
+// ======================================================
+// REMOVE BROKEN IMAGES
+// ======================================================
+
+function setupImageErrors() {
+    document.querySelectorAll(
+        ".topic-media img, .hero-background-image"
+    ).forEach(image => {
+        image.addEventListener("error", () => {
+            const figure = image.closest("figure");
+
+            if (figure) {
+                figure.remove();
+                return;
+            }
+
+            image.remove();
+        }, { once: true });
+    });
+}
+
+
+// ======================================================
+// RENDER COMPLETE PAGE
+// ======================================================
+
+function render(data) {
+    const name = data.entity?.name || entity;
+
+    document.title = `Space Explorer - ${name}`;
+
+    const topics = Array.isArray(data.topics)
+        ? data.topics.filter(topic =>
+            topic &&
+            topic.id &&
+            topic.title
+        )
+        : [];
+
+    const images = Array.isArray(data.images)
+        ? data.images
+        : [];
+
+    const hero = getHeroImage(data);
+
+    /*
+        The backend may provide text for each topic. Keep the
+        article content intact instead of hiding it in controls.
+    */
+
+    const articleSections = topics
+        .map((topic, index) =>
+            renderTopicSection(topic, index, images, hero)
+        )
+        .join("");
+
+    app.innerHTML = `
+        ${renderHero(data, name, hero)}
+
+        ${renderTopicNavigation(topics)}
+
+        <main class="container article-layout">
 
             <div class="article-heading">
 
-                <span class="entity-kicker">
+                <span class="eyebrow">
                     DISCOVER ${escapeHTML(name).toUpperCase()}
                 </span>
 
-                <h2>Explore the details</h2>
-
-                <p>
-                    Discover the story, science, and features
-                    of ${escapeHTML(name)}.
-                </p>
+                <h2>
+                    Explore the details
+                </h2>
 
             </div>
 
@@ -419,7 +742,7 @@ function render(data) {
                 articleSections ||
                 `
                     <p class="article-empty">
-                        No readable article sections were found.
+                        No article sections were returned by the backend.
                     </p>
                 `
             }
@@ -428,144 +751,50 @@ function render(data) {
                 data.wikipediaUrl
                     ? `
                         <div class="article-source">
-                            Article source:
+
                             <a
                                 href="${escapeHTML(data.wikipediaUrl)}"
                                 target="_blank"
-                                rel="noopener noreferrer">
-                                Read ${escapeHTML(name)} on Wikipedia ↗
+                                rel="noopener noreferrer"
+                            >
+                                Read the full Wikipedia article ↗
                             </a>
+
                         </div>
                     `
                     : ""
             }
 
-        </div>
-
+        </main>
 
         ${renderModel(data, name)}
-
     `;
 
+    setupModelTopLink(data);
     setupTopicNavigation();
-    setupInlineImages();
+    setupImageErrors();
 }
 
 
-/* Smooth-scroll topic navigation. */
-function setupTopicNavigation() {
+// ======================================================
+// LOAD DATA
+// ======================================================
 
-    const links = [
-        ...document.querySelectorAll(".article-navigation a")
-    ];
-
-    links.forEach(link => {
-
-        link.addEventListener("click", event => {
-
-            event.preventDefault();
-
-            const id = link.dataset.topicId;
-            const target = document.getElementById(id);
-
-            if (!target) return;
-
-            target.scrollIntoView({
-                behavior: "smooth",
-                block: "start"
-            });
-
-            links.forEach(item => {
-                item.classList.toggle("active", item === link);
-            });
-
-            history.replaceState(
-                null,
-                "",
-                `#${encodeURIComponent(id)}`
-            );
-
-        });
-
-    });
-
-
-    /* Highlight the current topic while scrolling. */
-    if ("IntersectionObserver" in window) {
-
-        const observer = new IntersectionObserver(entries => {
-
-            const visible = entries
-                .filter(entry => entry.isIntersecting)
-                .sort(
-                    (a, b) =>
-                        b.intersectionRatio - a.intersectionRatio
-                )[0];
-
-            if (!visible) return;
-
-            links.forEach(link => {
-
-                link.classList.toggle(
-                    "active",
-                    link.dataset.topicId === visible.target.id
-                );
-
-            });
-
-        }, {
-            rootMargin: "-140px 0px -60% 0px",
-            threshold: [0, 0.1, 0.5]
-        });
-
-
-        document.querySelectorAll(".topic-row").forEach(section => {
-            observer.observe(section);
-        });
-
-    }
-
-}
-
-
-/* Remove images that fail to load. */
-function setupInlineImages() {
-
-    document.querySelectorAll(
-        ".topic-media img, .article-section-content img"
-    ).forEach(image => {
-
-        image.loading = "lazy";
-        image.referrerPolicy = "no-referrer";
-
-        image.addEventListener("error", () => {
-
-            const figure = image.closest("figure");
-
-            if (figure && figure.classList.contains("topic-media")) {
-                figure.remove();
-            } else {
-                image.remove();
-            }
-
-        }, { once: true });
-
-    });
-
-}
-
-
-/* Fetch article data from the backend. */
-async function loadEntity() {
-
+async function loadPlanet() {
     try {
+        app.innerHTML = `
+            <div class="state">
+                Loading ${escapeHTML(entity)}...
+            </div>
+        `;
 
         const response = await fetch(
             `${API_BASE}/api/planet/${encodeURIComponent(entity)}`,
             {
                 headers: {
-                    Accept: "application/json"
-                }
+                    "Accept": "application/json"
+                },
+                cache: "no-store"
             }
         );
 
@@ -573,40 +802,36 @@ async function loadEntity() {
 
         if (!response.ok) {
             throw new Error(
-                data.error || `Request failed (${response.status})`
+                data.error || `Server returned ${response.status}`
             );
         }
 
         render(data);
 
     } catch (error) {
-
-        console.error("Space entity loading error:", error);
+        console.error("Planet loading error:", error);
 
         app.innerHTML = `
             <div class="state error">
 
                 <div>
-
-                    <h2>
-                        Unable to load ${escapeHTML(entity)}
-                    </h2>
+                    <h2>Unable to load ${escapeHTML(entity)}</h2>
 
                     <p>${escapeHTML(error.message)}</p>
 
-                    <p class="error-hint">
-                        Check that the backend is running at
-                        ${escapeHTML(API_BASE)}.
+                    <p>
+                        Check that your backend is running on port 3000.
                     </p>
-
                 </div>
 
             </div>
         `;
-
     }
-
 }
 
 
-loadEntity();
+// ======================================================
+// START
+// ======================================================
+
+loadPlanet();

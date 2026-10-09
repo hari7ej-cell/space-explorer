@@ -1,13 +1,32 @@
+"use strict";
+
 const express = require("express");
 const cors = require("cors");
+
 const {
     getLatestDiscovery
 } = require("./services/latestDiscovery");
-const { getWikipediaPage } = require("./services/wikipedia");
-const { createTopics } = require("./services/topicParser");
-const { getHeroImage } = require("./services/imageService");
-const { extractStructuredData } = require("./services/structuredData");
-const { processPlanet } = require("./services/cppService");
+
+const {
+    getWikipediaPage
+} = require("./services/wikipedia");
+
+const {
+    createTopics
+} = require("./services/topicParser");
+
+const {
+    getTopicImages
+} = require("./services/imageService");
+
+const {
+    extractStructuredData
+} = require("./services/structuredData");
+
+const {
+    processPlanet
+} = require("./services/cppService");
+
 
 const app = express();
 
@@ -16,29 +35,21 @@ app.use(express.json());
 
 const PORT = 3000;
 
-/*
-====================================================
-CACHE CONFIGURATION
-====================================================
-*/
 
-// Keep completed planet responses for 10 minutes.
+// ======================================================
+// CACHE CONFIGURATION
+// ======================================================
+
 const CACHE_TTL = 10 * 60 * 1000;
 
-// Stores completed responses.
 const planetCache = new Map();
 
-// Stores requests that are currently being processed.
-// This prevents two users/requests from fetching Mars
-// from Wikipedia + NASA at the same time.
 const pendingRequests = new Map();
 
 
-/*
-====================================================
-CACHE HELPERS
-====================================================
-*/
+// ======================================================
+// CACHE HELPERS
+// ======================================================
 
 function getCachedPlanet(name) {
     const cached = planetCache.get(name);
@@ -47,9 +58,7 @@ function getCachedPlanet(name) {
         return null;
     }
 
-    const age = Date.now() - cached.timestamp;
-
-    if (age > CACHE_TTL) {
+    if (Date.now() - cached.timestamp > CACHE_TTL) {
         planetCache.delete(name);
         return null;
     }
@@ -66,305 +75,282 @@ function setCachedPlanet(name, data) {
 }
 
 
-/*
-====================================================
-PLANET API
-====================================================
-*/
+// ======================================================
+// 3D MODEL CONFIGURATION
+// ======================================================
+
+function getModel3D(entityName) {
+    const normalized = entityName.trim().toLowerCase();
+
+    /*
+        The embed URL below is the NASA Mars interactive model.
+
+        Do not mark every space entity as having a model.
+        A model is shown only when an actual model URL is known.
+    */
+
+    if (normalized === "mars") {
+        return {
+            available: true,
+
+            name: "Mars",
+
+            url: "https://mars.nasa.gov/gltf_embed/24881",
+
+            format: "glTF",
+
+            source: {
+                name: "NASA/JPL-Caltech",
+
+                url: "https://science.nasa.gov/resource/planet-mars-3d-model/"
+            }
+        };
+    }
+
+    return {
+        available: false
+    };
+}
+
+
+// ======================================================
+// SUMMARY HELPER
+// ======================================================
+
+function makeSummary(topics) {
+    const overview = topics.find(
+        topic => topic.id === "overview"
+    );
+
+    const text = String(
+        overview?.content ||
+        overview?.text ||
+        "Space entity information."
+    );
+
+    /*
+        The overview is plain text in the current topicParser.
+        Keep it short for the hero section.
+    */
+
+    return text
+        .replace(/\s+/g, " ")
+        .trim()
+        .slice(0, 700);
+}
+
+
+// ======================================================
+// HERO IMAGE HELPER
+// ======================================================
+
+function getHeroImage(images, name, wikiURL) {
+    const list = Array.isArray(images) ? images : [];
+
+    const overviewImage = list.find(image =>
+        image &&
+        image.topicId === "overview" &&
+        image.url
+    );
+
+    const firstImage = list.find(image =>
+        image && image.url
+    );
+
+    const image = overviewImage || firstImage;
+
+    if (!image) {
+        return null;
+    }
+
+    return {
+        ...image,
+
+        title: image.title || name,
+
+        alt: image.alt || image.title || name,
+
+        source: image.source || {
+            name: "Wikipedia",
+            url: wikiURL
+        }
+    };
+}
+
+
+// ======================================================
+// MAIN PLANET API
+// ======================================================
 
 app.get("/api/planet/:name", async (req, res) => {
-
     const startTime = Date.now();
 
     try {
-
-        const name = req.params.name.trim();
+        const name = decodeURIComponent(
+            req.params.name || ""
+        ).trim();
 
         if (!name) {
             return res.status(400).json({
-                error: "Planet name is required"
+                error: "Space entity name is required."
             });
         }
 
-        // Normalize cache key.
-        const cacheKey =
-            decodeURIComponent(name).toLowerCase();
+        const cacheKey = name.toLowerCase();
 
-
-        /*
-        ====================================================
-        1. CHECK CACHE
-        ====================================================
-        */
+        // ----------------------------------------------
+        // Check server cache
+        // ----------------------------------------------
 
         const cached = getCachedPlanet(cacheKey);
 
         if (cached) {
+            console.log(`[CACHE HIT] ${name}`);
 
-            console.log(
-                `[CACHE HIT] ${name} - ${
-                    Date.now() - startTime
-                } ms`
-            );
-
-            // Tell browser it can reuse this response.
-            res.set(
-                "Cache-Control",
-                "public, max-age=600"
-            );
+            res.set("Cache-Control", "no-store");
 
             return res.json(cached);
         }
 
-
-        /*
-        ====================================================
-        2. CHECK IF SAME REQUEST IS ALREADY RUNNING
-        ====================================================
-        */
+        // ----------------------------------------------
+        // Avoid duplicate simultaneous requests
+        // ----------------------------------------------
 
         if (pendingRequests.has(cacheKey)) {
+            console.log(`[WAITING] ${name}`);
 
-            console.log(
-                `[WAITING] ${name} request already running`
-            );
+            const result = await pendingRequests.get(cacheKey);
 
-            const result =
-                await pendingRequests.get(cacheKey);
-
-            res.set(
-                "Cache-Control",
-                "public, max-age=600"
-            );
+            res.set("Cache-Control", "no-store");
 
             return res.json(result);
         }
 
+        // ----------------------------------------------
+        // Build new response
+        // ----------------------------------------------
 
-        /*
-        ====================================================
-        3. START NEW PLANET REQUEST
-        ====================================================
-        */
+        const requestPromise = buildPlanet(name);
 
-        const planetPromise = buildPlanet(name);
-
-        pendingRequests.set(
-            cacheKey,
-            planetPromise
-        );
-
+        pendingRequests.set(cacheKey, requestPromise);
 
         try {
+            const result = await requestPromise;
 
-            const result =
-                await planetPromise;
-
-            /*
-            ====================================================
-            4. SAVE COMPLETE RESULT TO CACHE
-            ====================================================
-            */
-
-            setCachedPlanet(
-                cacheKey,
-                result
-            );
-
-
-            /*
-            ====================================================
-            5. BROWSER CACHE
-            ====================================================
-            */
-
-            res.set(
-                "Cache-Control",
-                "public, max-age=600"
-            );
-
+            setCachedPlanet(cacheKey, result);
 
             console.log(
-                `[CACHE STORE] ${name} - ${
-                    Date.now() - startTime
-                } ms`
+                `[CACHE STORE] ${name} - ${Date.now() - startTime} ms`
             );
 
+            res.set("Cache-Control", "no-store");
 
             return res.json(result);
 
         } finally {
-
-            // Remove the running request.
             pendingRequests.delete(cacheKey);
         }
 
     } catch (error) {
-
-        console.error(
-            "API ERROR:",
-            error
-        );
+        console.error("PLANET API ERROR:", error);
 
         return res.status(500).json({
-            error: error.message
-        });
-    }
-});
-app.get("/api/latest-discovery", async (req, res) => {
-
-    try {
-
-        const discovery =
-            await getLatestDiscovery();
-
-        res.json(discovery);
-
-    } catch (error) {
-
-        console.error(
-            "LATEST DISCOVERY ERROR:",
-            error
-        );
-
-        res.status(500).json({
-            error: error.message
+            error: error.message || "Unable to load space entity."
         });
     }
 });
 
-/*
-====================================================
-ENTITY TYPE HELPER
-====================================================
-*/
 
-function inferEntityType(title, summary) {
-    const value = `${title || ""} ${summary || ""}`.toLowerCase();
-    if (value.includes("black hole")) return "Black Hole";
-    if (value.includes("galaxy")) return "Galaxy";
-    if (value.includes("nebula")) return "Nebula";
-    if (value.includes("asteroid")) return "Asteroid";
-    if (value.includes("comet")) return "Comet";
-    if (value.includes("pulsar")) return "Pulsar";
-    if (value.includes("quasar")) return "Quasar";
-    if (value.includes("exoplanet")) return "Exoplanet";
-    if (value.includes("moon") || value.includes("natural satellite")) return "Natural Satellite";
-    if (value.includes("star")) return "Star";
-    if (value.includes("planet")) return "Planet";
-    return "Space Entity";
-}
-
-/*
-====================================================
-BUILD PLANET
-====================================================
-*/
+// ======================================================
+// BUILD PLANET RESPONSE
+// ======================================================
 
 async function buildPlanet(name) {
-
     const totalStart = Date.now();
 
     console.log("");
-    console.log("================================");
-    console.log(`Loading: ${name}`);
-    console.log("================================");
+    console.log("======================================");
+    console.log(`Loading space entity: ${name}`);
+    console.log("======================================");
 
-
-    /*
-    ====================================================
-    STEP 1: WIKIPEDIA
-    ====================================================
-    */
+    // ----------------------------------------------
+    // STEP 1: Fetch Wikipedia article
+    // ----------------------------------------------
 
     const wikiStart = Date.now();
 
-    const wiki =
-        await getWikipediaPage(name);
+    const wiki = await getWikipediaPage(name);
 
     console.log(
-        `Wikipedia: ${wiki.title} - ${
-            Date.now() - wikiStart
-        } ms`
+        `Wikipedia: ${wiki.title} - ${Date.now() - wikiStart} ms`
     );
 
-
-    /*
-    ====================================================
-    STEP 2: PARSE WIKIPEDIA
-    ====================================================
-    */
+    // ----------------------------------------------
+    // STEP 2: Parse article into topics
+    // ----------------------------------------------
 
     const parseStart = Date.now();
 
-    const topics =
-        createTopics(wiki.html);
+    const topics = createTopics(wiki.html);
 
-    const overview =
-        topics.find(
-            topic => topic.id === "overview"
-        );
+    const summary = makeSummary(topics);
 
-    const summary =
-        (
-            overview?.text ||
-            overview?.content?.replace(/<[^>]*>/g, " ") ||
-            "Space entity information."
-        ).slice(0, 900);
-
-    const details =
-        extractStructuredData(wiki.html);
+    const details = extractStructuredData(wiki.html);
 
     console.log(
-        `Parsing: ${
-            Date.now() - parseStart
-        } ms`
+        `Topic parsing: ${Date.now() - parseStart} ms`
     );
 
-    console.log(
-        `Topics: ${topics.length}`
-    );
+    console.log(`Topics returned: ${topics.length}`);
 
-
-    /*
-    ====================================================
-    STEP 3: HIGH-RESOLUTION HERO IMAGE
-    ====================================================
-    */
+    // ----------------------------------------------
+    // STEP 3: Retrieve topic images
+    // ----------------------------------------------
 
     const imageStart = Date.now();
 
-    const heroImage = await getHeroImage(wiki.title, wiki.html);
-    const images = heroImage
-        ? [{
-            topicId: "overview",
-            url: heroImage.url,
-            title: heroImage.title || wiki.title,
-            caption: heroImage.caption || "",
-            source: heroImage.source || {
-                name: "Wikipedia",
-                url: wiki.url
-            }
-        }]
-        : [];
+    let images = [];
+
+    try {
+        images = await getTopicImages(
+            wiki.title,
+            topics
+        );
+
+        if (!Array.isArray(images)) {
+            images = [];
+        }
+
+    } catch (error) {
+        console.error(
+            "TOPIC IMAGE ERROR:",
+            error.message
+        );
+
+        images = [];
+    }
 
     console.log(
-        `Hero image: ${heroImage ? "available" : "not available"} - ${
-            Date.now() - imageStart
-        } ms`
+        `Images returned: ${images.length} - ${Date.now() - imageStart} ms`
     );
 
+    // ----------------------------------------------
+    // STEP 4: Create hero image
+    // ----------------------------------------------
 
-    /*
-    ====================================================
-    STEP 4: SEND DATA TO C++
-    ====================================================
-    */
+    const heroImage = getHeroImage(
+        images,
+        wiki.title,
+        wiki.url
+    );
+
+    // ----------------------------------------------
+    // STEP 5: Send data through existing C++ service
+    // ----------------------------------------------
 
     const cppStart = Date.now();
 
     const cppInput = {
-
         type: "Planet",
 
         summary,
@@ -376,84 +362,85 @@ async function buildPlanet(name) {
         images
     };
 
-
-    const cppResult =
-        await processPlanet(cppInput);
-
+    const cppResult = await processPlanet(cppInput);
 
     console.log(
-        `C++ processing: ${
-            Date.now() - cppStart
-        } ms`
+        `C++ processing: ${Date.now() - cppStart} ms`
     );
 
-
     /*
-    ====================================================
-    STEP 5: FINAL RESPONSE
-    ====================================================
+        Explicitly retain the JavaScript article data.
+
+        This prevents an incomplete C++ result from accidentally
+        replacing topics or images with empty arrays.
     */
 
     const result = {
-
-        ...cppResult,
+        ...(cppResult || {}),
 
         entity: {
             name: wiki.title,
-            type: inferEntityType(wiki.title, summary)
+            type: "Planet"
         },
 
+        summary,
+
+        topics,
+
+        details,
+
+        images,
+
         heroImage,
+
         wikipediaUrl: wiki.url,
 
-        // This embed is currently known to be available for Mars only.
-        // Never show it for an unrelated entity.
-        model3D: /^mars$/i.test(wiki.title) ? {
-            available: true,
-            name: wiki.title,
-            url: "https://mars.nasa.gov/gltf_embed/24881",
-            format: "glTF",
-            source: {
-                name: "NASA/JPL-Caltech",
-                url: "https://science.nasa.gov/resource/planet-mars-3d-model/"
-            }
-        } : {
-            available: false
-        }
+        model3D: getModel3D(wiki.title)
     };
 
-
     console.log(
-        `TOTAL: ${
-            Date.now() - totalStart
-        } ms`
+        `TOTAL: ${Date.now() - totalStart} ms`
     );
 
-    console.log(
-        "================================"
-    );
-
+    console.log("======================================");
 
     return result;
 }
 
 
-/*
-====================================================
-OPTIONAL CACHE STATUS ENDPOINT
-====================================================
-*/
+// ======================================================
+// LATEST DISCOVERY API
+// ======================================================
+
+app.get("/api/latest-discovery", async (req, res) => {
+    try {
+        const discovery = await getLatestDiscovery();
+
+        res.set("Cache-Control", "no-store");
+
+        return res.json(discovery);
+
+    } catch (error) {
+        console.error("LATEST DISCOVERY ERROR:", error);
+
+        return res.status(500).json({
+            error: error.message
+        });
+    }
+});
+
+
+// ======================================================
+// CACHE STATUS
+// ======================================================
 
 app.get("/api/cache", (req, res) => {
-
     const planets = [];
 
     for (const [name, value] of planetCache) {
-
         planets.push({
             name,
-            age:
-                Date.now() - value.timestamp
+            age: Date.now() - value.timestamp
         });
     }
 
@@ -463,32 +450,37 @@ app.get("/api/cache", (req, res) => {
 });
 
 
-/*
-====================================================
-CLEAR CACHE
-====================================================
-*/
+// ======================================================
+// CLEAR CACHE
+// ======================================================
 
 app.delete("/api/cache", (req, res) => {
-
     planetCache.clear();
 
     res.json({
-        message: "Planet cache cleared"
+        message: "Planet cache cleared."
     });
 });
 
 
-/*
-====================================================
-START SERVER
-====================================================
-*/
+// ======================================================
+// HEALTH CHECK
+// ======================================================
+
+app.get("/api/health", (req, res) => {
+    res.json({
+        status: "ok",
+        service: "Space Explorer Backend"
+    });
+});
+
+
+// ======================================================
+// START SERVER
+// ======================================================
 
 app.listen(PORT, () => {
-
     console.log(
         `Space Explorer backend running at http://localhost:${PORT}`
     );
-
 });
