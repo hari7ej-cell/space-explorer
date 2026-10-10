@@ -1,6 +1,49 @@
+const exploreButton = document.getElementById("exploreButton");
+        const exploreDropdown = exploreButton.closest(".dropdown");
+
+        const accountButton = document.getElementById("accountButton");
+        const accountDropdown = accountButton.closest(".dropdown");
+
+        exploreButton.addEventListener("click", event => {
+            event.stopPropagation();
+            exploreDropdown.classList.toggle("active");
+            accountDropdown.classList.remove("active");
+        });
+
+        accountButton.addEventListener("click", event => {
+            event.stopPropagation();
+            accountDropdown.classList.toggle("active");
+            exploreDropdown.classList.remove("active");
+        });
+
+        document.addEventListener("click", () => {
+            exploreDropdown.classList.remove("active");
+            accountDropdown.classList.remove("active");
+        });
+
+        const searchInput = document.getElementById("searchInput");
+
+        searchInput.addEventListener("keydown", event => {
+            if (event.key === "Enter") {
+                const value = searchInput.value.trim();
+
+                if (value) {
+                    window.location.href =
+                        "index.html?search=" +
+                        encodeURIComponent(value);
+                }
+            }
+        });
 const API_BASE = "http://localhost:3000";
 const params = new URLSearchParams(window.location.search);
 const entity = params.get("entity") || "Mars";
+const breadcrumbEntity = document.getElementById("breadcrumb-entity");
+
+if (breadcrumbEntity) {
+    breadcrumbEntity.textContent = entity
+        .replace(/[-_]+/g, " ")
+        .replace(/\b\w/g, char => char.toUpperCase());
+}
 const app = document.getElementById("app");
 
 function escapeHTML(value) {
@@ -40,7 +83,7 @@ function shortSummary(value, max = 210) {
     return result;
 }
 
-function summarizeTopic(value, max = 1150) {
+function summarizeTopic(value, max = 2400) {
     let clean = normalizeText(value)
         .replace(/\b(edit|citation needed|failed verification)\b/gi, "")
         .replace(/\s+/g, " ")
@@ -50,9 +93,9 @@ function summarizeTopic(value, max = 1150) {
     let result = "";
     for (const sentence of sentences) {
         const next = (result ? " " : "") + sentence.trim();
-        // Keep a useful, readable paragraph: normally 3-5 sentences, not a one-line stub.
+        // Keep a substantial, readable paragraph that can fill much of a desktop reading window.
         const count = result.split(/[.!?]+/).filter(Boolean).length;
-        if (result && (result.length + next.length > max || count >= 5)) break;
+        if (result && (result.length + next.length > max || count >= 10)) break;
         result += next;
         if (result.length >= max) break;
     }
@@ -81,7 +124,14 @@ function renderImage(image, extraClass = "") {
 
 function render(data) {
     const name = data.entity?.name || entity;
-    document.title = `Space Explorer | ${name}`;
+
+const breadcrumbEntity = document.getElementById("breadcrumb-entity");
+
+if (breadcrumbEntity) {
+    breadcrumbEntity.textContent = name;
+}
+
+document.title = `Space Explorer | ${name}`;
     const images = (data.images || []).filter(item => item && item.url);
     const hero = images.find(item => item.topicId === "overview") || images[0] || null;
     const heroUrl = hero?.url || "";
@@ -93,29 +143,69 @@ function render(data) {
 
     const topicImageUsage = new Set();
     const renderedTopics = topics.map((topic, index) => {
-        let media = imageForTopic(images, topic.id);
-        // The hero image belongs to the hero. Never repeat it in the article.
-        if (media && (media.url === heroUrl || topicImageUsage.has(media.url))) media = null;
-        if (media) topicImageUsage.add(media.url);
-        const id = `topic-${topic.id}`;
-        const imageMarkup = renderImage(media);
-        const layoutClass = media ? (index % 2 === 0 ? "image-right" : "image-left") : "text-only";
-        return `<section class="article-section ${layoutClass}" id="${escapeHTML(id)}">
+    let media = imageForTopic(images, topic.id);
+
+    // Use the hero image in Overview if that topic has no image.
+    if (topic.title.trim().toLowerCase() === "overview") {
+        media = media || hero;
+    }
+
+    // Do not repeat the hero image in other topics.
+    if (
+        topic.title.trim().toLowerCase() !== "overview" &&
+        media &&
+        media.url === heroUrl
+    ) {
+        media = null;
+    }
+
+    // Prevent the same image from appearing in multiple topics.
+    if (media && topicImageUsage.has(media.url)) {
+        media = null;
+    }
+
+    if (media) {
+        topicImageUsage.add(media.url);
+    }
+
+    const id = `topic-${topic.id}`;
+    const imageMarkup = renderImage(media);
+
+    // Keep images beside the text when appropriate.
+    const layoutClass = media
+        ? (index % 2 === 0 ? "image-right" : "image-left")
+        : "text-only";
+
+    return `
+        <section class="article-section ${layoutClass}" id="${escapeHTML(id)}">
             <div class="topic-copy">
                 <span class="topic-kicker">SPACE GUIDE</span>
                 <h2>${escapeHTML(topic.title)}</h2>
+
                 <p>${escapeHTML(topic.displayContent)}</p>
+
+                ${imageMarkup}
             </div>
-            ${imageMarkup}
-        </section>`;
-    }).join("");
+        </section>
+    `;
+}).join("");
 
     app.innerHTML = `
         <section class="entity-hero ${heroUrl ? "has-hero-image" : "no-hero-image"}" ${heroUrl ? `style="--hero-image: url('${escapeHTML(heroUrl).replace(/'/g, "%27")}')"` : ""}>
             <div class="entity-hero-content">
                 <span class="entity-kicker">SPACE ENTITY</span>
                 <h1 class="entity-title">${escapeHTML(name)}</h1>
-                <p class="entity-intro">${escapeHTML(shortSummary(data.summary || topics[0]?.content, 205))}</p>
+                <p class="entity-intro">${escapeHTML(
+    shortSummary(
+        data.summary ||
+        topics.find(topic =>
+            topic.title?.trim().toLowerCase() === "overview"
+        )?.content ||
+        topics[0]?.content ||
+        "",
+        240
+    )
+)}</p>
             </div>
         </section>
         <nav class="article-navigation" aria-label="Space entity topics">

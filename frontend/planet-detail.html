@@ -10,25 +10,131 @@
 </head>
 
 <body>
+    <header class="main-header">
+        <div class="header-left">
+            <div class="dropdown">
+                <button class="nav-button" id="exploreButton">
+                    <span>Explore</span>
+                    <span class="chevron">⌄</span>
+                </button>
 
-    <header class="topbar">
-        <a href="planets.html" class="back">
-            ← Planet &amp; Space Entity
-        </a>
+                <div class="dropdown-menu explore-menu" id="exploreMenu">
+                    <a href="index.html">Home</a>
+                    <a href="planets.html">Planet &amp; Space Entity</a>
+                    <a href="missions.html">Missions</a>
+                    <a href="astronauts.html">Astronaut</a>
+                    <a href="announcement.html">Announcement</a>
+                </div>
+            </div>
 
-        <a href="index.html" class="logo">
-            SPACE EXPLORER
-        </a>
+            <div class="search-container">
+                <svg class="search-icon" viewBox="0 0 24 24" aria-hidden="true">
+                    <circle cx="11" cy="11" r="7"></circle>
+                    <line x1="16.5" y1="16.5" x2="21" y2="21"></line>
+                </svg>
+                <input id="searchInput" type="text" placeholder="Search..." autocomplete="off">
+            </div>
+        </div>
 
-        <!-- Added dynamically when a 3D model is available -->
+        <div class="header-logo">
+            <a href="index.html">
+                <img src="assets/logo.jpeg" alt="Space Explorer">
+            </a>
+        </div>
+
+        <div class="header-right">
+            <div class="dropdown account-dropdown">
+                <button class="account-button" id="accountButton">
+                    <div class="account-greeting">Hello, Dhrumil</div>
+                    <div class="account-title">
+                        Account &amp; Lists
+                        <span class="chevron">⌄</span>
+                    </div>
+                </button>
+
+                <div class="dropdown-menu account-menu" id="accountMenu">
+                    <div class="account-email">
+                        <span class="account-menu-label">Your account</span>
+                        <span class="account-email-value">your-email@example.com</span>
+                    </div>
+
+                    <div class="menu-divider"></div>
+
+                    <a href="#"><span class="menu-icon">☆</span>Bookmarks</a>
+                    <a href="#"><span class="menu-icon">♡</span>Saved Images</a>
+                </div>
+            </div>
+        </div>
     </header>
+    <div class="breadcrumb">
+        <a href="index.html">Home</a>
+        <span>/</span>
+        <a href="planets.html">Planet &amp; Space Entity</a>
+        <span>/</span>
+        <strong id="breadcrumb-entity"></strong>
+    </div>
 
     <main id="app">
         <div class="state">Loading space entity...</div>
     </main>
 
-    <footer class="detail-footer">
-        <p>© 2026 Space Explorer | Explore. Discover. Understand.</p>
+    <footer class="site-footer">
+        <div class="footer-main">
+            <div class="footer-brand">
+                <a href="index.html" class="footer-logo-link">
+                    <img src="assets/logo.jpeg" alt="Space Explorer Logo" class="footer-logo">
+                </a>
+                <h2>Space Explorer</h2>
+
+                <p class="footer-mission">
+                    Our mission is to present space information in a clear and structured
+                    way, making it easier for everyone to explore, understand, and discover
+                    the universe.
+                </p>
+
+                <p class="footer-mission">
+                    Space Explorer aims to provide an engaging platform for people who are
+                    curious about space and passionate about learning about planets,
+                    missions, astronauts, and the wonders beyond Earth.
+                </p>
+            </div>
+
+            <div class="footer-column">
+                <h3>Explore</h3>
+                <a href="index.html">Home</a>
+                <a href="planets.html">Planet &amp; Space Entity</a>
+                <a href="missions.html">Missions</a>
+                <a href="astronauts.html">Astronaut</a>
+                <a href="announcement.html">Announcement</a>
+            </div>
+
+            <div class="footer-column">
+                <h3>Account</h3>
+                <a href="#">Your Account</a>
+                <a href="#">Bookmarks</a>
+                <a href="#">Saved Images</a>
+            </div>
+
+            <div class="footer-column footer-connect">
+                <h3>Connect</h3>
+                <a href="https://instagram.com/" target="_blank" rel="noopener noreferrer" class="social-link">
+                    <span class="social-icon">◎</span>
+                    Instagram
+                </a>
+                <a href="mailto:spaceexplorer@example.com" class="social-link">
+                    <span class="social-icon">@</span>
+                    Email
+                </a>
+                <a href="https://wa.me/919999999999" target="_blank" rel="noopener noreferrer" class="social-link">
+                    <span class="social-icon">◉</span>
+                    WhatsApp
+                </a>
+            </div>
+        </div>
+
+        <div class="footer-bottom">
+            <p>© 2026 Space Explorer | Explore. Discover. Understand.</p>
+        </div>
     </footer>
 
     <script src="planet-detail.js"></script>
