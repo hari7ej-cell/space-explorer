@@ -1,5 +1,7 @@
 "use strict";
-
+const {
+    getNASA3DModel
+} = require("./services/nasa3DService");
 const express = require("express");
 const cors = require("cors");
 
@@ -363,6 +365,7 @@ async function buildPlanet(name) {
     };
 
     const cppResult = await processPlanet(cppInput);
+    const model3D = await getNASA3DModel(wiki.title);
 
     console.log(
         `C++ processing: ${Date.now() - cppStart} ms`
@@ -395,7 +398,7 @@ async function buildPlanet(name) {
 
         wikipediaUrl: wiki.url,
 
-        model3D: getModel3D(wiki.title)
+        model3D
     };
 
     console.log(

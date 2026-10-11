@@ -1,44 +1,57 @@
 const exploreButton = document.getElementById("exploreButton");
-        const exploreDropdown = exploreButton.closest(".dropdown");
+const exploreDropdown = exploreButton.closest(".dropdown");
 
-        const accountButton = document.getElementById("accountButton");
-        const accountDropdown = accountButton.closest(".dropdown");
+const accountButton = document.getElementById("accountButton");
+const accountDropdown = accountButton.closest(".dropdown");
 
-        exploreButton.addEventListener("click", event => {
-            event.stopPropagation();
-            exploreDropdown.classList.toggle("active");
-            accountDropdown.classList.remove("active");
-        });
+exploreButton.addEventListener("click", event => {
+    event.stopPropagation();
+    exploreDropdown.classList.toggle("active");
+    accountDropdown.classList.remove("active");
+});
 
-        accountButton.addEventListener("click", event => {
-            event.stopPropagation();
-            accountDropdown.classList.toggle("active");
-            exploreDropdown.classList.remove("active");
-        });
+accountButton.addEventListener("click", event => {
+    event.stopPropagation();
+    accountDropdown.classList.toggle("active");
+    exploreDropdown.classList.remove("active");
+});
 
-        document.addEventListener("click", () => {
-            exploreDropdown.classList.remove("active");
-            accountDropdown.classList.remove("active");
-        });
+document.addEventListener("click", () => {
+    exploreDropdown.classList.remove("active");
+    accountDropdown.classList.remove("active");
+});
 
-        const searchInput = document.getElementById("searchInput");
+const searchInput = document.getElementById("searchInput");
 
-        searchInput.addEventListener("keydown", event => {
-            if (event.key === "Enter") {
-                const value = searchInput.value.trim();
+searchInput.addEventListener("keydown", event => {
+    if (event.key === "Enter") {
+        const value = searchInput.value.trim();
 
-                if (value) {
-                    window.location.href =
-                        "index.html?search=" +
-                        encodeURIComponent(value);
-                }
-            }
-        });
+        if (value) {
+            window.location.href =
+                "index.html?search=" +
+                encodeURIComponent(value);
+        }
+    }
+});
 const API_BASE = "http://localhost:3000";
 const params = new URLSearchParams(window.location.search);
 const entity = params.get("entity") || "Mars";
 const breadcrumbEntity = document.getElementById("breadcrumb-entity");
+function formatNavigationLabel(title) {
+    let label = String(title || "")
+        .replace(/\([^)]*\)/g, "")
+        .replace(/\s+/g, " ")
+        .trim();
 
+    // Remove trailing conjunctions and prepositions
+    label = label.replace(
+        /\s+\b(and|or|of|the|for|in|to|with|from|on|by|at|about)$/i,
+        ""
+    ).trim();
+
+    return label || title;
+}
 if (breadcrumbEntity) {
     breadcrumbEntity.textContent = entity
         .replace(/[-_]+/g, " ")
@@ -71,15 +84,27 @@ function normalizeText(value) {
         .trim();
 }
 
-function shortSummary(value, max = 210) {
+function shortSummary(value, max = 240) {
     const clean = normalizeText(value);
-    if (!clean) return "Explore the key facts, features, and science behind this space object.";
-    const firstSentence = clean.match(/^.*?[.!?](?=\s|$)/)?.[0] || clean;
-    let result = firstSentence.length > max ? firstSentence.slice(0, max - 1).trimEnd() + "…" : firstSentence;
-    if (result.length < 75 && clean.length > result.length) {
-        result = clean.slice(0, max).trimEnd();
-        if (clean.length > max) result += "…";
+
+    if (!clean || clean.length < 40) {
+        return "";
     }
+
+    const sentences = clean.match(/[^.!?]+[.!?]+|[^.!?]+$/g) || [clean];
+
+    // Prefer a general introduction rather than a historical event.
+    const preferred = sentences.find(sentence =>
+        !/\b(first successful|first flyby|discovered in|was discovered|was conducted|launched in|mission began)\b/i.test(sentence)
+        && sentence.trim().length >= 50
+    );
+
+    let result = (preferred || sentences[0]).trim();
+
+    if (result.length > max) {
+        result = result.slice(0, max - 1).trimEnd() + "…";
+    }
+
     return result;
 }
 
@@ -88,19 +113,42 @@ function summarizeTopic(value, max = 2400) {
         .replace(/\b(edit|citation needed|failed verification)\b/gi, "")
         .replace(/\s+/g, " ")
         .trim();
-    if (!clean || /information is not available in the matching wikipedia section/i.test(clean)) return "";
-    const sentences = clean.match(/[^.!?]+[.!?]+|[^.!?]+$/g) || [clean];
-    let result = "";
-    for (const sentence of sentences) {
-        const next = (result ? " " : "") + sentence.trim();
-        // Keep a substantial, readable paragraph that can fill much of a desktop reading window.
-        const count = result.split(/[.!?]+/).filter(Boolean).length;
-        if (result && (result.length + next.length > max || count >= 10)) break;
-        result += next;
-        if (result.length >= max) break;
+
+    if (
+        !clean ||
+        /information is not available in the matching wikipedia section/i.test(clean)
+    ) {
+        return "";
     }
-    if (result.length > max) result = result.slice(0, max).trimEnd() + "…";
-    return result;
+
+    // Split text into sentences.
+    const sentences = clean.match(/[^.!?]+[.!?]+|[^.!?]+$/g) || [clean];
+
+    const completeSentences = [];
+    let totalLength = 0;
+
+    for (const sentence of sentences) {
+        const trimmed = sentence.trim();
+
+        if (!trimmed) continue;
+
+        // Don't include an incomplete final sentence.
+        const isComplete = /[.!?]["')\]]*$/.test(trimmed);
+
+        if (!isComplete) continue;
+
+        const separatorLength = completeSentences.length > 0 ? 1 : 0;
+
+        // Stop before exceeding the character limit.
+        if (totalLength + separatorLength + trimmed.length > max) {
+            break;
+        }
+
+        completeSentences.push(trimmed);
+        totalLength += separatorLength + trimmed.length;
+    }
+
+    return completeSentences.join(" ");
 }
 
 function imageForTopic(images, topicId) {
@@ -108,12 +156,27 @@ function imageForTopic(images, topicId) {
 }
 
 function cleanCaption(image) {
-    const title = normalizeText(image?.title || "");
+    const caption = normalizeText(image?.caption || "");
     const description = normalizeText(image?.description || "");
-    const caption = description && description.length < 150 ? description : title;
-    return shortSummary(caption || "Image related to this topic.", 115);
-}
+    const title = normalizeText(image?.title || "");
 
+    // Prefer the actual image caption.
+    if (caption.length > description.length) {
+        return caption;
+    }
+
+    // Otherwise use the image description.
+    if (description) {
+        return description;
+    }
+
+    // Use the title only when no longer text is available.
+    if (title) {
+        return title;
+    }
+
+    return "Image related to this space topic.";
+}
 function renderImage(image, extraClass = "") {
     if (!image?.url) return "";
     return `<figure class="topic-media ${extraClass}">
@@ -125,101 +188,124 @@ function renderImage(image, extraClass = "") {
 function render(data) {
     const name = data.entity?.name || entity;
 
-const breadcrumbEntity = document.getElementById("breadcrumb-entity");
+    const breadcrumbEntity = document.getElementById("breadcrumb-entity");
 
-if (breadcrumbEntity) {
-    breadcrumbEntity.textContent = name;
-}
+    if (breadcrumbEntity) {
+        breadcrumbEntity.textContent = name;
+    }
 
-document.title = `Space Explorer | ${name}`;
+    document.title = `Space Explorer | ${name}`;
     const images = (data.images || []).filter(item => item && item.url);
-    const hero = images.find(item => item.topicId === "overview") || images[0] || null;
+
+    // NASA's official Mars page hero image.
+    const nasaHeroImages = {
+        mars: "https://science.nasa.gov/wp-content/uploads/2024/03/pia04304-mars.jpg?w=1536"
+    };
+
+    const nasaHeroUrl = nasaHeroImages[name.trim().toLowerCase()] || "";
+
+    const hero = nasaHeroUrl
+        ? {
+            url: nasaHeroUrl,
+            title: `${name} - NASA official hero image`,
+            topicId: "overview"
+        }
+        : (
+            images.find(item => item.topicId === "overview") ||
+            images[0] ||
+            null
+        );
+
     const heroUrl = hero?.url || "";
     const topics = (data.topics || [])
         .map(topic => ({ ...topic, displayContent: summarizeTopic(topic.content) }))
         .filter(topic => topic.displayContent);
-    const isMars = /^mars$/i.test(name.trim());
-    const modelAvailable = isMars;
-
     const topicImageUsage = new Set();
     const renderedTopics = topics.map((topic, index) => {
-    let media = imageForTopic(images, topic.id);
+        let media = imageForTopic(images, topic.id);
 
-    // Use the hero image in Overview if that topic has no image.
-    if (topic.title.trim().toLowerCase() === "overview") {
-        media = media || hero;
-    }
+        // Use the hero image in Overview if that topic has no image.
+        if (topic.title.trim().toLowerCase() === "overview") {
+            media = media || hero;
+        }
 
-    // Do not repeat the hero image in other topics.
-    if (
-        topic.title.trim().toLowerCase() !== "overview" &&
-        media &&
-        media.url === heroUrl
-    ) {
-        media = null;
-    }
+        // Do not repeat the hero image in other topics.
+        if (
+            topic.title.trim().toLowerCase() !== "overview" &&
+            media &&
+            media.url === heroUrl
+        ) {
+            media = null;
+        }
 
-    // Prevent the same image from appearing in multiple topics.
-    if (media && topicImageUsage.has(media.url)) {
-        media = null;
-    }
+        // Prevent the same image from appearing in multiple topics.
+        if (media && topicImageUsage.has(media.url)) {
+            media = null;
+        }
 
-    if (media) {
-        topicImageUsage.add(media.url);
-    }
+        if (media) {
+            topicImageUsage.add(media.url);
+        }
 
-    const id = `topic-${topic.id}`;
-    const imageMarkup = renderImage(media);
+        const id = `topic-${topic.id}`;
+        const imageMarkup = renderImage(media);
 
-    // Keep images beside the text when appropriate.
-    const layoutClass = media
-        ? (index % 2 === 0 ? "image-right" : "image-left")
-        : "text-only";
+        // Keep images beside the text when appropriate.
+        const layoutClass = media
+            ? (index % 2 === 0 ? "image-right" : "image-left")
+            : "text-only";
 
-    return `
+        return `
         <section class="article-section ${layoutClass}" id="${escapeHTML(id)}">
             <div class="topic-copy">
-                <span class="topic-kicker">SPACE GUIDE</span>
                 <h2>${escapeHTML(topic.title)}</h2>
 
+                ${imageMarkup}
                 <p>${escapeHTML(topic.displayContent)}</p>
 
-                ${imageMarkup}
             </div>
         </section>
     `;
-}).join("");
+    }).join("");
 
     app.innerHTML = `
         <section class="entity-hero ${heroUrl ? "has-hero-image" : "no-hero-image"}" ${heroUrl ? `style="--hero-image: url('${escapeHTML(heroUrl).replace(/'/g, "%27")}')"` : ""}>
             <div class="entity-hero-content">
-                <span class="entity-kicker">SPACE ENTITY</span>
+                <span class="entity-kicker">${escapeHTML((apiType = data.entity?.type).toUpperCase())}</span>
                 <h1 class="entity-title">${escapeHTML(name)}</h1>
                 <p class="entity-intro">${escapeHTML(
-    shortSummary(
-        data.summary ||
-        topics.find(topic =>
-            topic.title?.trim().toLowerCase() === "overview"
-        )?.content ||
-        topics[0]?.content ||
-        "",
-        240
-    )
-)}</p>
+        shortSummary(
+            (
+                normalizeText(data.summary).length > 100 &&
+                normalizeText(data.summary).trim().toLowerCase() !== name.trim().toLowerCase()
+            )
+                ? data.summary
+                : (
+                    topics.find(topic =>
+                        topic.title?.trim().toLowerCase() === "overview"
+                    )?.content || ""
+                ),
+            240
+        )
+    )}</p>
             </div>
         </section>
         <nav class="article-navigation" aria-label="Space entity topics">
-            <div class="article-navigation-inner">
-                ${topics.map(topic => `<a href="#topic-${escapeHTML(topic.id)}">${escapeHTML(topic.shortTitle || topic.title)}</a>`).join("")}
-                ${modelAvailable ? `<a class="model-nav-link" href="#entity-model">3D Model</a>` : ""}
-            </div>
-        </nav>
+    <div class="article-navigation-inner">
+        ${topics.map(topic => `
+            <a href="#topic-${escapeHTML(topic.id)}">
+                ${escapeHTML(formatNavigationLabel(topic.shortTitle || topic.title))}
+            </a>
+        `).join("")}
+        ${modelAvailable ? `<a class="model-nav-link" href="#entity-model">3D Model</a>` : ""}
+    </div>
+</nav>
         <div class="article-layout">
             ${renderedTopics || `<section class="article-section text-only"><div class="topic-copy"><h2>Overview</h2><p>Detailed information is not available right now.</p></div></section>`}
         </div>
         ${modelAvailable ? `<section class="entity-model-section" id="entity-model">
-            <span class="topic-kicker">INTERACTIVE RESOURCE</span>
-            <h2>Mars 3D Model</h2>
+            <span class="topic-kicker" style="color: #9fbaff;">INTERACTIVE RESOURCE</span>
+            <h2 style="color: #9fbaff;">Mars 3D Model</h2>
             <p>Explore the Martian surface with this interactive model.</p>
             <iframe class="entity-model-frame" src="https://mars.nasa.gov/gltf_embed/24881" title="Interactive 3D model of Mars" loading="lazy" allowfullscreen></iframe>
         </section>` : ""}
@@ -228,9 +314,13 @@ document.title = `Space Explorer | ${name}`;
     // If an image is genuinely panoramic/wider than its card, let it span the whole card.
     app.querySelectorAll(".topic-media img").forEach(img => {
         const markSize = () => {
-            if (img.naturalWidth && img.naturalHeight && img.naturalWidth / img.naturalHeight >= 1.55) {
-                img.closest(".article-section")?.classList.add("wide-media");
-            }
+            if (
+    img.naturalWidth &&
+    img.naturalHeight &&
+    img.naturalWidth / img.naturalHeight >= 4
+) {
+    img.closest(".article-section")?.classList.add("wide-media");
+}
         };
         if (img.complete) markSize(); else img.addEventListener("load", markSize, { once: true });
         img.addEventListener("error", () => img.closest(".topic-media")?.remove(), { once: true });
@@ -246,8 +336,113 @@ document.title = `Space Explorer | ${name}`;
             history.replaceState(null, "", link.getAttribute("href"));
         });
     });
+    setupSectionNavigation();
 }
+function setupSectionNavigation() {
+    const nav = document.querySelector(".article-navigation");
 
+    if (!nav) return;
+
+    const navLinks = nav.querySelectorAll("a[href^='#']");
+
+    const sections = Array.from(navLinks)
+        .map(link => document.querySelector(link.getAttribute("href")))
+        .filter(Boolean);
+
+    if (!sections.length) return;
+
+    const observer = new IntersectionObserver(
+        entries => {
+            // Find the section nearest the top of the reading area.
+            const visibleSections = sections
+                .map(section => {
+                    const rect = section.getBoundingClientRect();
+
+                    return {
+                        section,
+                        top: rect.top,
+                        bottom: rect.bottom
+                    };
+                })
+                .filter(item =>
+                    item.top < window.innerHeight * 0.5 &&
+                    item.bottom > 120
+                )
+                .sort((a, b) => b.top - a.top);
+
+            if (visibleSections.length) {
+                const activeId = visibleSections[0].section.id;
+
+                navLinks.forEach(link => {
+                    const active =
+                        link.getAttribute("href") === `#${activeId}`;
+
+                    link.classList.toggle("active", active);
+
+                    if (active) {
+                        link.setAttribute("aria-current", "location");
+                    } else {
+                        link.removeAttribute("aria-current");
+                    }
+                });
+            }
+        },
+        {
+            rootMargin: "-120px 0px -50% 0px",
+            threshold: 0
+        }
+    );
+
+    sections.forEach(section => observer.observe(section));
+
+    // Also handle scrolling directly, so the active item updates reliably.
+    let ticking = false;
+
+    function updateActiveSection() {
+        if (ticking) return;
+
+        ticking = true;
+
+        requestAnimationFrame(() => {
+            const readingPosition = 150;
+
+            let currentSection = sections[0];
+
+            for (const section of sections) {
+                if (section.getBoundingClientRect().top <= readingPosition) {
+                    currentSection = section;
+                } else {
+                    break;
+                }
+            }
+
+            const activeId = currentSection.id;
+
+            navLinks.forEach(link => {
+                const active =
+                    link.getAttribute("href") === `#${activeId}`;
+
+                link.classList.toggle("active", active);
+
+                if (active) {
+                    link.setAttribute("aria-current", "location");
+                } else {
+                    link.removeAttribute("aria-current");
+                }
+            });
+
+            ticking = false;
+        });
+    }
+
+    window.addEventListener("scroll", updateActiveSection, {
+        passive: true
+    });
+
+    window.addEventListener("resize", updateActiveSection);
+
+    updateActiveSection();
+}
 async function loadEntity() {
     try {
         const response = await fetch(`${API_BASE}/api/planet/${encodeURIComponent(entity)}`);
