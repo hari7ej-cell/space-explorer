@@ -220,42 +220,44 @@ function render(data) {
     const topics = (data.topics || [])
         .map(topic => ({ ...topic, displayContent: summarizeTopic(topic.content) }))
         .filter(topic => topic.displayContent);
+    const isMars = /^mars$/i.test(name.trim());
+    const modelAvailable = isMars;
     const topicImageUsage = new Set();
     const renderedTopics = topics.map((topic, index) => {
-        let media = imageForTopic(images, topic.id);
+    let media = imageForTopic(images, topic.id);
 
-        // Use the hero image in Overview if that topic has no image.
-        if (topic.title.trim().toLowerCase() === "overview") {
-            media = media || hero;
-        }
+    // Use the hero image in Overview if that topic has no image.
+    if (topic.title.trim().toLowerCase() === "overview") {
+        media = media || hero;
+    }
 
-        // Do not repeat the hero image in other topics.
-        if (
-            topic.title.trim().toLowerCase() !== "overview" &&
-            media &&
-            media.url === heroUrl
-        ) {
-            media = null;
-        }
+    // Do not repeat the hero image in other topics.
+    if (
+        topic.title.trim().toLowerCase() !== "overview" &&
+        media &&
+        media.url === heroUrl
+    ) {
+        media = null;
+    }
 
-        // Prevent the same image from appearing in multiple topics.
-        if (media && topicImageUsage.has(media.url)) {
-            media = null;
-        }
+    // Prevent the same image from appearing in multiple topics.
+    if (media && topicImageUsage.has(media.url)) {
+        media = null;
+    }
 
-        if (media) {
-            topicImageUsage.add(media.url);
-        }
+    if (media) {
+        topicImageUsage.add(media.url);
+    }
 
-        const id = `topic-${topic.id}`;
-        const imageMarkup = renderImage(media);
+    const id = `topic-${topic.id}`;
+    const imageMarkup = renderImage(media);
 
-        // Keep images beside the text when appropriate.
-        const layoutClass = media
-            ? (index % 2 === 0 ? "image-right" : "image-left")
-            : "text-only";
+    // Keep images beside the text when appropriate.
+    const layoutClass = media
+        ? (index % 2 === 0 ? "image-right" : "image-left")
+        : "text-only";
 
-        return `
+    return `
         <section class="article-section ${layoutClass}" id="${escapeHTML(id)}">
             <div class="topic-copy">
                 <h2>${escapeHTML(topic.title)}</h2>

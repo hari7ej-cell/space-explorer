@@ -246,28 +246,19 @@ async function searchCommonsImage(entityName, topic) {
 
         const imageInfo = suitable.imageinfo[0];
 
-        const metadata = imageInfo.extmetadata || {};
 
 const result = {
-    topicId: topic.id,
-    title: suitable.title,
-    url: imageInfo.thumburl || imageInfo.url,
-    alt: topic.title,
-
-    caption: metadata.ImageDescription?.value
-        ? metadata.ImageDescription.value.replace(/<[^>]*>/g, "").trim()
-        : "",
-
-    description: metadata.ImageDescription?.value
-        ? metadata.ImageDescription.value.replace(/<[^>]*>/g, "").trim()
-        : "",
-
-    source: {
-        name: "Wikimedia Commons",
-        url: imageInfo.descriptionurl ||
-            `https://commons.wikimedia.org/wiki/${encodeURIComponent(suitable.title.replace(/ /g, "_"))}`
-    }
-};
+            topicId: topic.id,
+            title: suitable.title,
+            url: imageInfo.thumburl || imageInfo.url,
+            alt: topic.title,
+            caption: "",
+            source: {
+                name: "Wikimedia Commons",
+                url: imageInfo.descriptionurl ||
+                    `https://commons.wikimedia.org/wiki/${encodeURIComponent(suitable.title.replace(/ /g, "_"))}`
+            }
+        };
 
         cacheSet(cacheKey, result);
 
