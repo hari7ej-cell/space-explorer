@@ -220,8 +220,14 @@ function render(data) {
     const topics = (data.topics || [])
         .map(topic => ({ ...topic, displayContent: summarizeTopic(topic.content) }))
         .filter(topic => topic.displayContent);
-    const isMars = /^mars$/i.test(name.trim());
-    const modelAvailable = isMars;
+    // Get the 3D model information from the backend API.
+const model3D = data.model3D || {};
+
+const modelAvailable =
+    model3D.available === true &&
+    model3D.format === "iframe" &&
+    typeof model3D.url === "string" &&
+    model3D.url.trim() !== "";
     const topicImageUsage = new Set();
     const renderedTopics = topics.map((topic, index) => {
     let media = imageForTopic(images, topic.id);
@@ -305,12 +311,21 @@ function render(data) {
         <div class="article-layout">
             ${renderedTopics || `<section class="article-section text-only"><div class="topic-copy"><h2>Overview</h2><p>Detailed information is not available right now.</p></div></section>`}
         </div>
-        ${modelAvailable ? `<section class="entity-model-section" id="entity-model">
-            <span class="topic-kicker" style="color: #9fbaff;">INTERACTIVE RESOURCE</span>
-            <h2 style="color: #9fbaff;">Mars 3D Model</h2>
-            <p>Explore the Martian surface with this interactive model.</p>
-            <iframe class="entity-model-frame" src="https://mars.nasa.gov/gltf_embed/24881" title="Interactive 3D model of Mars" loading="lazy" allowfullscreen></iframe>
-        </section>` : ""}
+        ${modelAvailable ? `
+    <section class="entity-model-section" id="entity-model">
+        <h2>3D Model</h2>
+
+        <h3>${escapeHTML(model3D.name || name)}</h3>
+
+        <iframe
+            class="entity-model-frame"
+            src="${escapeHTML(model3D.url)}"
+            title="${escapeHTML(`3D Model of ${model3D.name || name}`)}"
+            loading="lazy"
+            allowfullscreen>
+        </iframe>
+    </section>
+` : ""}
     `;
 
     // If an image is genuinely panoramic/wider than its card, let it span the whole card.

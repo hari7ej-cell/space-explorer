@@ -75,42 +75,88 @@ function setCachedPlanet(name, data) {
 
 
 // ======================================================
-// 3D MODEL CONFIGURATION
+// NASA 3D MODEL CONFIGURATION
 // ======================================================
 
 function getModel3D(entityName) {
-    const normalized = entityName.trim().toLowerCase();
+    const normalized = String(entityName || "")
+        .trim()
+        .toLowerCase()
+        .replace(/[_-]+/g, " ")
+        .replace(/\s+/g, " ");
 
-    /*
-        The embed URL below is the NASA Mars interactive model.
+    // Only add URLs for existing NASA-hosted iframe viewers.
+    const models = {
+        sun: {
+            name: "Sun",
+            url: "https://solarsystem.nasa.gov/gltf_embed/2352/"
+        },
 
-        Do not mark every space entity as having a model.
-        A model is shown only when an actual model URL is known.
-    */
+        mercury: {
+            name: "Mercury",
+            url: "https://solarsystem.nasa.gov/gltf_embed/2369/"
+        },
 
-    if (normalized === "mars") {
-        return {
-            available: true,
+        venus: {
+            name: "Venus",
+            url: "https://solarsystem.nasa.gov/gltf_embed/2342/"
+        },
 
+        earth: {
+            name: "Earth",
+            url: "https://solarsystem.nasa.gov/gltf_embed/2393/"
+        },
+
+        mars: {
             name: "Mars",
+            url: "https://solarsystem.nasa.gov/gltf_embed/2372/"
+        },
 
-            url: "https://mars.nasa.gov/gltf_embed/24881",
+        jupiter: {
+            name: "Jupiter",
+            url: "https://solarsystem.nasa.gov/gltf_embed/2375/"
+        },
 
-            format: "glTF",
+        saturn: {
+            name: "Saturn",
+            url: "https://solarsystem.nasa.gov/gltf_embed/2355/"
+        },
 
-            source: {
-                name: "NASA/JPL-Caltech",
+        uranus: {
+            name: "Uranus",
+            url: "https://solarsystem.nasa.gov/gltf_embed/2344/"
+        },
 
-                url: "https://science.nasa.gov/resource/planet-mars-3d-model/"
-            }
+        neptune: {
+            name: "Neptune",
+            url: "https://solarsystem.nasa.gov/gltf_embed/2364/"
+        },
+        
+        bennu: {
+            name: "Bennu",
+            url: "https://solarsystem.nasa.gov/gltf_embed/2403/"
+        },
+
+    };
+
+    const model = models[normalized];
+
+    if (!model) {
+        return {
+            available: false,
+            name: entityName,
+            url: null,
+            format: null
         };
     }
 
     return {
-        available: false
+        available: true,
+        name: model.name,
+        url: model.url,
+        format: "iframe"
     };
 }
-
 
 // ======================================================
 // SUMMARY HELPER
@@ -394,7 +440,7 @@ async function buildPlanet(name) {
 
         wikipediaUrl: wiki.url,
 
-        model3D : getModel3D(wiki.title)
+        model3D: getModel3D(wiki.title)
     };
 
     console.log(
