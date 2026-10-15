@@ -1,0 +1,908 @@
+/* =========================================================
+   RESET
+========================================================= */
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+
+/* =========================================================
+   PAGE
+========================================================= */
+
+html,
+body {
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+}
+
+body {
+    font-family:
+        Arial,
+        Helvetica,
+        sans-serif;
+
+    background: #020711;
+    color: #ffffff;
+}
+
+
+/* =========================================================
+   MAIN SPACE SCENE
+========================================================= */
+
+.space-scene {
+    position: relative;
+
+    width: 100vw;
+    height: 100vh;
+
+    min-height: 600px;
+
+    overflow: hidden;
+
+    background: #020711;
+}
+
+
+/* =========================================================
+   THREE.JS 3D SPACE LAYER
+========================================================= */
+
+#space-canvas {
+    position: fixed;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    display: block;
+
+    pointer-events: none;
+
+    z-index: 3;
+}
+
+/* Old 2D Earth/Moon are kept only as backups */
+.legacy-space-object {
+    display: none !important;
+}
+
+
+/* =========================================================
+   TWINKLING STARS
+========================================================= */
+
+.star-field {
+    position: fixed;
+    inset: 0;
+
+    pointer-events: none;
+
+    overflow: hidden;
+
+    z-index: 1;
+}
+
+.twinkle-star {
+    position: absolute;
+
+    width: 2px;
+    height: 2px;
+
+    border-radius: 50%;
+
+    background: rgba(255, 255, 255, 0.9);
+
+    opacity: 0.25;
+
+    animation:
+        starTwinkle var(--twinkle-duration) ease-in-out
+        var(--twinkle-delay) infinite alternate;
+}
+
+@keyframes starTwinkle {
+
+    0% {
+        opacity: 0.15;
+        transform: scale(0.7);
+    }
+
+    50% {
+        opacity: 0.45;
+        transform: scale(1);
+    }
+
+    100% {
+        opacity: 1;
+        transform: scale(1.5);
+    }
+}
+
+
+/* =========================================================
+   SPACESHIP MOTION
+========================================================= */
+
+.spaceship {
+    animation: spaceshipFloat 7s ease-in-out infinite;
+}
+
+@keyframes spaceshipFloat {
+
+    0% {
+        transform: translate3d(0, 0, 0) rotate(0deg);
+    }
+
+    25% {
+        transform: translate3d(-8px, -5px, 0) rotate(-1deg);
+    }
+
+    50% {
+        transform: translate3d(-15px, 3px, 0) rotate(1deg);
+    }
+
+    75% {
+        transform: translate3d(-7px, 7px, 0) rotate(-0.5deg);
+    }
+
+    100% {
+        transform: translate3d(0, 0, 0) rotate(0deg);
+    }
+}
+
+
+/* =========================================================
+   SPACE BACKGROUND
+========================================================= */
+
+.space-background {
+    position: absolute;
+
+    inset: 0;
+
+    width: 100%;
+    height: 100%;
+
+    background-image:
+        linear-gradient(
+            rgba(0, 4, 12, 0.08),
+            rgba(0, 4, 12, 0.08)
+        ),
+        url("../assets/images/background.png");
+
+    background-size: cover;
+    background-position: center center;
+    background-repeat: no-repeat;
+
+    z-index: 0;
+}
+
+
+
+/* =========================================================
+   SUBTLE DARK OVERLAY
+   Keeps the login card readable without destroying
+   the original background.
+========================================================= */
+
+.space-scene::after {
+    content: "";
+
+    position: absolute;
+
+    inset: 0;
+
+    pointer-events: none;
+
+    background:
+        radial-gradient(
+            circle at 50% 50%,
+            transparent 35%,
+            rgba(0, 3, 10, 0.10) 100%
+        );
+
+    z-index: 1;
+}
+
+
+/* =========================================================
+   ORBIT
+========================================================= */
+
+.orbit-svg {
+    display: none !important;
+}
+
+.orbit-svg ellipse {
+    fill: none;
+
+    stroke: rgba(105, 177, 255, 0.48);
+
+    stroke-width: 1.25;
+
+    vector-effect: non-scaling-stroke;
+}
+
+
+/* =========================================================
+   COMMON SPACE OBJECT
+========================================================= */
+
+.space-object {
+    position: absolute;
+
+    display: block;
+
+    pointer-events: none;
+
+    user-select: none;
+
+    object-fit: contain;
+
+    z-index: 3;
+}
+
+
+/* =========================================================
+   SUN
+========================================================= */
+
+.sun {
+    width: 21vw;
+
+    min-width: 220px;
+    max-width: 330px;
+
+    left: -6vw;
+    top: -8vw;
+
+    z-index: 3;
+
+    filter:
+        drop-shadow(0 0 25px rgba(255, 169, 42, 0.65))
+        drop-shadow(0 0 60px rgba(255, 139, 0, 0.35));
+}
+
+
+/* =========================================================
+   EARTH
+========================================================= */
+
+.earth {
+    width: 31vw;
+
+    min-width: 330px;
+    max-width: 500px;
+
+    left: 4.5vw;
+    bottom: 15.5vh;
+
+    z-index: 4;
+
+    filter:
+        drop-shadow(0 0 7px rgba(58, 183, 255, 0.45))
+        drop-shadow(0 0 22px rgba(25, 137, 255, 0.22));
+}
+
+
+/* =========================================================
+   MOON
+========================================================= */
+
+.moon {
+    width: 5.2vw;
+
+    min-width: 62px;
+    max-width: 85px;
+
+    left: 29.8vw;
+    top: 18.5vh;
+
+    z-index: 5;
+
+    filter:
+        drop-shadow(0 0 9px rgba(255, 255, 255, 0.18));
+}
+
+
+/* =========================================================
+   SPACESHIP
+========================================================= */
+
+.spaceship {
+    width: 29vw;
+
+    min-width: 280px;
+    max-width: 460px;
+
+    right: 2vw;
+    top: 60vh;
+
+    z-index: 4;
+
+    filter:
+        drop-shadow(0 0 12px rgba(62, 171, 255, 0.5));
+}
+
+/* =========================================================
+   LOGIN CARD
+========================================================= */
+
+.login-card {
+    position: absolute;
+
+    width: 365px;
+
+    min-height: 474px;
+
+    left: 50%;
+    top: 50%;
+
+    transform: translate(-50%, -50%);
+
+    padding:
+        28px 30px
+        23px 30px;
+
+    background:
+        linear-gradient(
+            145deg,
+            rgba(10, 28, 47, 0.94),
+            rgba(5, 17, 31, 0.91)
+        );
+
+    border:
+        1px solid rgba(78, 126, 170, 0.62);
+
+    border-radius: 11px;
+
+    box-shadow:
+        0 0 0 1px rgba(43, 86, 124, 0.10) inset,
+        0 20px 55px rgba(0, 0, 0, 0.45),
+        0 0 30px rgba(21, 115, 190, 0.08);
+
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+
+    z-index: 20;
+}
+
+
+/* =========================================================
+   LOGO
+========================================================= */
+
+.logo-container {
+    width: 100%;
+
+    height: 57px;
+
+    display: flex;
+
+    align-items: center;
+    justify-content: center;
+
+    margin-bottom: 9px;
+}
+
+.logo {
+    width: 68px;
+    height: 55px;
+
+    object-fit: cover;
+    border-radius: 50%;
+    display: block;
+}
+
+
+/* =========================================================
+   TITLE
+========================================================= */
+
+.login-card h1 {
+    text-align: center;
+
+    font-size: 22px;
+
+    line-height: 1.15;
+
+    font-weight: 500;
+
+    letter-spacing: 1px;
+
+    color: #e8f2ff;
+
+    margin-bottom: 7px;
+
+    white-space: nowrap;
+}
+
+
+/* =========================================================
+   TAGLINE
+========================================================= */
+
+.tagline {
+    text-align: center;
+
+    font-size: 12px;
+
+    font-weight: 400;
+
+    color: rgba(220, 232, 247, 0.76);
+
+    letter-spacing: 0.15px;
+
+    margin-bottom: 24px;
+}
+
+.tagline span {
+    display: inline-block;
+
+    margin: 0 7px;
+
+    color: rgba(147, 166, 188, 0.72);
+}
+
+
+/* =========================================================
+   FORM
+========================================================= */
+
+#loginForm {
+    width: 100%;
+}
+
+
+/* =========================================================
+   INPUT CONTAINER
+========================================================= */
+
+.input-container {
+    position: relative;
+
+    width: 100%;
+    height: 42px;
+
+    margin-bottom: 9px;
+}
+
+
+/* =========================================================
+   INPUT ICON
+========================================================= */
+
+.input-icon {
+    position: absolute;
+
+    width: 17px;
+    height: 17px;
+
+    left: 13px;
+    top: 50%;
+
+    transform: translateY(-50%);
+
+    color: rgba(220, 233, 248, 0.78);
+
+    pointer-events: none;
+
+    z-index: 2;
+}
+
+
+/* =========================================================
+   INPUT
+========================================================= */
+
+.input-container input {
+    width: 100%;
+    height: 100%;
+
+    padding:
+        0 42px
+        0 37px;
+
+    border:
+        1px solid rgba(81, 122, 158, 0.57);
+
+    border-radius: 9px;
+
+    outline: none;
+
+    background:
+        linear-gradient(
+            180deg,
+            rgba(25, 48, 72, 0.68),
+            rgba(15, 34, 55, 0.72)
+        );
+
+    color: #edf5ff;
+
+    font-family: inherit;
+
+    font-size: 12px;
+
+    transition:
+        border-color 0.2s ease,
+        box-shadow 0.2s ease,
+        background 0.2s ease;
+}
+
+.input-container input::placeholder {
+    color: rgba(204, 219, 236, 0.67);
+}
+
+.input-container input:focus {
+    border-color: rgba(53, 166, 255, 0.9);
+
+    box-shadow:
+        0 0 0 2px rgba(29, 143, 255, 0.10),
+        0 0 15px rgba(29, 143, 255, 0.10);
+}
+
+
+/* =========================================================
+   PASSWORD EYE
+========================================================= */
+
+.password-toggle {
+    position: absolute;
+
+    right: 10px;
+    top: 50%;
+
+    transform: translateY(-50%);
+
+    width: 25px;
+    height: 25px;
+
+    border: none;
+
+    background: transparent;
+
+    color: rgba(222, 234, 247, 0.82);
+
+    cursor: pointer;
+
+    display: flex;
+
+    align-items: center;
+    justify-content: center;
+
+    padding: 0;
+}
+
+.password-toggle svg {
+    width: 18px;
+    height: 18px;
+}
+
+
+/* =========================================================
+   LOGIN BUTTON
+========================================================= */
+
+.login-button {
+    position: relative;
+
+    width: 100%;
+    height: 44px;
+
+    margin-top: 11px;
+
+    border: none;
+
+    border-radius: 24px;
+
+    background:
+        linear-gradient(
+            90deg,
+            #1798ff 0%,
+            #198cff 48%,
+            #176fff 100%
+        );
+
+    color: white;
+
+    font-family: inherit;
+
+    font-size: 13px;
+
+    font-weight: 400;
+
+    cursor: pointer;
+
+    box-shadow:
+        0 5px 16px rgba(0, 123, 255, 0.34),
+        inset 0 1px 1px rgba(255, 255, 255, 0.20);
+
+    transition:
+        transform 0.15s ease,
+        box-shadow 0.15s ease;
+}
+
+.login-button:hover {
+    box-shadow:
+        0 7px 22px rgba(0, 123, 255, 0.48),
+        inset 0 1px 1px rgba(255, 255, 255, 0.20);
+}
+
+.login-button:active {
+    transform: scale(0.99);
+}
+
+.login-button .arrow {
+    position: absolute;
+
+    right: 27px;
+
+    font-size: 20px;
+
+    line-height: 1;
+
+    top: 50%;
+
+    transform: translateY(-52%);
+}
+
+
+/* =========================================================
+   OR DIVIDER
+========================================================= */
+
+.or-divider {
+    display: flex;
+
+    align-items: center;
+
+    width: 100%;
+
+    margin:
+        20px 0
+        18px;
+}
+
+.divider-line {
+    flex: 1;
+
+    height: 1px;
+
+    background:
+        rgba(119, 144, 168, 0.27);
+}
+
+.or-divider span {
+    margin: 0 13px;
+
+    color:
+        rgba(202, 215, 230, 0.65);
+
+    font-size: 11px;
+
+    font-weight: 400;
+}
+
+
+/* =========================================================
+   GOOGLE BUTTON
+========================================================= */
+
+.google-button {
+    width: 100%;
+    height: 43px;
+
+    border:
+        1px solid rgba(84, 125, 161, 0.65);
+
+    border-radius: 22px;
+
+    background:
+        rgba(7, 23, 39, 0.30);
+
+    color:
+        rgba(232, 240, 250, 0.90);
+
+    font-family: inherit;
+
+    font-size: 12px;
+
+    display: flex;
+
+    align-items: center;
+    justify-content: center;
+
+    gap: 9px;
+
+    cursor: pointer;
+
+    transition:
+        background 0.2s ease,
+        border-color 0.2s ease;
+}
+
+.google-button:hover {
+    background:
+        rgba(23, 50, 77, 0.40);
+
+    border-color:
+        rgba(101, 150, 192, 0.85);
+}
+
+
+/* =========================================================
+   GOOGLE "G"
+========================================================= */
+
+.google-logo {
+    font-family:
+        Arial,
+        Helvetica,
+        sans-serif;
+
+    font-size: 19px;
+
+    font-weight: 700;
+
+    color: #4285f4;
+
+    line-height: 1;
+}
+
+
+/* =========================================================
+   SIGN UP
+========================================================= */
+
+.signup-text {
+    text-align: center;
+
+    margin-top: 20px;
+
+    font-size: 11px;
+
+    color:
+        rgba(205, 218, 232, 0.76);
+}
+
+.signup-text a {
+    color:
+        #258eff;
+
+    text-decoration: none;
+
+    cursor: pointer;
+}
+
+.signup-text a:hover {
+    text-decoration: underline;
+}
+
+
+/* =========================================================
+   RESPONSIVE
+========================================================= */
+
+@media (max-width: 1100px) {
+
+    .earth {
+        width: 34vw;
+
+        left: 1vw;
+        bottom: 15vh;
+    }
+
+    .moon {
+        left: 28vw;
+    }
+
+    .spaceship {
+        right: 5vw;
+    }
+
+}
+
+
+@media (max-width: 850px) {
+
+    .login-card {
+        width: 340px;
+
+        min-height: 455px;
+
+        padding:
+            25px 27px
+            21px 27px;
+    }
+
+    .earth {
+        width: 40vw;
+
+        left: -5vw;
+        bottom: 12vh;
+    }
+
+    .sun {
+        width: 27vw;
+
+        left: -9vw;
+        top: -8vw;
+    }
+
+    .moon {
+        width: 7vw;
+
+        left: 26vw;
+    }
+
+    .spaceship {
+        width: 15vw;
+
+        right: 3vw;
+    }
+
+}
+
+
+@media (max-width: 650px) {
+
+    .login-card {
+        width: calc(100vw - 40px);
+
+        max-width: 365px;
+    }
+
+    .earth {
+        width: 55vw;
+
+        left: -17vw;
+        bottom: 7vh;
+
+        opacity: 0.88;
+    }
+
+    .moon {
+        width: 9vw;
+
+        left: 22vw;
+    }
+
+    .spaceship {
+        width: 21vw;
+
+        right: -2vw;
+
+        opacity: 0.85;
+    }
+
+    .sun {
+        width: 35vw;
+
+        left: -13vw;
+    }
+
+    .orbit-svg {
+        width: 90vw;
+
+        left: -30vw;
+    }
+
+}
+
+
+/* =========================================================
+   VERY SMALL SCREENS
+========================================================= */
+
+@media (max-height: 700px) {
+
+    .login-card {
+        transform:
+            translate(-50%, -50%)
+            scale(0.90);
+    }
+
+}

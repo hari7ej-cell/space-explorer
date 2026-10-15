@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>Space Explorer</title>
+
+    <link rel="stylesheet" href="css/style.css">
+</head>
+
+<body>
+
+    <!-- =====================================================
+         MAIN SPACE SCENE
+    ====================================================== -->
+
+    <main class="space-scene">
+
+        <!-- Galaxy / Space Background -->
+        <div class="space-background"></div>
+
+        <canvas id="space-canvas" aria-hidden="true"></canvas>
+
+        <!-- =================================================
+             EARTH
+        ================================================== -->
+
+        <img
+        src="assets/images/earth.png"
+        alt="Earth backup"
+        class="space-object earth legacy-space-object"
+        >
+
+
+        <!-- =================================================
+             MOON
+        ================================================== -->
+
+        <img
+        src="assets/images/moon.png"
+        alt="Moon backup"
+        class="space-object moon legacy-space-object"
+        >
+
+
+        <!-- =================================================
+             SPACESHIP
+        ================================================== -->
+
+        <img
+            src="assets/images/spaceship.png"
+            alt="Spaceship"
+            class="space-object spaceship"
+        >
+
+
+        <!-- =================================================
+             LOGIN CARD
+        ================================================== -->
+
+        <section class="login-card">
+
+            <!-- Logo -->
+            <div class="logo-container">
+
+                <img
+                    src="assets/images/logo.jpeg"
+                    alt="Space Explorer Logo"
+                    class="logo"
+                >
+
+            </div>
+
+
+            <!-- Heading -->
+            <h1>SPACE EXPLORER</h1>
+
+            <p class="tagline">
+                Explore
+                <span>•</span>
+                Learn
+                <span>•</span>
+                Discover
+            </p>
+
+
+            <!-- =================================================
+                 LOGIN FORM
+            ================================================== -->
+
+            <form id="loginForm">
+
+                <!-- Username / Email -->
+
+                <div class="input-container">
+
+                    <svg
+                        class="input-icon"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        xmlns="http://www.w3.org/2000/svg"
+                    >
+                        <path
+                            d="M20 21V19C20 16.7909 18.2091 15 16 15H8C5.79086 15 4 16.7909 4 19V21"
+                            stroke="currentColor"
+                            stroke-width="1.8"
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                        />
+
+                        <circle
+                            cx="12"
+                            cy="7"
+                            r="4"
+                            stroke="currentColor"
+                            stroke-width="1.8"
+                        />
+                    </svg>
+
+                    <input
+                        type="text"
+                        id="username"
+                        placeholder="Username or Email"
+                        autocomplete="username"
+                    >
+
+                </div>
+
+
+                <!-- Password -->
+
+                <div class="input-container">
+
+                    <svg
+                        class="input-icon"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        xmlns="http://www.w3.org/2000/svg"
+                    >
+                        <rect
+                            x="5"
+                            y="10"
+                            width="14"
+                            height="11"
+                            rx="2"
+                            stroke="currentColor"
+                            stroke-width="1.8"
+                        />
+
+                        <path
+                            d="M8 10V7C8 4.79086 9.79086 3 12 3C14.2091 3 16 4.79086 16 7V10"
+                            stroke="currentColor"
+                            stroke-width="1.8"
+                            stroke-linecap="round"
+                        />
+
+                        <circle
+                            cx="12"
+                            cy="15.5"
+                            r="1"
+                            fill="currentColor"
+                        />
+                    </svg>
+
+
+                    <input
+                        type="password"
+                        id="password"
+                        placeholder="Password"
+                        autocomplete="current-password"
+                    >
+
+
+                    <!-- Password visibility -->
+
+                    <button
+                        type="button"
+                        class="password-toggle"
+                        id="passwordToggle"
+                        aria-label="Show password"
+                    >
+
+                        <svg
+                            id="eyeIcon"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            xmlns="http://www.w3.org/2000/svg"
+                        >
+
+                            <path
+                                d="M2 12C2 12 5.5 5 12 5C18.5 5 22 12 22 12C22 12 18.5 19 12 19C5.5 19 2 12 2 12Z"
+                                stroke="currentColor"
+                                stroke-width="1.7"
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                            />
+
+                            <circle
+                                cx="12"
+                                cy="12"
+                                r="3"
+                                stroke="currentColor"
+                                stroke-width="1.7"
+                            />
+
+                        </svg>
+
+                    </button>
+
+                </div>
+
+
+                <!-- Login Button -->
+
+                <button
+                    type="submit"
+                    class="login-button"
+                >
+                    <span>Login</span>
+
+                    <span class="arrow">→</span>
+                </button>
+
+            </form>
+
+
+            <!-- =================================================
+                 OR DIVIDER
+            ================================================== -->
+
+            <div class="or-divider">
+
+                <div class="divider-line"></div>
+
+                <span>OR</span>
+
+                <div class="divider-line"></div>
+
+            </div>
+
+
+            <!-- =================================================
+                 GOOGLE BUTTON
+            ================================================== -->
+
+            <button
+                type="button"
+                class="google-button"
+                id="googleButton"
+            >
+
+                <span class="google-logo">G</span>
+
+                <span>Continue with Google</span>
+
+            </button>
+
+
+            <!-- =================================================
+                 SIGN UP
+            ================================================== -->
+
+            <p class="signup-text">
+
+                Don't have an account?
+
+                <a
+                    href="#"
+                    id="signupLink"
+                >
+                    Sign Up
+                </a>
+
+            </p>
+
+        </section>
+
+    </main>
+
+
+    <script type="module" src="js/spaceVersion.js"></script>
+
+</body>
+</html>
