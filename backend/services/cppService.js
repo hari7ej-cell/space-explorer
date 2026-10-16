@@ -8,7 +8,8 @@ function processPlanet(planetData) {
         const executable =
             path.join(
                 __dirname,
-                "../../cpp/bin/space_model.exe"
+                "../../cpp/bin/" +
+                (process.platform === "win32" ? "space_model.exe" : "space_model")
             );
 
         const cpp =

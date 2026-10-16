@@ -1,131 +1,62 @@
+const path = require("path");
 const express = require("express");
 const cors = require("cors");
 
-const {
-    getWikipediaPage
-} = require("./services/wikipedia");
-
-const {
-    createTopics
-} = require("./services/topicParser");
-
-const {
-    processPlanet
-} = require("./services/cppService");
+const { getWikipediaPage } = require("./services/wikipedia");
+const { createTopics } = require("./services/topicParser");
+const { processPlanet } = require("./services/cppService");
+const { getApod } = require("./services/nasa");
+const { getAnnouncements } = require("./services/news");
 
 const app = express();
-
 app.use(cors());
 app.use(express.json());
 
+// Serves the website, so http://localhost:3000 opens the front page.
+app.use(express.static(path.join(__dirname, "..", "frontend")));
 
-app.get(
-    "/api/planet/:name",
-    async (req, res) => {
-
-        try {
-
-            const name =
-                req.params.name;
-
-            // -----------------------------
-            // 1. Wikipedia
-            // -----------------------------
-
-            const wiki =
-                await getWikipediaPage(name);
-
-
-            // -----------------------------
-            // 2. Convert Wikipedia
-            //    into 9 topics
-            // -----------------------------
-
-            const topics =
-                createTopics(wiki.html);
-
-
-            // -----------------------------
-            // 3. C++ OOP model
-            // -----------------------------
-
-            const cpp =
-                await processPlanet({
-                    title: wiki.title,
-                    topics: topics
-                });
-
-
-            // -----------------------------
-            // 4. Final JSON
-            // -----------------------------
-
-            res.json({
-
-                title: wiki.title,
-
-                wikipediaUrl:
-                    wiki.url,
-
-                topics: topics,
-
-                cpp: cpp,
-
-                // Reserved for other team members
-                media: [],
-
-                missions: [],
-
-                astronauts: []
-
-            });
-
-        }
-
-        catch (error) {
-
-            console.error(error);
-
-            res.status(500).json({
-
-                error:
-                    error.message
-
-            });
-        }
-    }
-);
-
-
-// NASA Astronomy Picture of the Day (cached per day)
-let apodCache = { date: "", data: null };
-app.get("/api/apod", async (req, res) => {
+// Planet: Wikipedia -> 9 topics -> C++ OOP model
+app.get("/api/planet/:name", async (req, res) => {
     try {
-        const today = new Date().toISOString().slice(0, 10);
-        if (apodCache.data && apodCache.date === today) return res.json(apodCache.data);
-        const key = process.env.NASA_API_KEY || "RAYf28bqdR9Qi81URJabhEds0sh7ftOzpa86KUVZ";
-        const r = await fetch("https://api.nasa.gov/planetary/apod?api_key=" + key);
-        if (!r.ok) throw new Error("NASA API returned " + r.status);
-        const d = await r.json();
-        apodCache = { date: today, data: d };
-        res.json(d);
-    } catch (e) {
-        console.error(e);
-        res.status(502).json({ error: e.message });
+        const wiki = await getWikipediaPage(req.params.name);
+        const topics = createTopics(wiki.html);
+        const cpp = await processPlanet({ title: wiki.title, topics });
+        res.json({
+            title: wiki.title,
+            wikipediaUrl: wiki.url,
+            topics,
+            cpp,
+            // Reserved for other team members
+            media: [],
+            missions: [],
+            astronauts: []
+        });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: error.message });
     }
 });
 
-
-app.listen(
-    3000,
-    () => {
-
-        console.log(
-            "Space Explorer backend running at:"
-        );
-
-        console.log(
-            "http://localhost:3000"
-        );
+// NASA image of the day
+app.get("/api/apod", async (req, res) => {
+    try {
+        res.json(await getApod());
+    } catch (error) {
+        console.error(error);
+        res.status(502).json({ error: error.message });
     }
-);
+});
+
+// Space news from the last 30 days
+app.get("/api/announcements", async (req, res) => {
+    try {
+        res.json(await getAnnouncements());
+    } catch (error) {
+        console.error(error);
+        res.status(502).json({ error: error.message });
+    }
+});
+
+app.listen(3000, () => {
+    console.log("Space Explorer running at: http://localhost:3000");
+});
