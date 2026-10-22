@@ -1,15 +1,17 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+
     <meta charset="UTF-8">
 
     <meta
         name="viewport"
+        
         content="width=device-width, initial-scale=1.0"
     >
 
     <title>Space Explorer</title>
-
+    
     <link rel="stylesheet" href="css/style.css">
 </head>
 
@@ -230,6 +232,62 @@
 
 
             <!-- =================================================
+                 SIGN UP FORM
+            ================================================== -->
+
+            <form id="signupForm" hidden>
+
+                <div class="input-container">
+                    <input
+                        type="text"
+                        id="signupUsername"
+                        placeholder="Choose a username"
+                        autocomplete="username"
+                        minlength="3"
+                        maxlength="24"
+                        pattern="[A-Za-z0-9_]+"
+                        required
+                    >
+                </div>
+
+                <div class="input-container">
+                    <input
+                        type="email"
+                        id="signupEmail"
+                        placeholder="Email address"
+                        autocomplete="email"
+                        required
+                    >
+                </div>
+
+                <div class="input-container">
+                    <input
+                        type="password"
+                        id="signupPassword"
+                        placeholder="Create a password"
+                        autocomplete="new-password"
+                        minlength="8"
+                        required
+                    >
+                </div>
+
+                <button
+                    type="submit"
+                    class="login-button"
+                >
+                    <span>Create Account</span>
+                    <span class="arrow">→</span>
+                </button>
+
+                <p class="signup-text">
+                    Already have an account?
+                    <a href="#" id="backToLogin">Login</a>
+                </p>
+
+            </form>
+
+
+            <!-- =================================================
                  OR DIVIDER
             ================================================== -->
 
@@ -266,23 +324,18 @@
             ================================================== -->
 
             <p class="signup-text">
-
                 Don't have an account?
-
                 <a
                     href="#"
                     id="signupLink"
                 >
                     Sign Up
                 </a>
-
             </p>
-
+            <p id="authMessage" role="status" aria-live="polite"></p>
         </section>
 
     </main>
-
-
     <script type="module" src="js/spaceVersion.js"></script>
 
 </body>

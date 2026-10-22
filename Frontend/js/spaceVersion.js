@@ -1,58 +1,167 @@
 import * as THREE from "https://unpkg.com/three@0.180.0/build/three.module.js";
+import { supabase } from "./supabaseClient.js";
 
 
 /* =========================================================
-   LOGIN UI
+   LOGIN UI + SUPABASE SIGN UP
 ========================================================= */
 
 const passwordInput = document.getElementById("password");
-const passwordToggle = document.getElementById("password-toggle");
+const passwordToggle = document.getElementById("passwordToggle");
+
+const loginForm = document.getElementById("loginForm");
+const signupForm = document.getElementById("signupForm");
+
+const signupLink = document.getElementById("signupLink");
+const backToLogin = document.getElementById("backToLogin");
+
+const googleButton = document.getElementById("googleButton");
+const authMessage = document.getElementById("authMessage");
+
+const usernameInput = document.getElementById("username");
+const loginPasswordInput = document.getElementById("password");
+
+const signupUsername = document.getElementById("signupUsername");
+const signupEmail = document.getElementById("signupEmail");
+const signupPassword = document.getElementById("signupPassword");
+
+/* ---------- Password Toggle ---------- */
 
 if (passwordToggle && passwordInput) {
-
     passwordToggle.addEventListener("click", () => {
 
-        passwordInput.type =
-            passwordInput.type === "password"
-                ? "text"
-                : "password";
+        const isPassword = passwordInput.type === "password";
+
+        passwordInput.type = isPassword ? "text" : "password";
+
+        passwordToggle.setAttribute(
+            "aria-label",
+            isPassword ? "Hide password" : "Show password"
+        );
     });
 }
 
+/* ---------- Switch Between Forms ---------- */
 
-const loginForm = document.getElementById("login-form");
+signupLink?.addEventListener("click", (event) => {
 
-if (loginForm) {
+    event.preventDefault();
 
-    loginForm.addEventListener("submit", (event) => {
+    loginForm.hidden = true;
+    signupForm.hidden = false;
 
-        event.preventDefault();
+    authMessage.textContent = "";
+});
 
-        console.log("Login button clicked.");
+backToLogin?.addEventListener("click", (event) => {
+
+    event.preventDefault();
+
+    signupForm.hidden = true;
+    loginForm.hidden = false;
+
+    authMessage.textContent = "";
+});
+
+/* ---------- Sign Up ---------- */
+
+signupForm?.addEventListener("submit", async (event) => {
+
+    event.preventDefault();
+
+    authMessage.textContent = "Creating account...";
+
+    const { error } = await supabase.auth.signUp({
+
+        email: signupEmail.value.trim(),
+
+        password: signupPassword.value,
+
+        options: {
+
+            data: {
+                username: signupUsername.value.trim()
+            }
+        }
     });
-}
+
+    if (error) {
+
+        authMessage.textContent = error.message;
+        return;
+    }
+
+    authMessage.textContent =
+        "Account created! Check your email to verify your account.";
+
+    signupForm.reset();
+
+    signupForm.hidden = true;
+    loginForm.hidden = false;
+});
 
 
-const googleButton = document.getElementById("google-login");
 
-if (googleButton) {
+/* ---------- Login via Backend ---------- */
 
-    googleButton.addEventListener("click", () => {
+loginForm?.addEventListener("submit", async (event) => {
+    event.preventDefault();
 
-        console.log("Google login clicked.");
-    });
-}
+    authMessage.textContent = "Signing in...";
+
+    const identifier = usernameInput.value.trim();
+    const password = loginPasswordInput.value;
+
+    try {
+        const response = await fetch("http://localhost:3000/api/login", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+                identifier,
+                password
+            })
+        });
+
+        const result = await response.json();
+
+        if (!response.ok) {
+            authMessage.textContent =
+                result.error || "Login failed. Please try again.";
+            return;
+        }
+
+        const { error } = await supabase.auth.setSession({
+            access_token: result.access_token,
+            refresh_token: result.refresh_token
+        });
+
+        if (error) {
+            authMessage.textContent =
+                "Login succeeded, but the session could not be saved. Please try again.";
+            console.error("Session error:", error.message);
+            return;
+        }
+
+        authMessage.textContent = "Login successful! Welcome back.";
+        loginForm.reset();
+
+    } catch (error) {
+        console.error("Login request failed:", error);
+        authMessage.textContent =
+            "Cannot connect to the backend. Please check that the server is running.";
+    }
+});
 
 
-const signupButton = document.getElementById("signup");
 
-if (signupButton) {
+/* ---------- Google Button (later) ---------- */
 
-    signupButton.addEventListener("click", () => {
+googleButton?.addEventListener("click", () => {
 
-        console.log("Sign up clicked.");
-    });
-}
+    console.log("Google login will be connected later.");
+});
 
 
 /* =========================================================
