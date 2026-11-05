@@ -16,7 +16,7 @@ const interestingEntities = [
         description:
             "M87* is a supermassive black hole at the center of galaxy Messier 87. Its famous image revealed a bright ring of material surrounding the black hole's dark shadow.",
 
-        image: "assets/interesting-entities/m87-black-hole.png",
+        image: "assets/interesting-entities/m87-black-hole.jpg",
 
         wikipedia: "M87"
     },
@@ -28,7 +28,7 @@ const interestingEntities = [
         description:
             "The Crab Pulsar is a rapidly rotating neutron star left behind by a supernova explosion. It emits beams of radiation and powers the surrounding Crab Nebula.",
 
-        image: "assets/interesting-entities/crab-pulsar.png",
+        image: "assets/interesting-entities/crab-pulsar.jpg",
 
         wikipedia: "Crab_Pulsar"
     },
@@ -40,7 +40,7 @@ const interestingEntities = [
         description:
             "A magnetar is a neutron star with an extraordinarily powerful magnetic field. Some magnetars release enormous bursts of energy detectable across the galaxy.",
 
-        image: "assets/interesting-entities/magnetar.png",
+        image: "assets/interesting-entities/magnetar.jpg",
 
         wikipedia: "Magnetar"
     },
@@ -52,7 +52,7 @@ const interestingEntities = [
         description:
             "3C 273 is a famous quasar powered by matter falling toward a supermassive black hole. It is so luminous that astronomers can observe it across enormous cosmic distances.",
 
-        image: "assets/interesting-entities/quasar-3c273.png",
+        image: "assets/interesting-entities/quasar-3c273.jpg",
 
         wikipedia: "3C_273"
     },

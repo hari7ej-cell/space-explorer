@@ -1,6 +1,8 @@
 "use strict";
 const express = require("express");
 const cors = require("cors");
+const path = require("path");
+const cheerio = require("cheerio");
 
 const {
     getLatestDiscovery
@@ -31,6 +33,8 @@ const app = express();
 
 app.use(cors());
 app.use(express.json());
+const frontendDir = path.join(__dirname, "../frontend");
+app.use(express.static(frontendDir));
 
 const PORT = 3000;
 
@@ -158,70 +162,79 @@ function getModel3D(entityName) {
     };
 }
 
-// ======================================================
-// SUMMARY HELPER
-// ======================================================
+function detectEntityType(title, html) {
+    const $ = cheerio.load(html || "");
 
-function makeSummary(topics) {
-    const overview = topics.find(
-        topic => topic.id === "overview"
-    );
+    const name = String(title || "").toLowerCase().trim();
 
-    const text = String(
-        overview?.content ||
-        overview?.text ||
-        "Space entity information."
-    );
-
-    /*
-        The overview is plain text in the current topicParser.
-        Keep it short for the hero section.
-    */
-
-    return text
-        .replace(/\s+/g, " ")
-        .trim()
-        .slice(0, 700);
-}
-
-
-// ======================================================
-// HERO IMAGE HELPER
-// ======================================================
-
-function getHeroImage(images, name, wikiURL) {
-    const list = Array.isArray(images) ? images : [];
-
-    const overviewImage = list.find(image =>
-        image &&
-        image.topicId === "overview" &&
-        image.url
-    );
-
-    const firstImage = list.find(image =>
-        image && image.url
-    );
-
-    const image = overviewImage || firstImage;
-
-    if (!image) {
+    // Reject Wikipedia disambiguation pages
+    if (
+        $(".mw-disambig").length > 0 ||
+        /disambiguation/i.test(name) ||
+        /disambiguation pages/i.test($(".mw-normal-catlinks").text())
+    ) {
         return null;
     }
 
-    return {
-        ...image,
+    const categories = $(".mw-normal-catlinks a")
+        .map((_, el) => $(el).text().toLowerCase())
+        .get();
 
-        title: image.title || name,
+    const infobox = $("table.infobox").first();
 
-        alt: image.alt || image.title || name,
+    const infoboxText = infobox.text().toLowerCase();
+    const lead = $("p").slice(0, 3).text().toLowerCase();
 
-        source: image.source || {
-            name: "Wikipedia",
-            url: wikiURL
-        }
-    };
+    const categoryText = categories.join(" ");
+
+    // Astronaut
+    if (/astronaut|cosmonaut|taikonaut/.test(categoryText + " " + infoboxText))
+        return "Astronaut";
+
+    // Mission
+    if (/space mission|spaceflight mission|space program/.test(categoryText + " " + infoboxText))
+        return "Mission";
+
+    // Black Hole
+    if (/black hole/.test(categoryText + " " + infoboxText + " " + lead))
+        return "Black Hole";
+
+    // Galaxy
+    if (/galaxies|galaxy/.test(categoryText) && /galaxy/.test(lead))
+        return "Galaxy";
+
+    // Planet
+    if (
+        /planets|exoplanets/.test(categoryText) &&
+        /planet|exoplanet/.test(lead)
+    ) return "Planet";
+
+    // Moon
+    if (
+        /natural satellites|moons of|planetary satellites/.test(categoryText)
+    ) return "Moon";
+
+    // Star
+    if (/stars/.test(categoryText) && /star/.test(lead))
+        return "Star";
+
+    // Comet
+    if (/comets/.test(categoryText))
+        return "Comet";
+
+    // Asteroid
+    if (/asteroids/.test(categoryText))
+        return "Asteroid";
+
+    return null;
 }
-
+const routeTypes = new Set(["planet", "galaxy", "astronaut", "mission", "black-hole", "star", "moon", "asteroid", "comet", "deep-sky-object", "space-entity"]);
+function routeType(type) {
+    return String(type || "Space Entity").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+}
+function typeFromRoute(value) {
+    return value.split("-").map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(" ");
+}
 
 // ======================================================
 // MAIN PLANET API
@@ -305,7 +318,128 @@ app.get("/api/planet/:name", async (req, res) => {
     }
 });
 
+async function resolveWikipediaEntity(searchName) {
+    const apiURL = new URL("https://en.wikipedia.org/w/api.php");
 
+    apiURL.search = new URLSearchParams({
+        action: "query",
+        generator: "search",
+        gsrsearch: searchName,
+        gsrlimit: "10",
+        prop: "pageprops|categories|extracts",
+        cllimit: "max",
+        exintro: "1",
+        explaintext: "1",
+        format: "json"
+    });
+
+    const response = await fetch(apiURL, {
+        headers: {
+            "User-Agent": "SpaceExplorer/1.0 (educational project)"
+        }
+    });
+
+    if (response.status === 429) {
+        throw new Error("Wikipedia rate limit reached. Wait before searching again.");
+    }
+
+    if (!response.ok) {
+        throw new Error(`Wikipedia request failed: ${response.status}`);
+    }
+
+    const result = await response.json();
+
+    const pages = Object.values(result.query?.pages || {});
+
+    if (!pages.length) {
+        throw new Error("No Wikipedia results found.");
+    }
+
+    const validCandidates = [];
+
+    for (const page of pages) {
+        if (page.pageprops?.disambiguation !== undefined) {
+            continue;
+        }
+
+        const title = page.title;
+        const extract = (page.extract || "").toLowerCase();
+
+        const categories = (page.categories || [])
+            .map(c => c.title.replace("Category:", "").toLowerCase());
+
+        const categoryText = categories.join(" ");
+
+        let type = null;
+
+        if (/astronaut|cosmonaut|taikonaut/.test(categoryText)) {
+            type = "Astronaut";
+        }
+        else if (/space missions|spaceflight missions|lunar missions/.test(categoryText)) {
+            type = "Mission";
+        }
+        else if (/black holes/.test(categoryText) || /black hole/.test(extract)) {
+            type = "Black Hole";
+        }
+        else if (/galaxies/.test(categoryText)) {
+            type = "Galaxy";
+        }
+        else if (/planets|terrestrial planets|gas giants|dwarf planets/.test(categoryText)) {
+            type = "Planet";
+        }
+        else if (/natural satellites|moons of|planetary satellites/.test(categoryText)) {
+            type = "Moon";
+        }
+        else if (/comets/.test(categoryText)) {
+            type = "Comet";
+        }
+        else if (/asteroids/.test(categoryText)) {
+            type = "Asteroid";
+        }
+        else if (/nebulae|nebula/.test(categoryText)) {
+            type = "Deep-Sky Object";
+        }
+        else if (/stars/.test(categoryText)) {
+            type = "Star";
+        }
+
+        if (!type) continue;
+
+        let score = 0;
+
+        if (title.toLowerCase() === searchName.toLowerCase()) {
+            score += 100;
+        }
+
+        if (title.toLowerCase().startsWith(searchName.toLowerCase())) {
+            score += 30;
+        }
+
+        validCandidates.push({
+            title,
+            type,
+            score
+        });
+    }
+
+    if (!validCandidates.length) {
+        throw new Error("No supported space entity found.");
+    }
+
+    validCandidates.sort((a, b) => b.score - a.score);
+
+    const selected = validCandidates[0];
+
+    console.log("Selected article:", selected.title);
+    console.log("Entity type:", selected.type);
+
+    const wiki = await getWikipediaPage(selected.title);
+
+    return {
+        ...wiki,
+        entityType: selected.type
+    };
+}
 // ======================================================
 // BUILD PLANET RESPONSE
 // ======================================================
@@ -324,7 +458,7 @@ async function buildPlanet(name) {
 
     const wikiStart = Date.now();
 
-    const wiki = await getWikipediaPage(name);
+    const wiki = await resolveWikipediaEntity(name);
 
     console.log(
         `Wikipedia: ${wiki.title} - ${Date.now() - wikiStart} ms`
@@ -337,8 +471,6 @@ async function buildPlanet(name) {
     const parseStart = Date.now();
 
     const topics = createTopics(wiki.html);
-
-    const summary = makeSummary(topics);
 
     const details = extractStructuredData(wiki.html);
 
@@ -380,30 +512,22 @@ async function buildPlanet(name) {
     );
 
     // ----------------------------------------------
-    // STEP 4: Create hero image
-    // ----------------------------------------------
-
-    const heroImage = getHeroImage(
-        images,
-        wiki.title,
-        wiki.url
-    );
-
-    // ----------------------------------------------
     // STEP 5: Send data through existing C++ service
     // ----------------------------------------------
 
     const cppStart = Date.now();
 
+    const entityType = wiki.entityType;
+    if (!entityType) {
+    throw new Error("This article is not a supported space entity.");
+    }
+
     const cppInput = {
-        type: "Planet",
-
-        summary,
-
+        type: entityType,
+        name: wiki.title,
+        wikipediaUrl: wiki.url,
         details,
-
         topics,
-
         images
     };
 
@@ -425,10 +549,10 @@ async function buildPlanet(name) {
 
         entity: {
             name: wiki.title,
-            type: "Planet"
+            type: cppResult.type || entityType
         },
 
-        summary,
+        summary: cppResult.summary,
 
         topics,
 
@@ -436,7 +560,7 @@ async function buildPlanet(name) {
 
         images,
 
-        heroImage,
+        heroImage: cppResult.heroImage,
 
         wikipediaUrl: wiki.url,
 
@@ -452,6 +576,12 @@ async function buildPlanet(name) {
     return result;
 }
 
+
+// Clean detail URLs, for example /astronaut/Neil-Armstrong.
+app.get("/:category/:name", (req, res, next) => {
+    if (!routeTypes.has(req.params.category)) return next();
+    res.sendFile(path.join(frontendDir, "planet-detail.html"));
+});
 
 // ======================================================
 // LATEST DISCOVERY API

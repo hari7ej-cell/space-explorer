@@ -64,7 +64,29 @@ public:
     json():v(nullptr){} json(std::initializer_list<std::pair<std::string,json>> init){ object_t o; for(const auto& item:init)o[item.first]=item.second; v=std::move(o); } json(const std::vector<std::string>& a){ array_t x; for(const auto& s:a)x.emplace_back(s); v=std::move(x); } json(std::nullptr_t):v(nullptr){} json(bool b):v(b){} json(double n):v(n){} json(int n):v((double)n){} json(const char* s):v(std::string(s)){} json(const std::string& s):v(s){}
     static json object(){return json(object_t{});} static json array(){return json(array_t{});}
     static json parse(const std::string& s){Parser p{s};json j=p.value();p.ws();if(p.p!=s.size())throw std::runtime_error("trailing JSON data");return j;}
-    bool is_array() const{return std::holds_alternative<array_t>(v);} bool is_string() const{return std::holds_alternative<std::string>(v);}
+    bool is_array() const {
+    return std::holds_alternative<array_t>(v);
+}
+
+bool is_string() const {
+    return std::holds_alternative<std::string>(v);
+}
+
+bool is_object() const {
+    return std::holds_alternative<object_t>(v);
+}
+
+bool is_number() const {
+    return std::holds_alternative<double>(v);
+}
+
+bool is_boolean() const {
+    return std::holds_alternative<bool>(v);
+}
+
+bool is_null() const {
+    return std::holds_alternative<std::nullptr_t>(v);
+}
     bool contains(const std::string& k) const{auto o=std::get_if<object_t>(&v);return o&&o->count(k);}
     json& operator[](const std::string& k){return std::get<object_t>(v)[k];} const json& operator[](const std::string& k)const{return std::get<object_t>(v).at(k);}
     void push_back(const json& j){std::get<array_t>(v).push_back(j);} auto begin()const{return std::get<array_t>(v).begin();} auto end()const{return std::get<array_t>(v).end();}

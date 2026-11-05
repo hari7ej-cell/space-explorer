@@ -185,8 +185,38 @@ function renderImage(image, extraClass = "") {
     </figure>`;
 }
 
+function categoryPage(type) {
+    const key = String(type || "Space Entity").trim().toLowerCase();
+    const labels = {
+        "planet": "Planet & Space Entity",
+        "exoplanet": "Planet & Space Entity",
+        "astronaut": "Astronaut",
+        "mission": "Mission",
+        "galaxy": "Galaxy",
+        "black hole": "Black Hole",
+        "star": "Star",
+        "moon": "Moon",
+        "asteroid": "Asteroid",
+        "comet": "Comet",
+        "deep-sky object": "Deep-Sky Object"
+    };
+    const label = labels[key] || "Space Entity";
+    const href = key === "astronaut" || key === "mission" ? "index.html" : "planets.html";
+    return { label, href };
+}
+
+function makeSlug(value) {
+    return String(value || "").trim().replace(/[^\p{L}\p{N}]+/gu, "-").replace(/^-|-$/g, "");
+}
+
 function render(data) {
     const name = data.entity?.name || entity;
+    const actualType = data.entity?.type || "Space Entity";
+    const category = categoryPage(actualType);
+    document.querySelectorAll("#breadcrumb-category").forEach(categoryLink => {
+        categoryLink.textContent = category.label;
+        categoryLink.href = category.href;
+    });
 
     const breadcrumbEntity = document.getElementById("breadcrumb-entity");
 
@@ -279,7 +309,7 @@ const modelAvailable =
     app.innerHTML = `
         <section class="entity-hero ${heroUrl ? "has-hero-image" : "no-hero-image"}" ${heroUrl ? `style="--hero-image: url('${escapeHTML(heroUrl).replace(/'/g, "%27")}')"` : ""}>
             <div class="entity-hero-content">
-                <span class="entity-kicker">${escapeHTML((apiType = data.entity?.type).toUpperCase())}</span>
+                <span class="entity-kicker">${escapeHTML(actualType.toUpperCase())}</span>
                 <h1 class="entity-title">${escapeHTML(name)}</h1>
                 <p class="entity-intro">${escapeHTML(
         shortSummary(

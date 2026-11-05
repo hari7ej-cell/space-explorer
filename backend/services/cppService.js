@@ -3,6 +3,15 @@ const { spawn } = require("child_process");
 
 function processPlanet(apiData) {
     return new Promise((resolve, reject) => {
+        if (!apiData || typeof apiData !== "object") {
+            reject(new Error("Invalid entity data"));
+            return;
+        }
+
+        if (typeof apiData.type !== "string") {
+            reject(new Error("Invalid entity type"));
+            return;
+        }
         const executable = path.join(__dirname, "../../cpp/bin/space_model.exe");
         const cpp = spawn(executable);
         let output = "";
