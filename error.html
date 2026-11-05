@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Something went wrong | Space Explorer</title>
+    <link rel="stylesheet" href="error.css">
+</head>
+<body>
+<main class="error-page" id="errorPage" data-type="notfound">
+    <div class="stars" id="stars" aria-hidden="true"></div>
+
+    <!-- BLACK HOLE (invalid / notfound) -->
+    <div class="visual visual-blackhole" aria-hidden="true">
+        <div class="bh-glow"></div>
+        <div class="bh-lens"></div>
+        <span class="bh-word" id="bhWord"></span>
+        <div class="bh-core"></div>
+        <div class="bh-disk"></div>
+    </div>
+
+    <!-- LOST ASTRONAUT (server) -->
+    <div class="visual visual-astronaut" aria-hidden="true">
+        <svg class="astro" viewBox="0 0 200 260">
+            <path class="tether" d="M100 150 C 60 170, 90 200, 40 230 S 20 255, 10 250"/>
+            <rect x="52" y="108" width="96" height="86" rx="30" fill="#e9eef5"/>
+            <rect x="38" y="116" width="26" height="62" rx="13" fill="#d3dbe6" transform="rotate(14 51 147)"/>
+            <rect x="136" y="116" width="26" height="62" rx="13" fill="#d3dbe6" transform="rotate(-24 149 147)"/>
+            <rect x="62" y="186" width="30" height="52" rx="14" fill="#d3dbe6"/>
+            <rect x="108" y="186" width="30" height="52" rx="14" fill="#d3dbe6" transform="rotate(10 123 212)"/>
+            <rect x="76" y="132" width="48" height="26" rx="6" fill="#1b2a3d"/>
+            <circle cx="88" cy="145" r="4" fill="#ff5a5a" class="blink"/>
+            <circle cx="100" cy="145" r="4" fill="#4aa3ff"/>
+            <circle cx="112" cy="145" r="4" fill="#7bd88f"/>
+            <circle cx="100" cy="72" r="46" fill="#f4f7fb"/>
+            <ellipse cx="100" cy="74" rx="34" ry="28" fill="#0d1726"/>
+            <ellipse cx="88" cy="64" rx="12" ry="7" fill="#4aa3ff" opacity=".35"/>
+        </svg>
+    </div>
+
+    <div class="error-text">
+        <p class="error-code" id="errorCode"></p>
+        <h1 id="errorTitle"></h1>
+        <p class="error-message" id="errorMessage"></p>
+        <div class="error-actions">
+            <a class="btn btn-primary" href="index.html">Back to home</a>
+            <button class="btn" id="tryAgain" type="button">Try again</button>
+        </div>
+    </div>
+</main>
+<script src="error.js"></script>
+</body>
+</html>
