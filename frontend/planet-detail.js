@@ -1,42 +1,35 @@
 const exploreButton = document.getElementById("exploreButton");
-const exploreDropdown = exploreButton.closest(".dropdown");
-
+const exploreDropdown = exploreButton?.closest(".dropdown");
 const accountButton = document.getElementById("accountButton");
-const accountDropdown = accountButton.closest(".dropdown");
+const accountDropdown = accountButton?.closest(".dropdown");
 
-exploreButton.addEventListener("click", event => {
+exploreButton?.addEventListener("click", event => {
     event.stopPropagation();
-    exploreDropdown.classList.toggle("active");
-    accountDropdown.classList.remove("active");
+    exploreDropdown?.classList.toggle("active");
+    accountDropdown?.classList.remove("active");
 });
 
-accountButton.addEventListener("click", event => {
+accountButton?.addEventListener("click", event => {
     event.stopPropagation();
-    accountDropdown.classList.toggle("active");
-    exploreDropdown.classList.remove("active");
+    accountDropdown?.classList.toggle("active");
+    exploreDropdown?.classList.remove("active");
 });
 
 document.addEventListener("click", () => {
-    exploreDropdown.classList.remove("active");
-    accountDropdown.classList.remove("active");
+    exploreDropdown?.classList.remove("active");
+    accountDropdown?.classList.remove("active");
 });
 
+// Search is intentionally not connected yet.
 const searchInput = document.getElementById("searchInput");
-
-searchInput.addEventListener("keydown", event => {
-    if (event.key === "Enter") {
-        const value = searchInput.value.trim();
-
-        if (value) {
-            window.location.href =
-                "index.html?search=" +
-                encodeURIComponent(value);
-        }
+searchInput?.addEventListener("keydown", event => {
+    if (event.key === "Enter" && searchInput.value.trim()) {
+        console.info("Search is not enabled yet.");
     }
 });
 const API_BASE = "http://localhost:3000";
 const params = new URLSearchParams(window.location.search);
-const entity = params.get("entity") || "Mars";
+const entity = params.get("entity") || "";
 const breadcrumbEntity = document.getElementById("breadcrumb-entity");
 function formatNavigationLabel(title) {
     let label = String(title || "")
@@ -82,6 +75,22 @@ function normalizeText(value) {
         .replace(/\[[0-9]+\]/g, "")
         .replace(/\s+/g, " ")
         .trim();
+}
+
+function removeDuplicatedEntityPrefix(value, entityName) {
+    const clean = normalizeText(value);
+    const label = formatNavigationLabel(entityName).trim();
+    if (!label) return clean;
+
+    const lower = clean.toLowerCase();
+    const repeated = label.toLowerCase();
+    if (lower.startsWith(repeated + repeated)) {
+        return clean.slice(label.length).trimStart();
+    }
+    if (lower.startsWith(repeated + " " + repeated)) {
+        return clean.slice(label.length).trimStart();
+    }
+    return clean;
 }
 
 function shortSummary(value, max = 240) {
@@ -198,10 +207,21 @@ function categoryPage(type) {
         "moon": "Moon",
         "asteroid": "Asteroid",
         "comet": "Comet",
-        "deep-sky object": "Deep-Sky Object"
+        "deep-sky object": "Deep-Sky Object",
+        "magnetar": "Magnetar",
+        "neutron star": "Neutron Star",
+        "pulsar": "Pulsar",
+        "white dwarf": "White Dwarf",
+        "brown dwarf": "Brown Dwarf",
+        "quasar": "Quasar",
+        "supernova": "Supernova",
+        "nebula": "Nebula",
+        "dwarf planet": "Planet & Space Entity",
+        "spacecraft": "Spacecraft",
+        "space station": "Space Station"
     };
     const label = labels[key] || "Space Entity";
-    const href = key === "astronaut" || key === "mission" ? "index.html" : "planets.html";
+    const href = "planets.html";
     return { label, href };
 }
 
@@ -310,19 +330,22 @@ const modelAvailable =
         <section class="entity-hero ${heroUrl ? "has-hero-image" : "no-hero-image"}" ${heroUrl ? `style="--hero-image: url('${escapeHTML(heroUrl).replace(/'/g, "%27")}')"` : ""}>
             <div class="entity-hero-content">
                 <span class="entity-kicker">${escapeHTML(actualType.toUpperCase())}</span>
-                <h1 class="entity-title">${escapeHTML(name)}</h1>
+                <h1 class="entity-title">${escapeHTML(formatNavigationLabel(name))}</h1>
                 <p class="entity-intro">${escapeHTML(
         shortSummary(
-            (
-                normalizeText(data.summary).length > 100 &&
-                normalizeText(data.summary).trim().toLowerCase() !== name.trim().toLowerCase()
-            )
-                ? data.summary
-                : (
-                    topics.find(topic =>
-                        topic.title?.trim().toLowerCase() === "overview"
-                    )?.content || ""
-                ),
+            removeDuplicatedEntityPrefix(
+                (
+                    normalizeText(data.summary).length > 100 &&
+                    normalizeText(data.summary).trim().toLowerCase() !== name.trim().toLowerCase()
+                )
+                    ? data.summary
+                    : (
+                        topics.find(topic =>
+                            topic.title?.trim().toLowerCase() === "overview"
+                        )?.content || ""
+                    ),
+                name
+            ),
             240
         )
     )}</p>
@@ -491,14 +514,34 @@ function setupSectionNavigation() {
     updateActiveSection();
 }
 async function loadEntity() {
+    if (!app) {
+        console.error("Detail page is missing #app.");
+        return;
+    }
+    if (!entity.trim()) {
+        app.innerHTML = '<div class="state error">No space entity was specified.</div>';
+        return;
+    }
     try {
-        const response = await fetch(`${API_BASE}/api/planet/${encodeURIComponent(entity)}`);
-        const data = await response.json();
-        if (!response.ok) throw new Error(data.error || "Could not load this space entity.");
+        const response = await fetch(`${API_BASE}/api/planet/${encodeURIComponent(entity)}`, {
+            signal: AbortSignal.timeout(30000)
+        });
+        const data = await response.json().catch(() => ({}));
+        if (!response.ok) {
+            const message = response.status === 404
+                ? (data.error || "Reliable information for this space entity is unavailable.")
+                : (data.error || "The space information service is temporarily unavailable.");
+            throw new Error(message);
+        }
         render(data);
     } catch (error) {
         console.error("Space entity loading error:", error);
-        app.innerHTML = `<div class="state error">${escapeHTML(error.message)}<br><small>Check that the backend is running with <code>node server.js</code>.</small></div>`;
+        const hint = error.name === "TimeoutError"
+            ? "The request took too long. Please try again later."
+            : (error.message.includes("Failed to fetch")
+                ? "Start the backend using node server.js and make sure it is running on port 3000."
+                : "No unrelated article will be displayed as a substitute.");
+        app.innerHTML = `<div class="state error">${escapeHTML(error.message)}<br><small>${escapeHTML(hint)}</small></div>`;
     }
 }
 

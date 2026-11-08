@@ -347,15 +347,10 @@
 
         const searchInput = document.getElementById("searchInput");
 
-        searchInput.addEventListener("keydown", event => {
-            if (event.key === "Enter") {
-                const value = searchInput.value.trim();
-
-                if (value) {
-                    window.location.href =
-                        "index.html?search=" +
-                        encodeURIComponent(value);
-                }
+        searchInput?.addEventListener("keydown", event => {
+            if (event.key === "Enter" && searchInput.value.trim()) {
+                event.preventDefault();
+                console.info("Search is not enabled yet.");
             }
         });
         const learnMoreBtn = document.getElementById("learnMoreBtn");
@@ -363,7 +358,7 @@
 
         let expanded = false;
 
-        learnMoreBtn.addEventListener("click", () => {
+        learnMoreBtn?.addEventListener("click", () => {
 
             expanded = !expanded;
 
@@ -536,111 +531,14 @@
         // =========================
 
         loadLatestDiscovery();
-        // =========================
-        // INTERESTING SPACE ENTITY
-        // =========================
-
-        const interestingEntityCard =
-            document.getElementById("interestingEntityCard");
-
-        const interestingEntityImage =
-            document.getElementById("interestingEntityImage");
-
-        const interestingEntityType =
-            document.getElementById("interestingEntityType");
-
-        const interestingEntityTitle =
-            document.getElementById("interestingEntityTitle");
-
-        const interestingEntityCaption =
-            document.getElementById("interestingEntityCaption");
-
-
-        async function loadInterestingEntity() {
-
-            try {
-
-                const response =
-                    await fetch(
-                        "http://localhost:3000/api/interesting-entity"
-                    );
-
-                if (!response.ok) {
-                    throw new Error(
-                        `API returned ${response.status}`
-                    );
-                }
-
-                const entity =
-                    await response.json();
-
-                console.log(
-                    "Interesting entity:",
-                    entity
-                );
-
-
-                // =========================
-                // TEXT
-                // =========================
-
-                interestingEntityType.textContent =
-                    entity.type.toUpperCase();
-
-                interestingEntityTitle.textContent =
-                    entity.title;
-
-                interestingEntityCaption.textContent =
-                    entity.caption;
-
-
-                // =========================
-                // IMAGE
-                // =========================
-
-                if (entity.image) {
-
-                    interestingEntityImage.style.backgroundImage =
-                        `url("${entity.image}")`;
-
-                }
-
-
-                // =========================
-                // CARD LINK
-                // =========================
-
-                interestingEntityCard.href =
-                    "planet-detail.html?entity=" +
-                    encodeURIComponent(entity.name);
-
-
-            } catch (error) {
-
-                console.error(
-                    "Interesting entity error:",
-                    error
-                );
-
-                interestingEntityType.textContent =
-                    "SPACE ENTITY";
-
-                interestingEntityTitle.textContent =
-                    "Unable to load";
-
-                interestingEntityCaption.textContent =
-                    "Interesting space entity data is currently unavailable.";
-
-            }
-        }
         /* ---------- scroll reveal + CTA ---------- */
         const io = new IntersectionObserver(es => es.forEach(e => {
             if (e.isIntersecting) { e.target.classList.add("in"); io.unobserve(e.target); }
         }), { threshold: 0.12 });
         document.querySelectorAll(".reveal").forEach(el => io.observe(el));
-        document.getElementById("ctaSearch").addEventListener("click", () => {
+        document.getElementById("ctaSearch")?.addEventListener("click", () => {
             window.scrollTo({ top: 0, behavior: "smooth" });
-            setTimeout(() => searchInput.focus(), 500);
+            // Search is intentionally inactive until its API is implemented.
         });
     </script>
     <script src="interestingEntities.js"></script>

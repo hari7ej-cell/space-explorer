@@ -25,7 +25,10 @@ async function getLatestDiscovery() {
     console.log("NASA URL:");
     console.log(url);
 
-    const response = await fetch(url);
+    const response = await fetch(url, {
+        headers: { "User-Agent": "SpaceExplorer/1.0 (educational project)" },
+        signal: AbortSignal.timeout(15000)
+    });
 
     if (!response.ok) {
 
@@ -52,6 +55,9 @@ async function getLatestDiscovery() {
     }
 
     const planet = data[0];
+    if (!planet.pl_name) {
+        throw new Error("NASA returned an incomplete discovery record.");
+    }
 
     return {
         name: planet.pl_name,

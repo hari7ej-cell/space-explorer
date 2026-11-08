@@ -227,36 +227,46 @@ async function searchCommonsImage(entityName, topic) {
             data.query?.pages || {}
         );
 
-        const suitable = pages.find(page => {
-            const title = page.title || "";
+        const entityTerms = String(entityName || "").toLowerCase().split(/[^a-z0-9]+/).filter(word => word.length > 2);
+        const topicTerms = String(topic.title || "").toLowerCase().split(/[^a-z0-9]+/).filter(word => word.length > 3);
+        const suitable = pages
+            .map(page => {
+                const title = String(page.title || "").toLowerCase();
+                const imageInfo = page.imageinfo?.[0];
+                const metadata = String(imageInfo?.extmetadata?.ImageDescription?.value || "").toLowerCase();
+                const searchable = `${title} ${metadata}`;
+                const relevance = [...entityTerms, ...topicTerms]
+                    .filter((term, index, all) => all.indexOf(term) === index && searchable.includes(term)).length;
+                return { page, relevance };
+            })
+            .filter(item => {
+                const title = item.page.title || "";
+                const imageInfo = item.page.imageinfo?.[0];
+                return imageInfo && isUsableImage(imageInfo.thumburl || imageInfo.url) &&
+                    !/logo|icon|flag|map|diagram|symbol|coat of arms/i.test(title) &&
+                    item.relevance > 0;
+            })
+            .sort((a, b) => b.relevance - a.relevance);
+        const selected = suitable[0]?.page;
 
-            const imageInfo = page.imageinfo?.[0];
-
-            return imageInfo &&
-                isUsableImage(
-                    imageInfo.thumburl || imageInfo.url
-                ) &&
-                !/logo|icon|flag|map|diagram|symbol/i.test(title);
-        });
-
-        if (!suitable) {
+        if (!selected) {
             cacheSet(cacheKey, null);
             return null;
         }
 
-        const imageInfo = suitable.imageinfo[0];
+        const imageInfo = selected.imageinfo[0];
 
 
 const result = {
             topicId: topic.id,
-            title: suitable.title,
+            title: selected.title,
             url: imageInfo.thumburl || imageInfo.url,
             alt: topic.title,
             caption: "",
             source: {
                 name: "Wikimedia Commons",
                 url: imageInfo.descriptionurl ||
-                    `https://commons.wikimedia.org/wiki/${encodeURIComponent(suitable.title.replace(/ /g, "_"))}`
+                    `https://commons.wikimedia.org/wiki/${encodeURIComponent(selected.title.replace(/ /g, "_"))}`
             }
         };
 

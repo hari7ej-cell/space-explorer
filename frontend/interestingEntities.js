@@ -1,13 +1,5 @@
 "use strict";
 
-/*
- * Space Explorer
- * Interesting Space Entities
- *
- * Images are stored locally.
- * No image API is required.
- */
-
 const interestingEntities = [
     {
         name: "M87*",
@@ -193,9 +185,6 @@ const interestingEntities = [
 
 /* Find the card container */
 
-const entitiesGrid = document.getElementById(
-    "interestingEntitiesGrid"
-);
 
 
 /* Build one entity card */
@@ -312,6 +301,10 @@ const toggleBtn = document.getElementById("toggleEntitiesBtn");
 let showAllEntities = false;
 
 function renderInterestingEntities() {
+    if (!grid) {
+        console.warn("Interesting entities grid was not found.");
+        return;
+    }
     grid.innerHTML = "";
 
     const visibleEntities = showAllEntities
@@ -322,9 +315,8 @@ function renderInterestingEntities() {
         const card = document.createElement("a");
 
         card.className = "entity-card";
-        card.href = entity.wikipedia;
-        card.target = "_blank";
-        card.rel = "noopener noreferrer";
+        card.href = "planet-detail.html?entity=" +
+            encodeURIComponent(entity.name);
 
         const image = document.createElement("img");
         image.className = "entity-card-image";
@@ -361,21 +353,21 @@ function renderInterestingEntities() {
         grid.appendChild(card);
     });
 
-    toggleBtn.textContent = showAllEntities
-        ? "Show Less ↑"
-        : "Explore More ↓";
-
-    toggleBtn.style.display =
-        interestingEntities.length > 6 ? "inline-flex" : "none";
+    if (toggleBtn) {
+        toggleBtn.textContent = showAllEntities
+            ? "Show Less ↑"
+            : "Explore More ↓";
+        toggleBtn.style.display = interestingEntities.length > 6 ? "inline-flex" : "none";
+    }
 }
 
-toggleBtn.addEventListener("click", () => {
+toggleBtn?.addEventListener("click", () => {
     showAllEntities = !showAllEntities;
     renderInterestingEntities();
 
     if (!showAllEntities) {
         document.querySelector(".interesting-entities-section")
-            .scrollIntoView({ behavior: "smooth", block: "start" });
+            ?.scrollIntoView({ behavior: "smooth", block: "start" });
     }
 });
 

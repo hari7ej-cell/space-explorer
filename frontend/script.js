@@ -1,124 +1,32 @@
 /* =========================================
-   EXPLORE DROPDOWN
+   NAVIGATION DROPDOWNS
 ========================================= */
+const exploreButton = document.getElementById("exploreButton");
+const exploreDropdown = exploreButton?.closest(".dropdown");
+const accountButton = document.getElementById("accountButton");
+const accountDropdown = accountButton?.closest(".dropdown");
 
-const exploreButton =
-    document.getElementById(
-        "exploreButton"
-    );
+exploreButton?.addEventListener("click", event => {
+    event.stopPropagation();
+    exploreDropdown?.classList.toggle("active");
+    accountDropdown?.classList.remove("active");
+});
 
-const exploreDropdown =
-    exploreButton.closest(
-        ".dropdown"
-    );
+accountButton?.addEventListener("click", event => {
+    event.stopPropagation();
+    accountDropdown?.classList.toggle("active");
+    exploreDropdown?.classList.remove("active");
+});
 
+document.addEventListener("click", () => {
+    exploreDropdown?.classList.remove("active");
+    accountDropdown?.classList.remove("active");
+});
 
-exploreButton.addEventListener(
-    "click",
-    function(event) {
-
-        event.stopPropagation();
-
-        exploreDropdown.classList.toggle(
-            "active"
-        );
-
-        accountDropdown.classList.remove(
-            "active"
-        );
+/* Search remains intentionally inactive until the search feature is built. */
+const searchInput = document.getElementById("searchInput");
+searchInput?.addEventListener("keydown", event => {
+    if (event.key === "Enter" && searchInput.value.trim()) {
+        console.info("Search is not enabled yet.");
     }
-);
-
-
-/* =========================================
-   ACCOUNT DROPDOWN
-========================================= */
-
-const accountButton =
-    document.getElementById(
-        "accountButton"
-    );
-
-const accountDropdown =
-    accountButton.closest(
-        ".dropdown"
-    );
-
-
-accountButton.addEventListener(
-    "click",
-    function(event) {
-
-        event.stopPropagation();
-
-        accountDropdown.classList.toggle(
-            "active"
-        );
-
-        exploreDropdown.classList.remove(
-            "active"
-        );
-    }
-);
-
-
-/* =========================================
-   CLOSE DROPDOWNS
-========================================= */
-
-document.addEventListener(
-    "click",
-    function() {
-
-        exploreDropdown.classList.remove(
-            "active"
-        );
-
-        accountDropdown.classList.remove(
-            "active"
-        );
-
-    }
-);
-
-
-/* =========================================
-   SEARCH
-========================================= */
-
-const searchInput =
-    document.getElementById(
-        "searchInput"
-    );
-
-
-searchInput.addEventListener(
-    "keydown",
-    function(event) {
-
-        if (
-            event.key === "Enter"
-        ) {
-
-            const value =
-                searchInput.value.trim();
-
-            if (value) {
-
-                console.log(
-                    "Searching for:",
-                    value
-                );
-
-                /*
-                 * Wikipedia search functionality
-                 * will be connected here when
-                 * we build the home page.
-                 */
-
-            }
-
-        }
-
-    }
-);
+});
