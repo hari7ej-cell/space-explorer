@@ -1,0 +1,186 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="description" content="Explore astronauts and cosmonauts from around the world.">
+  <title>Space Explorer | Astronauts</title>
+  <link rel="stylesheet" href="style.css">
+  <script src="script.js" defer></script>
+</head>
+<body>
+  <header class="main-header">
+    <div class="header-left">
+      <div class="dropdown">
+        <button class="nav-button" id="exploreButton" type="button">
+          <span>Explore</span>
+          <span class="chevron">⌄</span>
+        </button>
+
+        <div class="dropdown-menu explore-menu" id="exploreMenu">
+          <a href="index.html">Home</a>
+          <a href="planets.html">Planet &amp; Space Entity</a>
+          <a href="missions.html">Missions</a>
+          <a href="astronauts.html">Astronaut</a>
+          <a href="announcement.html">Announcement</a>
+        </div>
+      </div>
+
+      <div class="search-container">
+        <svg class="search-icon" viewBox="0 0 24 24" aria-hidden="true">
+          <circle cx="11" cy="11" r="7"></circle>
+          <line x1="16.5" y1="16.5" x2="21" y2="21"></line>
+        </svg>
+        <input id="searchInput" type="text" placeholder="Search..." autocomplete="off">
+      </div>
+    </div>
+
+    <div class="header-logo">
+      <a href="index.html">
+        <img src="assets/logo.jpeg" alt="Space Explorer" onerror="this.style.display='none'">
+      </a>
+    </div>
+
+    <div class="header-right">
+      <div class="dropdown account-dropdown">
+        <button class="account-button" id="accountButton" type="button">
+          <div class="account-greeting">Hello, Nakul</div>
+          <div class="account-title">
+            Account &amp; Lists
+            <span class="chevron">⌄</span>
+          </div>
+        </button>
+
+        <div class="dropdown-menu account-menu" id="accountMenu">
+          <div class="account-email">
+            <span class="account-menu-label">Your account</span>
+            <span class="account-email-value">your-email@example.com</span>
+          </div>
+
+          <div class="menu-divider"></div>
+
+          <a href="#"><span class="menu-icon">☆</span>Bookmarks</a>
+          <a href="#"><span class="menu-icon">♡</span>Saved Images</a>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <div class="breadcrumb">
+    <a href="index.html">Home</a>
+    <span>/</span>
+    <strong>Astronaut</strong>
+  </div>
+
+  <section class="entity-hero" id="top">
+    <div class="entity-hero-content">
+      <span class="entity-kicker">PEOPLE BEYOND EARTH</span>
+      <h1 class="entity-title">Astronauts</h1>
+      <p class="entity-intro">Explore astronauts, cosmonauts and spaceflight pioneers from across the world. Search their records and open each astronaut's page for the full details.</p>
+      <div class="stats">
+        <div><b id="total">—</b><span>Loaded records</span></div>
+        <div><b>Worldwide</b><span>Historical + current</span></div>
+        <div><b id="sourceStatus">Connecting</b><span>Data status</span></div>
+      </div>
+    </div>
+  </section>
+
+  <nav class="article-navigation" aria-label="Astronaut page sections">
+    <div class="article-navigation-inner">
+      <a href="#directory">Directory</a>
+      <a href="#sources">Data sources</a>
+      <a href="index.html">Back to Home</a>
+    </div>
+  </nav>
+
+  <main>
+    <section class="directory" id="directory">
+      <div class="section-head">
+        <h2>Explorer directory</h2>
+      </div>
+      <p class="section-sub">Search across every loaded record, including nationality, occupation and biography summary. Click any card to open that astronaut's page.</p>
+
+      <div class="filters">
+        <input id="search" type="search" placeholder="Search name, country, occupation…" aria-label="Search astronauts">
+        <select id="agency" aria-label="Filter by agency"><option value="all">All agencies / affiliations</option></select>
+        <select id="role" aria-label="Filter by role"><option value="all">All occupations</option></select>
+        <select id="sort" aria-label="Sort astronauts"><option value="name">Name A–Z</option><option value="birth">Birth date: oldest first</option><option value="recent">Birth date: newest first</option></select>
+      </div>
+      <div class="results"><span id="results">Loading astronaut records…</span><span class="results-actions"><button id="refresh" type="button">Refresh data ↻</button><button id="clear" type="button">Clear filters ↗</button></span></div>
+      <div id="status" class="status" role="status">Connecting to the directory…</div>
+      <div class="grid" id="grid" aria-live="polite"></div>
+      <p class="empty" id="empty" hidden>No records match your search. Try another term or clear the filters.</p>
+      <div class="load-more-wrap"><button id="loadMore" class="load-more" type="button" hidden>Load more astronauts</button></div>
+      <p class="note">Directory records are discovered from Wikidata. Biographies and portrait images are enriched from Wikipedia when an English article is available. Not every record contains every field; blank details are labelled “Not listed”.</p>
+    </section>
+
+    <section class="source-panel" id="sources">
+      <span class="entity-kicker">ABOUT THE DATA</span>
+      <h2>Records first. Sources always.</h2>
+      <p>Wikidata is used to discover people whose occupations are labelled astronaut, cosmonaut or spaceflight participant. Biographies and portraits are enriched from Wikipedia when an English article is available. This is a community-maintained source, so the result is not a guarantee of every person who has ever flown to space.</p>
+      <p id="updatedAt" class="updated"></p>
+      <div class="source-links"><a href="https://www.wikidata.org/wiki/Wikidata:SPARQL_query_service" target="_blank" rel="noreferrer">Wikidata query service ↗</a><a href="https://www.wikipedia.org/" target="_blank" rel="noreferrer">Wikipedia ↗</a></div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="footer-main">
+      <div class="footer-brand">
+        <a href="index.html" class="footer-logo-link">
+          <img src="assets/logo.jpeg" alt="Space Explorer Logo" class="footer-logo" onerror="this.style.display='none'">
+        </a>
+        <h2>Space Explorer</h2>
+
+        <p class="footer-mission">
+          Our mission is to present space information in a clear and structured
+          way, making it easier for everyone to explore, understand, and discover
+          the universe.
+        </p>
+
+        <p class="footer-mission">
+          Space Explorer aims to provide an engaging platform for people who are
+          curious about space and passionate about learning about planets,
+          missions, astronauts, and the wonders beyond Earth.
+        </p>
+      </div>
+
+      <div class="footer-column">
+        <h3>Explore</h3>
+        <a href="index.html">Home</a>
+        <a href="planets.html">Planet &amp; Space Entity</a>
+        <a href="missions.html">Missions</a>
+        <a href="astronauts.html">Astronaut</a>
+        <a href="announcement.html">Announcement</a>
+      </div>
+
+      <div class="footer-column">
+        <h3>Account</h3>
+        <a href="#">Your Account</a>
+        <a href="#">Bookmarks</a>
+        <a href="#">Saved Images</a>
+      </div>
+
+      <div class="footer-column footer-connect">
+        <h3>Connect</h3>
+        <a href="https://instagram.com/" target="_blank" rel="noopener noreferrer" class="social-link">
+          <span class="social-icon">◎</span>
+          Instagram
+        </a>
+        <a href="mailto:spaceexplorer@example.com" class="social-link">
+          <span class="social-icon">@</span>
+          Email
+        </a>
+        <a href="https://wa.me/919999999999" target="_blank" rel="noopener noreferrer" class="social-link">
+          <span class="social-icon">◉</span>
+          WhatsApp
+        </a>
+      </div>
+    </div>
+
+    <div class="footer-bottom">
+      <p>© <span id="year">2026</span> Space Explorer | Explore. Discover. Understand.</p>
+    </div>
+  </footer>
+
+</body>
+</html>

@@ -1,0 +1,9 @@
+{
+  "name": "astronaut-explorer",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Space Explorer directory with Node.js, Wikidata, Wikipedia, and a C++ Astronaut validation bridge",
+  "main": "server.js",
+  "scripts": { "start": "node server.js" },
+  "engines": { "node": ">=18" }
+}
