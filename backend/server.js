@@ -28,6 +28,9 @@ const {
     processPlanet
 } = require("./services/cppService");
 
+const homeRoutes = require("./routes/home");
+const { notFound, serverError } = require("./routes/errors");
+
 const app = express();
 
 app.use(cors());
@@ -36,7 +39,7 @@ const frontendDir = path.join(__dirname, "../frontend");
 app.use(express.static(frontendDir));
 
 // Home page data (image of the day, latest updates)
-app.use(require("./routes/home"));
+app.use(homeRoutes);
 
 const PORT = 3000;
 
@@ -109,10 +112,6 @@ const routeTypes = new Set([
     "planet", "galaxy", "astronaut", "mission", "black-hole",
     "star", "moon", "asteroid", "comet", "deep-sky-object", "space-entity"
 ]);
-
-function routeType(type) {
-    return String(type || "Space Entity").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
-}
 
 // ======================================================
 // MAIN PLANET / SPACE ENTITY API
@@ -779,7 +778,6 @@ app.get("/api/health", (req, res) => {
 });
 
 // Friendly error pages (must stay after every other route)
-const { notFound, serverError } = require("./routes/errors");
 app.use(notFound);
 app.use(serverError);
 
