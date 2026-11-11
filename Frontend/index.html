@@ -1,342 +1,95 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-
     <meta charset="UTF-8">
-
-    <meta
-        name="viewport"
-        
-        content="width=device-width, initial-scale=1.0"
-    >
-
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Space Explorer</title>
-    
-    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="site.css">
+    <link rel="stylesheet" href="home.css">
 </head>
-
 <body>
+    <header class="main-header" id="siteHeader"></header>
 
-    <!-- =====================================================
-         MAIN SPACE SCENE
-    ====================================================== -->
+    <main id="home">
 
-    <main class="space-scene">
+        <!-- HERO -->
+        <section class="hero" id="hero">
+            <canvas id="starfield"></canvas>
+            <div class="hero-glow"></div>
 
-        <!-- Galaxy / Space Background -->
-        <div class="space-background"></div>
-
-        <canvas id="space-canvas" aria-hidden="true"></canvas>
-
-        <!-- =================================================
-             EARTH
-        ================================================== -->
-
-        <img
-        src="assets/images/earth.png"
-        alt="Earth backup"
-        class="space-object earth legacy-space-object"
-        >
-
-
-        <!-- =================================================
-             MOON
-        ================================================== -->
-
-        <img
-        src="assets/images/moon.png"
-        alt="Moon backup"
-        class="space-object moon legacy-space-object"
-        >
-
-
-        <!-- =================================================
-             SPACESHIP
-        ================================================== -->
-
-        <img
-            src="assets/images/spaceship.png"
-            alt="Spaceship"
-            class="space-object spaceship"
-        >
-
-
-        <!-- =================================================
-             LOGIN CARD
-        ================================================== -->
-
-        <section class="login-card">
-
-            <!-- Logo -->
-            <div class="logo-container">
-
-                <img
-                    src="assets/images/logo.jpeg"
-                    alt="Space Explorer Logo"
-                    class="logo"
-                >
-
+            <div class="hero-stage" id="heroStage">
+                <button class="planet-btn" id="planetBtn" aria-label="Show next planet"><canvas id="planetCanvas"></canvas></button>
             </div>
 
-
-            <!-- Heading -->
-            <h1>SPACE EXPLORER</h1>
-
-            <p class="tagline">
-                Explore
-                <span>•</span>
-                Learn
-                <span>•</span>
-                Discover
-            </p>
-
-
-            <!-- =================================================
-                 LOGIN FORM
-            ================================================== -->
-
-            <form id="loginForm">
-
-                <!-- Username / Email -->
-
-                <div class="input-container">
-
-                    <svg
-                        class="input-icon"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        xmlns="http://www.w3.org/2000/svg"
-                    >
-                        <path
-                            d="M20 21V19C20 16.7909 18.2091 15 16 15H8C5.79086 15 4 16.7909 4 19V21"
-                            stroke="currentColor"
-                            stroke-width="1.8"
-                            stroke-linecap="round"
-                            stroke-linejoin="round"
-                        />
-
-                        <circle
-                            cx="12"
-                            cy="7"
-                            r="4"
-                            stroke="currentColor"
-                            stroke-width="1.8"
-                        />
-                    </svg>
-
-                    <input
-                        type="text"
-                        id="username"
-                        placeholder="Username or Email"
-                        autocomplete="username"
-                    >
-
+            <div class="hero-copy">
+                <h1>Explore the Universe</h1>
+                <p class="hero-sub">Planets, missions and astronauts, all in one place.</p>
+                <div class="hero-actions">
+                    <a href="planets.html" class="btn btn-primary">Explore planets</a>
+                    <a href="#missions" class="btn btn-ghost">View missions</a>
+                    <a href="#astronauts" class="btn btn-ghost">View astronauts</a>
                 </div>
-
-
-                <!-- Password -->
-
-                <div class="input-container">
-
-                    <svg
-                        class="input-icon"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        xmlns="http://www.w3.org/2000/svg"
-                    >
-                        <rect
-                            x="5"
-                            y="10"
-                            width="14"
-                            height="11"
-                            rx="2"
-                            stroke="currentColor"
-                            stroke-width="1.8"
-                        />
-
-                        <path
-                            d="M8 10V7C8 4.79086 9.79086 3 12 3C14.2091 3 16 4.79086 16 7V10"
-                            stroke="currentColor"
-                            stroke-width="1.8"
-                            stroke-linecap="round"
-                        />
-
-                        <circle
-                            cx="12"
-                            cy="15.5"
-                            r="1"
-                            fill="currentColor"
-                        />
-                    </svg>
-
-
-                    <input
-                        type="password"
-                        id="password"
-                        placeholder="Password"
-                        autocomplete="current-password"
-                    >
-
-
-                    <!-- Password visibility -->
-
-                    <button
-                        type="button"
-                        class="password-toggle"
-                        id="passwordToggle"
-                        aria-label="Show password"
-                    >
-
-                        <svg
-                            id="eyeIcon"
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            xmlns="http://www.w3.org/2000/svg"
-                        >
-
-                            <path
-                                d="M2 12C2 12 5.5 5 12 5C18.5 5 22 12 22 12C22 12 18.5 19 12 19C5.5 19 2 12 2 12Z"
-                                stroke="currentColor"
-                                stroke-width="1.7"
-                                stroke-linecap="round"
-                                stroke-linejoin="round"
-                            />
-
-                            <circle
-                                cx="12"
-                                cy="12"
-                                r="3"
-                                stroke="currentColor"
-                                stroke-width="1.7"
-                            />
-
-                        </svg>
-
-                    </button>
-
-                </div>
-
-
-                <!-- Login Button -->
-
-                <button
-                    type="submit"
-                    class="login-button"
-                >
-                    <span>Login</span>
-
-                    <span class="arrow">→</span>
-                </button>
-
-            </form>
-
-
-            <!-- =================================================
-                 SIGN UP FORM
-            ================================================== -->
-
-            <form id="signupForm" hidden>
-
-                <div class="input-container">
-                    <input
-                        type="text"
-                        id="signupUsername"
-                        placeholder="Choose a username"
-                        autocomplete="username"
-                        minlength="3"
-                        maxlength="24"
-                        pattern="[A-Za-z0-9_]+"
-                        required
-                    >
-                </div>
-
-                <div class="input-container">
-                    <input
-                        type="email"
-                        id="signupEmail"
-                        placeholder="Email address"
-                        autocomplete="email"
-                        required
-                    >
-                </div>
-
-                <div class="input-container">
-                    <input
-                        type="password"
-                        id="signupPassword"
-                        placeholder="Create a password"
-                        autocomplete="new-password"
-                        minlength="8"
-                        required
-                    >
-                </div>
-
-                <button
-                    type="submit"
-                    class="login-button"
-                >
-                    <span>Create Account</span>
-                    <span class="arrow">→</span>
-                </button>
-
-                <p class="signup-text">
-                    Already have an account?
-                    <a href="#" id="backToLogin">Login</a>
-                </p>
-
-            </form>
-
-
-            <!-- =================================================
-                 OR DIVIDER
-            ================================================== -->
-
-            <div class="or-divider">
-
-                <div class="divider-line"></div>
-
-                <span>OR</span>
-
-                <div class="divider-line"></div>
-
+                <p class="hero-hint">Move your mouse and click the planet to switch worlds. Now viewing: <b id="planetName">Earth</b>. <span id="moonInfo"></span></p>
             </div>
+        </section>
 
+        <!-- PLANET FLASHCARDS (built in home.js) -->
+        <section class="section reveal" id="planet-cards">
+            <div class="section-head"><h2>Meet the planets</h2><span class="line"></span></div>
+            <p class="flash-intro">Tap a card to flip it, then open the full planet page. Want more worlds? <a href="planets.html">See all planets &amp; space entities</a>.</p>
+            <div class="flash-grid" id="flashGrid"></div>
+            <div class="section-more"><a href="planets.html" class="btn btn-ghost">View all planets</a></div>
+        </section>
 
-            <!-- =================================================
-                 GOOGLE BUTTON
-            ================================================== -->
+        <!-- IMAGE OF THE DAY -->
+        <section class="section reveal" id="apod">
+            <div class="section-head"><h2>Image of the day</h2><span class="line"></span></div>
+            <div class="apod-card">
+                <div class="apod-media" id="apodMedia"><div class="skeleton"></div></div>
+                <div class="apod-text">
+                    <h3 id="apodTitle">Loading today's image...</h3>
+                    <p id="apodDesc"></p>
+                    <small id="apodDate"></small>
+                </div>
+            </div>
+        </section>
 
-            <button
-                type="button"
-                class="google-button"
-                id="googleButton"
-            >
+        <!-- MISSIONS -->
+        <section class="section reveal" id="missions">
+            <div class="section-head"><h2>Featured missions</h2><span class="line"></span></div>
+            <div class="card-grid" id="missionGrid"></div>
+            <div class="section-more"><a href="missions.html" class="btn btn-ghost">View all missions</a></div>
+        </section>
 
-                <span class="google-logo">G</span>
+        <!-- ASTRONAUTS -->
+        <section class="section reveal" id="astronauts">
+            <div class="section-head"><h2>Astronauts</h2><span class="line"></span></div>
+            <div class="card-grid" id="astronautGrid"></div>
+            <div class="section-more"><a href="astronauts.html" class="btn btn-ghost">View all astronauts</a></div>
+        </section>
 
-                <span>Continue with Google</span>
+        <!-- LATEST UPDATES -->
+        <section class="section reveal" id="updates">
+            <div class="section-head"><h2>Latest updates</h2><span class="line"></span></div>
+            <div class="updates-scroll" id="updatesScroll"><ul class="updates" id="updateList"></ul></div>
+            <p class="updates-meta" id="updateMeta"></p>
+        </section>
 
-            </button>
-
-
-            <!-- =================================================
-                 SIGN UP
-            ================================================== -->
-
-            <p class="signup-text">
-                Don't have an account?
-                <a
-                    href="#"
-                    id="signupLink"
-                >
-                    Sign Up
-                </a>
-            </p>
-            <p id="authMessage" role="status" aria-live="polite"></p>
+        <!-- CALL TO ACTION -->
+        <section class="section reveal cta">
+            <h2>Looking for something specific?</h2>
+            <p>Search any planet, mission or astronaut.</p>
+            <button class="btn btn-primary" id="ctaSearch">Start searching</button>
         </section>
 
     </main>
-    <script type="module" src="js/spaceVersion.js"></script>
 
+    <footer class="site-footer" id="siteFooter"></footer>
+
+    <script src="search.js"></script>
+    <script src="site.js"></script>
+    <script src="hero.js"></script>
+    <script src="missionData.js"></script>
+    <script src="home.js"></script>
 </body>
 </html>

@@ -171,7 +171,7 @@ body {
             rgba(0, 4, 12, 0.08),
             rgba(0, 4, 12, 0.08)
         ),
-        url("../assets/images/background.png");
+        url("assets/login/background.png");
 
     background-size: cover;
     background-position: center center;

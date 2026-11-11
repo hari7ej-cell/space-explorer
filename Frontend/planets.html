@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Space Explorer - Planets &amp; Space Entity</title>
+    <link rel="stylesheet" href="site.css">
+    <link rel="stylesheet" href="planets.css">
+</head>
+<body>
+    <header class="main-header" id="siteHeader"></header>
+
+    <main>
+        <div class="breadcrumb">
+            <a href="index.html">Home</a>
+            <span>/</span>
+            <strong>Planet &amp; Space Entity</strong>
+        </div>
+
+        <section class="solar-model-section">
+
+            <iframe class="solar-model-frame" src="solar-system.html" title="Interactive Solar System 3D Model"
+                loading="eager">
+            </iframe>
+
+            <div class="solar-model-overlay">
+                <div class="solar-overlay-content">
+                    <h2>Solar System</h2>
+
+                    <p>
+                        Let's know about solar system with 3-Dimension model.
+                    </p>
+                </div>
+            </div>
+
+        </section>
+
+        <section class="space-content">
+            <div class="content-inner">
+
+                <section class="topic-section">
+                    <div class="section-heading">
+                        <h2>Let's Know About the Solar System</h2>
+                        <span></span>
+                    </div>
+
+                    <p class="section-intro">
+                        Explore the Sun and the eight planets of our Solar System.
+                        Select a celestial body to discover its basic characteristics,
+                        position, and role in our cosmic neighborhood.
+                    </p>
+
+                    <div class="planet-grid" id="planetGrid"></div>
+
+                    <div class="learn-more-container">
+                        <button class="learn-more-btn" id="learnMoreBtn">
+                            Show More
+                            <span>↓</span>
+                        </button>
+                    </div>
+                </section>
+
+                <section class="topic-section interesting-entities-section">
+                    <div class="section-heading">
+                        <h2>Interesting Space Entities</h2>
+                        <span></span>
+                    </div>
+
+                    <p class="entities-intro">
+                        Explore extraordinary objects in our universe, from mysterious
+                        black holes to fascinating distant galaxies.
+                    </p>
+
+                    <div class="interesting-entities-grid" id="interestingEntitiesGrid"></div>
+
+                    <div class="entities-toggle-container">
+                        <button id="toggleEntitiesBtn" class="entities-toggle-btn">
+                            Explore More ↓
+                        </button>
+                    </div>
+                </section>
+                <section class="topic-section compact-topic">
+
+                    <div class="section-heading">
+                        <h2>Latest Discovered Space Entity</h2>
+                        <span></span>
+                    </div>
+
+                    <a class="feature-card latest-discovery-card" id="latestDiscoveryCard" href="#">
+
+                        <!-- Left image -->
+                        <div class="latest-discovery-visual" id="latestDiscoveryImage">
+                        </div>
+
+                        <!-- Right content -->
+                        <div class="discovery-content">
+
+                            <span class="eyebrow" id="latestDiscoveryType">
+                                LATEST DISCOVERY
+                            </span>
+
+                            <h3 id="latestDiscoveryName">
+                                Loading...
+                            </h3>
+
+                            <p id="latestDiscoveryCaption">
+                                Loading latest discovery...
+                            </p>
+
+                            <span class="feature-link">
+                                Explore →
+                            </span>
+
+                        </div>
+
+                    </a>
+                </section>
+                <section class="reveal cta">
+                    <h2>Looking for something specific?</h2>
+                    <p>Search any planet, mission or astronaut.</p>
+                    <button class="btn btn-primary" id="ctaSearch">Start searching</button>
+                </section>
+
+            </div>
+        </section>
+    </main>
+
+    <footer class="site-footer" id="siteFooter"></footer>
+
+    <script src="search.js"></script>
+    <script src="site.js"></script>
+    <script src="interestingEntities.js"></script>
+    <script src="planets.js"></script>
+</body>
+</html>

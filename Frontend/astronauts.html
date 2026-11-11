@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Explore astronauts and cosmonauts from around the world.">
+    <title>Space Explorer | Astronauts</title>
+    <link rel="stylesheet" href="site.css">
+    <link rel="stylesheet" href="astronauts.css">
+</head>
+<body>
+    <header class="main-header" id="siteHeader"></header>
+
+    <div class="breadcrumb">
+        <a href="index.html">Home</a>
+        <span>/</span>
+        <strong>Astronaut</strong>
+    </div>
+
+    <div class="astronaut-page">
+    <section class="entity-hero" id="top">
+      <div class="entity-hero-content">
+        <span class="entity-kicker">PEOPLE BEYOND EARTH</span>
+        <h1 class="entity-title">Astronauts</h1>
+        <p class="entity-intro">Explore astronauts, cosmonauts and spaceflight pioneers from across the world. Search their records and open each astronaut's page for the full details.</p>
+        <div class="stats">
+          <div><b id="total">—</b><span>Loaded records</span></div>
+          <div><b>Worldwide</b><span>Historical + current</span></div>
+          <div><b id="sourceStatus">Connecting</b><span>Data status</span></div>
+        </div>
+      </div>
+    </section>
+
+    <nav class="article-navigation" aria-label="Astronaut page sections">
+      <div class="article-navigation-inner">
+        <a href="#directory">Directory</a>
+        <a href="#sources">Data sources</a>
+        <a href="index.html">Back to Home</a>
+      </div>
+    </nav>
+
+    <main>
+      <section class="directory" id="directory">
+        <div class="section-head">
+          <h2>Explorer directory</h2>
+        </div>
+        <p class="section-sub">Search across every loaded record, including nationality, occupation and biography summary. Click any card to open that astronaut's page.</p>
+
+        <div class="filters">
+          <input id="search" type="search" placeholder="Search name, country, occupation…" aria-label="Search astronauts">
+          <select id="agency" aria-label="Filter by agency"><option value="all">All agencies / affiliations</option></select>
+          <select id="role" aria-label="Filter by role"><option value="all">All occupations</option></select>
+          <select id="sort" aria-label="Sort astronauts"><option value="name">Name A–Z</option><option value="birth">Birth date: oldest first</option><option value="recent">Birth date: newest first</option></select>
+        </div>
+        <div class="results"><span id="results">Loading astronaut records…</span><span class="results-actions"><button id="refresh" type="button">Refresh data ↻</button><button id="clear" type="button">Clear filters ↗</button></span></div>
+        <div id="status" class="status" role="status">Connecting to the directory…</div>
+        <div class="grid" id="grid" aria-live="polite"></div>
+        <p class="empty" id="empty" hidden>No records match your search. Try another term or clear the filters.</p>
+        <div class="load-more-wrap"><button id="loadMore" class="load-more" type="button" hidden>Load more astronauts</button></div>
+        <p class="note">Directory records are discovered from Wikidata. Biographies and portrait images are enriched from Wikipedia when an English article is available. Not every record contains every field; blank details are labelled “Not listed”.</p>
+      </section>
+
+      <section class="source-panel" id="sources">
+        <span class="entity-kicker">ABOUT THE DATA</span>
+        <h2>Records first. Sources always.</h2>
+        <p>Wikidata is used to discover people whose occupations are labelled astronaut, cosmonaut or spaceflight participant. Biographies and portraits are enriched from Wikipedia when an English article is available. This is a community-maintained source, so the result is not a guarantee of every person who has ever flown to space.</p>
+        <p id="updatedAt" class="updated"></p>
+        <div class="source-links"><a href="https://www.wikidata.org/wiki/Wikidata:SPARQL_query_service" target="_blank" rel="noreferrer">Wikidata query service ↗</a><a href="https://www.wikipedia.org/" target="_blank" rel="noreferrer">Wikipedia ↗</a></div>
+      </section>
+    </main>
+    </div>
+
+    <footer class="site-footer" id="siteFooter"></footer>
+
+    <script src="search.js"></script>
+    <script src="site.js"></script>
+    <script src="astronauts.js"></script>
+</body>
+</html>

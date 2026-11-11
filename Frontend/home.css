@@ -1,0 +1,282 @@
+/* =========================================
+   HOME PAGE STYLES
+   Header, footer, buttons and the call-to-action are in site.css.
+========================================= */
+
+:root { --c1: #e98a5b; }   /* planet colour, changed by hero.js */
+
+body { background: #050505; }
+
+/* =========================================
+   HERO
+========================================= */
+
+.hero {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    gap: 10px;
+    min-height: calc(100vh - 96px);
+    padding: 24px 0 40px;
+    overflow: hidden;
+    background: radial-gradient(ellipse at 50% 40%, #0d1a2b 0%, #05070b 70%);
+}
+
+#starfield { position: absolute; inset: 0; width: 100%; height: 100%; }
+
+.hero-glow {
+    position: absolute;
+    left: 50%;
+    top: 36%;
+    width: 60vmin;
+    height: 60vmin;
+    border-radius: 50%;
+    transform: translate(-50%, -50%);
+    background: radial-gradient(circle, var(--c1), transparent 65%);
+    opacity: .22;
+    filter: blur(40px);
+    transition: background .8s;
+}
+
+.hero-stage {
+    position: relative;
+    width: min(64vmin, 600px);
+    aspect-ratio: 1;
+    transition: transform .15s ease-out;
+}
+
+.planet-btn { all: unset; display: block; width: 100%; cursor: pointer; border-radius: 50%; }
+.planet-btn:focus-visible { outline: 2px solid var(--site-accent); }
+#planetCanvas { display: block; width: 100%; height: auto; }
+
+.hero-copy { position: relative; z-index: 2; padding: 0 20px; text-align: center; }
+.hero-copy h1 { margin: 0 0 8px; font-size: clamp(38px, 6vw, 76px); font-weight: 400; letter-spacing: -1px; }
+.hero-sub { margin: 0 0 22px; color: #b9c6d3; font-size: clamp(15px, 2vw, 19px); }
+.hero-actions { display: flex; flex-wrap: wrap; justify-content: center; gap: 14px; }
+.hero-hint { margin: 20px 0 0; color: #7f8994; font-size: 13px; }
+.hero-hint b { color: #fff; font-weight: 600; }
+
+/* =========================================
+   SECTIONS
+========================================= */
+
+.section { max-width: 1300px; margin: 0 auto; padding: 90px 40px 0; }
+.section-head { display: flex; align-items: center; gap: 24px; margin-bottom: 34px; }
+.section-head h2 { margin: 0; font-size: clamp(26px, 3.4vw, 40px); font-weight: 400; white-space: nowrap; }
+.line { flex: 1; height: 1px; background: linear-gradient(90deg, var(--site-edge), transparent); }
+
+/* ---------- image of the day ---------- */
+
+.apod-card {
+    display: grid;
+    grid-template-columns: 1.4fr 1fr;
+    gap: 34px;
+    padding: 22px;
+    background: var(--site-glass);
+    border: 1px solid var(--site-edge);
+    border-radius: 26px;
+    backdrop-filter: blur(10px);
+}
+
+.apod-media { min-height: 320px; overflow: hidden; background: #0b111a; border-radius: 18px; }
+
+.apod-media img,
+.apod-media iframe {
+    display: block;
+    width: 100%;
+    height: 100%;
+    min-height: 320px;
+    object-fit: cover;
+    border: 0;
+    transition: transform .8s;
+}
+
+.apod-media:hover img { transform: scale(1.05); }
+.apod-text { display: flex; flex-direction: column; justify-content: center; gap: 12px; }
+.apod-text h3 { margin: 0; font-size: 26px; font-weight: 500; }
+.apod-text p { max-height: 190px; margin: 0; overflow: auto; color: #aeb8c3; line-height: 1.7; }
+.apod-text small { color: #7f8994; }
+
+.skeleton {
+    height: 100%;
+    min-height: 320px;
+    background: linear-gradient(90deg, #0b111a, #17212e, #0b111a);
+    background-size: 200%;
+    animation: shine 1.5s infinite;
+}
+
+@keyframes shine { to { background-position: -200% 0; } }
+
+/* ---------- missions and astronauts ---------- */
+
+.card-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 22px; }
+
+.info-card {
+    display: block;
+    color: inherit;
+    text-decoration: none;
+    padding: 26px;
+    background: linear-gradient(160deg, rgba(255, 255, 255, .07), rgba(255, 255, 255, .02));
+    border: 1px solid var(--site-edge);
+    border-radius: 24px;
+    transition: transform .25s, border-color .25s;
+}
+
+.info-card:hover { transform: translateY(-6px); border-color: rgba(124, 196, 255, .5); }
+.info-card h3 { margin: 0 0 8px; font-size: 21px; font-weight: 500; }
+.info-card p { margin: 0 0 16px; color: #9aa6b3; font-size: 14px; line-height: 1.6; }
+
+.badge {
+    display: inline-block;
+    padding: 4px 12px;
+    color: var(--site-accent);
+    font-size: 12px;
+    background: rgba(124, 196, 255, .14);
+    border-radius: 999px;
+}
+
+.avatar {
+    display: grid;
+    place-items: center;
+    width: 54px;
+    height: 54px;
+    margin-bottom: 16px;
+    font-size: 20px;
+    background: linear-gradient(135deg, #2a4a6d, #7cc4ff);
+    border-radius: 50%;
+}
+
+.section-more { margin-top: 34px; text-align: center; }
+
+/* ---------- latest updates: 5 visible, scroll for more ---------- */
+
+.updates-scroll {
+    max-height: 600px;
+    padding: 0 10px 0 14px;
+    overflow-y: auto;
+    scroll-snap-type: y proximity;
+    scrollbar-width: thin;
+    scrollbar-color: #3a4654 transparent;
+}
+
+.updates { margin: 0; padding: 0; list-style: none; border-left: 1px solid var(--site-edge); }
+
+.updates li {
+    position: relative;
+    display: grid;
+    grid-template-columns: 1fr 104px;
+    gap: 18px;
+    height: 120px;
+    padding: 6px 0 0 28px;
+    overflow: hidden;
+    scroll-snap-align: start;
+}
+
+.updates li::before {
+    content: "";
+    position: absolute;
+    left: -5px;
+    top: 9px;
+    width: 9px;
+    height: 9px;
+    background: var(--site-accent);
+    border-radius: 50%;
+    box-shadow: 0 0 12px var(--site-accent);
+}
+
+.u-text { min-width: 0; }
+.updates time { color: #7f8994; font-size: 13px; }
+
+.updates h3,
+.updates p {
+    display: -webkit-box;
+    overflow: hidden;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+}
+
+.updates h3 { margin: 3px 0 4px; font-size: 16px; font-weight: 500; line-height: 1.3; }
+.updates h3 a { color: #fff; text-decoration: none; }
+.updates h3 a:hover { color: var(--site-accent); }
+.updates p { margin: 0; color: #9aa6b3; font-size: 14px; line-height: 1.45; }
+
+.updates img {
+    width: 104px;
+    height: 72px;
+    margin-top: 6px;
+    object-fit: cover;
+    border: 1px solid var(--site-edge);
+    border-radius: 12px;
+}
+
+.updates-meta { margin: 14px 0 0; color: #7f8994; font-size: 13px; }
+.updates-meta a { color: var(--site-accent); }
+
+/* =========================================
+   PLANET FLASHCARDS (home page)
+========================================= */
+.flash-intro{margin:-12px 0 28px;color:#9aa6b3;font-size:15px;line-height:1.6}
+.flash-intro a{color:var(--site-accent);text-decoration:none}
+.flash-intro a:hover{text-decoration:underline}
+.flash-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:26px}
+.flash-card{perspective:1200px;height:380px}
+.flash-inner{position:relative;width:100%;height:100%;transform-style:preserve-3d;transition:transform .7s cubic-bezier(.2,.7,.2,1)}
+.flash-card.flipped .flash-inner{transform:rotateY(180deg)}
+.flash-face{all:unset;box-sizing:border-box;position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:12px;padding:28px 24px;text-align:center;border-radius:26px;border:1px solid var(--site-edge);
+  background:linear-gradient(160deg,rgba(255,255,255,.08),rgba(255,255,255,.02));
+  backface-visibility:hidden;-webkit-backface-visibility:hidden}
+.flash-front{cursor:pointer;transition:border-color .25s,box-shadow .25s}
+.flash-front:hover,.flash-front:focus-visible{border-color:rgba(124,196,255,.55);box-shadow:0 20px 50px -24px var(--site-accent)}
+.flash-front:focus-visible{outline:2px solid var(--site-accent);outline-offset:4px}
+.flash-back{transform:rotateY(180deg);background:linear-gradient(160deg,rgba(124,196,255,.12),rgba(255,255,255,.03))}
+.flash-name{font-size:26px;font-weight:500}
+.flash-hint{color:#7f8994;font-size:13px;letter-spacing:.5px}
+
+/* a spinning sphere made from the texture */
+.flash-planet{display:block;width:150px;height:150px;border-radius:50%;margin-bottom:6px;
+  background-size:300px 150px;background-repeat:repeat-x;animation:flashRoll 46s linear infinite;
+  box-shadow:inset -26px -12px 42px rgba(0,0,0,.85),inset 6px 4px 18px rgba(255,255,255,.12),0 0 46px -10px var(--fp-glow,#7cc4ff)}
+.fp-earth{background-image:url("assets/planets/earth_day.jpg");--fp-glow:#4da3ff}
+.fp-mars{background-image:url("assets/planets/mars.jpg");--fp-glow:#e98a5b}
+.fp-jupiter{background-image:url("assets/planets/jupiter.jpg");--fp-glow:#e6c9a0}
+@keyframes flashRoll{to{background-position:-300px 0}}
+
+.flash-back h3{margin:0;font-size:26px;font-weight:500}
+.flash-facts{list-style:none;margin:4px 0 0;padding:0;width:100%;display:grid;gap:8px}
+.flash-facts li{display:flex;justify-content:space-between;gap:12px;padding:9px 14px;border-radius:12px;
+  background:rgba(255,255,255,.05);font-size:14px;text-align:left}
+.flash-facts span{color:#9aa6b3}
+.flash-facts b{font-weight:600;color:#fff;text-align:right}
+.flash-back p{margin:2px 0 4px;color:#aeb8c3;font-size:14px;line-height:1.55}
+.flash-link{padding:11px 24px;font-size:14px}
+.flash-flip-back{all:unset;cursor:pointer;color:#9aa6b3;font-size:13px;padding:4px 10px;border-radius:8px}
+.flash-flip-back:hover{color:#fff}
+.flash-flip-back:focus-visible{outline:2px solid var(--site-accent)}
+
+
+@media(max-width:1000px){.flash-grid{grid-template-columns:1fr 1fr}}
+@media(max-width:640px){.flash-grid{grid-template-columns:1fr}.flash-card{height:360px}}
+@media(prefers-reduced-motion:reduce){.flash-inner{transition:none}.flash-planet{animation:none!important}}
+
+/* =========================================
+   RESPONSIVE
+========================================= */
+
+@media (max-width: 1000px) {
+    .card-grid { grid-template-columns: 1fr 1fr; }
+    .apod-card { grid-template-columns: 1fr; }
+}
+
+@media (max-width: 600px) {
+    .section { padding: 64px 22px 0; }
+    .card-grid { grid-template-columns: 1fr; }
+    .updates li { grid-template-columns: 1fr; height: 128px; }
+    .updates img { display: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    * { animation: none !important; transition: none !important; }
+}
