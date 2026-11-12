@@ -1,52 +1,42 @@
-// Space Explorer - C++ object model.
-//
-// Node sends one JSON object on stdin and reads one JSON object from stdout.
-//   Space entity page : {type, name, wikipediaUrl, details, topics, images}
-//                       -> {type, summary, heroImage}
-//   Astronaut list    : {people:[{id, name, agency, experience}, ...]}
-//                       -> {valid:[id, ...]}   (records that pass Astronaut::isValid)
-//
-// OOP concepts used (from the project guidelines):
-//   abstraction       SpaceEntity is abstract (pure virtual getSummary)
-//   inheritance       Planet, Mission and Astronaut extend SpaceEntity
-//   polymorphism      main() works with SpaceEntity pointers
-//   composition       Planet owns its CelestialDetails
-//   aggregation       SpaceEntity holds a gallery of SpaceImage, Mission holds Astronaut crew
-//   overloading       constructors (CelestialDetails, Astronaut) and operator==
-
+// Space Explorer - C++ object model (Full Lab Concepts Edition)
 #include <iostream>
 #include <memory>
 #include <string>
 #include <vector>
 #include <cctype>
+#include <thread>
+#include <mutex>
+#include <chrono>
 #include "simple_json.hpp"
 
 using namespace std;
 using json = simplejson::json;
 
-// ---------- small helpers ----------
+// ---------- Helpers & Custom Template ----------
 
-string text(const json &obj, const string &key, const string &fallback = "")
-{
+// [Lab Topic: Templates] Generic helper function
+template <typename T>
+void addUnique(vector<T> &list, const T &item) {
+    for (const auto &existing : list)
+        if (existing == item) return;
+    list.push_back(item);
+}
+
+string text(const json &obj, const string &key, const string &fallback = "") {
     return obj.is_object() && obj.contains(key) && obj[key].is_string() ? obj[key].get<string>() : fallback;
 }
 
-double number(const json &obj, const string &key)
-{
+double number(const json &obj, const string &key) {
     return obj.is_object() && obj.contains(key) && obj[key].is_number() ? obj[key].get<double>() : 0.0;
 }
 
-// Removes HTML tags and collapses white space.
-string cleanText(const string &html)
-{
+string cleanText(const string &html) {
     string out;
-    bool insideTag = false, space = false;
-    for (unsigned char c : html)
-    {
-        if (c == '<') insideTag = true;
-        else if (c == '>') { insideTag = false; space = !out.empty(); }
-        else if (!insideTag)
-        {
+    bool inTag = false, space = false;
+    for (unsigned char c : html) {
+        if (c == '<') inTag = true;
+        else if (c == '>') { inTag = false; space = !out.empty(); }
+        else if (!inTag) {
             if (isspace(c)) space = !out.empty();
             else { if (space) out += ' '; out += static_cast<char>(c); space = false; }
         }
@@ -54,100 +44,101 @@ string cleanText(const string &html)
     return out;
 }
 
-// ---------- value classes ----------
+// ---------- Value Classes ----------
 
-class SpaceImage
-{
-    json data; // the image exactly as Node sent it (url, caption, source, ...)
-
+class SpaceImage {
+    json data;
 public:
     SpaceImage(const json &image) : data(image) {}
     string url() const { return text(data, "url"); }
     string topicId() const { return text(data, "topicId"); }
     const json &raw() const { return data; }
 
-    // Two images are the same when they show the same file for the same topic.
-    friend bool operator==(const SpaceImage &a, const SpaceImage &b)
-    {
+    // [Lab Topic: Operator Overloading using a Friend Function]
+    friend bool operator==(const SpaceImage &a, const SpaceImage &b) {
         return a.url() == b.url() && a.topicId() == b.topicId();
     }
 };
 
-class TopicInfo
-{
+class TopicInfo {
     string id, content;
-
 public:
     TopicInfo(const string &id, const string &content) : id(id), content(content) {}
     string getId() const { return id; }
     string getContent() const { return content; }
 };
 
-class CelestialDetails
-{
+class CelestialDetails {
     double mass, radius, distanceFromSun;
     string atmosphere, composition;
     bool rings;
-
 public:
-    CelestialDetails(double mass, double radius, double distanceFromSun,
-                     const string &atmosphere, const string &composition, bool rings)
-        : mass(mass), radius(radius), distanceFromSun(distanceFromSun),
-          atmosphere(atmosphere), composition(composition), rings(rings) {}
+    CelestialDetails(double m, double r, double d, const string &atm, const string &comp, bool rng)
+        : mass(m), radius(r), distanceFromSun(d), atmosphere(atm), composition(comp), rings(rng) {}
 
-    // Overload: for bodies without an atmosphere value.
-    CelestialDetails(double mass, double radius, double distanceFromSun,
-                     const string &composition, bool rings)
-        : CelestialDetails(mass, radius, distanceFromSun, "No atmosphere details.", composition, rings) {}
-
-    double getMass() const { return mass; }
-    double getRadius() const { return radius; }
-    double getDistanceFromSun() const { return distanceFromSun; }
-    string getAtmosphere() const { return atmosphere; }
-    string getComposition() const { return composition; }
-    bool hasRings() const { return rings; }
+    CelestialDetails(double m, double r, double d, const string &comp, bool rng)
+        : CelestialDetails(m, r, d, "No atmosphere details.", comp, rng) {}
 };
 
-// ---------- entities ----------
+// ---------- Entities ----------
 
-class SpaceEntity
-{
+class SpaceEntity {
 protected:
     string type, name, id;
     vector<TopicInfo> topics;
     vector<SpaceImage> gallery;
+    static int totalEntities; // [Lab Topic: Static Variables]
 
 public:
+    // [Lab Topic: Nested Class]
+    class Tag {
+    public:
+        string label;
+        Tag(const string &l = "General") : label(l) {}
+    };
+
     SpaceEntity(const string &type, const string &name, const string &id = "")
-        : type(type), name(name), id(id) {}
+        : type(type), name(name), id(id) { totalEntities++; }
     virtual ~SpaceEntity() {}
 
-    string getType() const { return type; }
-    string getName() const { return name; }
-    string getId() const { return id; }
+    // [Lab Topic: Static Functions]
+    static int getTotalEntities() { return totalEntities; }
 
+    // [Lab Topic: "this" Pointer]
+    string getType() const { return this->type; }
+    string getName() const { return this->name; }
+    string getId() const { return this->id; }
+
+    // [Lab Topic: Method Overloading]
     void addTopic(const TopicInfo &topic) { topics.push_back(topic); }
+    void addTopic(const string &tId, const string &content) { topics.push_back(TopicInfo(tId, content)); }
 
-    void addImage(const SpaceImage &image)
-    {
-        for (const auto &existing : gallery)
-            if (existing == image) return;
-        gallery.push_back(image);
+    void addImage(const SpaceImage &image) { addUnique(gallery, image); } // Uses template
+
+    // [Lab Topic: Virtual Function] (Non-pure so Object Slicing can be demonstrated)
+    virtual string getSummary() const {
+        for (const auto &topic : topics) {
+            if (topic.getId() != "overview") continue;
+            string content = cleanText(topic.getContent());
+            if (!content.empty()) return content.substr(0, 100);
+        }
+        return "Space entity information.";
     }
 
-    // Every subclass must provide a summary. This shared version reads the overview
-    // topic (first 100 characters), so subclasses can reuse it.
-    virtual string getSummary() const = 0;
+    // [Lab Topic: Stream Operators Overloading using a Friend Function]
+    friend ostream &operator<<(ostream &os, const SpaceEntity &e) {
+        return os << e.type << ": " << e.name;
+    }
+    friend istream &operator>>(istream &is, SpaceEntity &e) {
+        return is >> e.name;
+    }
 
-    // The overview image if there is one, otherwise the first image with a url.
-    json heroImage(const string &wikipediaUrl) const
-    {
+    json heroImage(const string &wikipediaUrl) const {
         const SpaceImage *pick = nullptr;
-        for (const auto &image : gallery)
-        {
-            if (image.url().empty()) continue;
-            if (!pick) pick = &image;
-            if (image.topicId() == "overview") { pick = &image; break; }
+        for (const auto &img : gallery) {
+            if (img.url().empty()) continue;
+            if (!pick) pick = &img;
+            if (img.topicId() == "overview") { pick = &img; break; }
         }
         if (!pick) return json(nullptr);
 
@@ -159,79 +150,106 @@ public:
     }
 };
 
-string SpaceEntity::getSummary() const
-{
-    for (const auto &topic : topics)
-    {
-        if (topic.getId() != "overview") continue;
-        string content = cleanText(topic.getContent());
-        if (content.empty()) break;
-        return content.substr(0, 100);
-    }
-    return "Space entity information.";
-}
+int SpaceEntity::totalEntities = 0;
 
-class Planet : public SpaceEntity
-{
-    CelestialDetails details; // composition: a planet cannot exist without its details
-
+// [Lab Topic: Virtual Base Class & Final]
+class Planet final : virtual public SpaceEntity {
+    CelestialDetails details;
 public:
     Planet(const string &type, const string &name, const CelestialDetails &details)
         : SpaceEntity(type, name), details(details) {}
-    CelestialDetails getDetails() const { return details; }
-    string getSummary() const override { return SpaceEntity::getSummary(); }
+    string getSummary() const override final { return SpaceEntity::getSummary(); }
 };
 
-class Astronaut : public SpaceEntity
-{
+class Astronaut : virtual public SpaceEntity {
     string agency;
     int spaceflights;
-
 public:
-    Astronaut(const string &name, const string &agency, int spaceflights, const string &id)
-        : SpaceEntity("Astronaut", name, id), agency(agency), spaceflights(spaceflights) {}
+    Astronaut(const string &name, const string &agency, int flights, const string &id)
+        : SpaceEntity("Astronaut", name, id), agency(agency), spaceflights(flights) {}
 
-    // Overload: an astronaut page only knows the name.
+    // [Lab Topic: Basic-to-Class Type Casting] (const string -> Astronaut)
     Astronaut(const string &name) : Astronaut(name, "Not listed", 0, "") {}
 
-    string getAgency() const { return agency; }
-    int getSpaceflights() const { return spaceflights; }
+    // [Lab Topic: Class-to-Basic Type Casting] (Astronaut -> int)
+    operator int() const { return spaceflights; }
+
+    // [Lab Topic: Class-to-Class Type Casting] (Astronaut -> SpaceEntity::Tag)
+    operator SpaceEntity::Tag() const { return SpaceEntity::Tag(agency); }
+
     bool isValid() const { return !id.empty() && !name.empty() && spaceflights >= 0; }
     bool operator==(const Astronaut &other) const { return id == other.id; }
-    string getSummary() const override { return SpaceEntity::getSummary(); }
 };
 
-class Mission : public SpaceEntity
-{
-    vector<Astronaut> crew; // aggregation: astronauts exist without the mission
-
+class Mission : virtual public SpaceEntity {
+    vector<Astronaut> crew;
 public:
     Mission(const string &type, const string &name) : SpaceEntity(type, name) {}
-
-    void addCrewMember(const Astronaut &astronaut)
-    {
-        for (const auto &member : crew)
-            if (member == astronaut) return;
-        crew.push_back(astronaut);
-    }
-    int getCrewCount() const { return static_cast<int>(crew.size()); }
-    string getSummary() const override { return SpaceEntity::getSummary(); }
+    void addCrewMember(const Astronaut &a) { addUnique(crew, a); }
 };
 
-// ---------- building objects from JSON ----------
+// ---------- Multithreading (Runnable, Thread Class, Lifecycle, Sync) ----------
 
-unique_ptr<SpaceEntity> createEntity(const json &data)
-{
+class Runnable {
+public:
+    virtual void run() = 0;
+    virtual ~Runnable() {}
+};
+
+class Thread : public Runnable {
+    thread t;
+public:
+    void start() { t = thread(&Thread::run, this); }
+    void join() { if (t.joinable()) t.join(); }
+    static void sleep(int ms) { this_thread::sleep_for(chrono::milliseconds(ms)); }
+    static void yield() { this_thread::yield(); }
+    void run() override {}
+};
+
+class ValidationWorker : public Thread {
+    const json &people;
+    vector<Astronaut> &accepted;
+    json &validIds;
+    mutex &mtx;
+public:
+    ValidationWorker(const json &p, vector<Astronaut> &acc, json &v, mutex &m)
+        : people(p), accepted(acc), validIds(v), mtx(m) {}
+
+    void run() override {
+        yield();     // Thread method: yield()
+        sleep(1);    // Thread method: sleep()
+        for (const auto &p : people) {
+            Astronaut a(text(p, "name"), text(p, "agency", "Not listed"),
+                        static_cast<int>(number(p, "experience")), text(p, "id"));
+
+            int flights = a;                      // Triggers Class-to-Basic casting
+            SpaceEntity::Tag tag = a;             // Triggers Class-to-Class casting
+            SpaceEntity sliced = a;               // [Lab Topic: Object Slicing] (Derived copied to Base by value)
+            (void)flights; (void)tag; (void)sliced;
+
+            lock_guard<mutex> lock(mtx);          // [Lab Topic: Thread Synchronization]
+            bool dup = false;
+            for (const auto &k : accepted) if (k == a) dup = true;
+            if (a.isValid() && !dup) {
+                accepted.push_back(a);
+                validIds.push_back(a.getId());
+            }
+        }
+    }
+};
+
+// ---------- Factory & Main ----------
+
+unique_ptr<SpaceEntity> createEntity(const json &data) {
     string type = text(data, "type", "Planet");
     string name = text(data, "name", "Space Entity");
-
     unique_ptr<SpaceEntity> entity;
+
     if (type == "Astronaut")
         entity = make_unique<Astronaut>(name);
     else if (type == "Mission" || type == "Spacecraft" || type == "Space Station")
         entity = make_unique<Mission>(type, name);
-    else
-    {
+    else {
         json d = data.contains("details") ? data["details"] : json::object();
         entity = make_unique<Planet>(type, name, CelestialDetails(
             number(d, "mass"), number(d, "radius"), number(d, "distanceFromSun"),
@@ -240,63 +258,45 @@ unique_ptr<SpaceEntity> createEntity(const json &data)
     }
 
     if (data.contains("topics") && data["topics"].is_array())
-        for (const auto &topic : data["topics"])
-            if (topic.is_object())
-                entity->addTopic(TopicInfo(text(topic, "id"),
-                                           text(topic, "content", text(topic, "text"))));
+        for (const auto &t : data["topics"])
+            if (t.is_object()) entity->addTopic(text(t, "id"), text(t, "content", text(t, "text")));
 
     if (data.contains("images") && data["images"].is_array())
-        for (const auto &image : data["images"])
-            if (image.is_object())
-                entity->addImage(SpaceImage(image));
+        for (const auto &img : data["images"])
+            if (img.is_object()) entity->addImage(SpaceImage(img));
 
     return entity;
 }
 
-int main()
-{
-    try
-    {
+int main() {
+    try {
         string input, line;
-        while (getline(cin, line))
-            input += line;
+        while (getline(cin, line)) input += line;
 
         json data = json::parse(input);
-        if (!data.is_object())
-            throw runtime_error("Input JSON must be an object.");
+        if (!data.is_object()) throw runtime_error("Input JSON must be an object.");
 
-        // Astronaut list: keep only the records that pass Astronaut::isValid().
-        if (data.contains("people") && data["people"].is_array())
-        {
+        if (data.contains("people") && data["people"].is_array()) {
             vector<Astronaut> accepted;
             json validIds = json::array();
-            for (const auto &person : data["people"])
-            {
-                Astronaut astronaut(text(person, "name"), text(person, "agency", "Not listed"),
-                                    static_cast<int>(number(person, "experience")), text(person, "id"));
-                bool duplicate = false;
-                for (const auto &known : accepted)
-                    if (known == astronaut) duplicate = true;
-                if (astronaut.isValid() && !duplicate)
-                {
-                    accepted.push_back(astronaut);
-                    validIds.push_back(astronaut.getId());
-                }
-            }
+            mutex mtx;
+
+            // Run astronaut validation using our custom Thread & Runnable setup
+            ValidationWorker worker(data["people"], accepted, validIds, mtx);
+            worker.start();
+            worker.join();
+
             cout << json{{"valid", validIds}}.dump();
             return 0;
         }
 
-        // Space entity page: build the right object and let it describe itself.
         unique_ptr<SpaceEntity> entity = createEntity(data);
         cout << json{{"type", entity->getType()},
                      {"summary", entity->getSummary()},
                      {"heroImage", entity->heroImage(text(data, "wikipediaUrl"))}}.dump();
         return 0;
-    }
-    catch (const exception &error)
-    {
+    } catch (const exception &error) {
         cerr << "C++ ERROR: " << error.what() << endl;
         return 1;
     }
-}
+}0
