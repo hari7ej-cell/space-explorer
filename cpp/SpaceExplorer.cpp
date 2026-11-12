@@ -1,9 +1,7 @@
-// Space Explorer - C++ object model (Full Lab Concepts Edition)
 #include <iostream>
 #include <memory>
 #include <string>
 #include <vector>
-#include <cctype>
 #include <thread>
 #include <mutex>
 #include <chrono>
@@ -12,9 +10,7 @@
 using namespace std;
 using json = simplejson::json;
 
-// ---------- Helpers & Custom Template ----------
-
-// [Lab Topic: Templates] Generic helper function
+// Templates
 template <typename T>
 void addUnique(vector<T> &list, const T &item) {
     for (const auto &existing : list)
@@ -44,8 +40,6 @@ string cleanText(const string &html) {
     return out;
 }
 
-// ---------- Value Classes ----------
-
 class SpaceImage {
     json data;
 public:
@@ -54,7 +48,7 @@ public:
     string topicId() const { return text(data, "topicId"); }
     const json &raw() const { return data; }
 
-    // [Lab Topic: Operator Overloading using a Friend Function]
+    //Operator Overloading using a Friend Function
     friend bool operator==(const SpaceImage &a, const SpaceImage &b) {
         return a.url() == b.url() && a.topicId() == b.topicId();
     }
@@ -87,10 +81,10 @@ protected:
     string type, name, id;
     vector<TopicInfo> topics;
     vector<SpaceImage> gallery;
-    static int totalEntities; // [Lab Topic: Static Variables]
+    static int totalEntities; // Static Variables
 
 public:
-    // [Lab Topic: Nested Class]
+    //Nested Class
     class Tag {
     public:
         string label;
@@ -101,21 +95,21 @@ public:
         : type(type), name(name), id(id) { totalEntities++; }
     virtual ~SpaceEntity() {}
 
-    // [Lab Topic: Static Functions]
+    //Static Functions
     static int getTotalEntities() { return totalEntities; }
 
-    // [Lab Topic: "this" Pointer]
+    //"this" Pointer
     string getType() const { return this->type; }
     string getName() const { return this->name; }
     string getId() const { return this->id; }
 
-    // [Lab Topic: Method Overloading]
+    //Method Overloading
     void addTopic(const TopicInfo &topic) { topics.push_back(topic); }
     void addTopic(const string &tId, const string &content) { topics.push_back(TopicInfo(tId, content)); }
 
     void addImage(const SpaceImage &image) { addUnique(gallery, image); } // Uses template
 
-    // [Lab Topic: Virtual Function] (Non-pure so Object Slicing can be demonstrated)
+    //Virtual Function
     virtual string getSummary() const {
         for (const auto &topic : topics) {
             if (topic.getId() != "overview") continue;
@@ -125,7 +119,7 @@ public:
         return "Space entity information.";
     }
 
-    // [Lab Topic: Stream Operators Overloading using a Friend Function]
+    // Stream Operators Overloading using a Friend Function
     friend ostream &operator<<(ostream &os, const SpaceEntity &e) {
         return os << e.type << ": " << e.name;
     }
@@ -152,7 +146,7 @@ public:
 
 int SpaceEntity::totalEntities = 0;
 
-// [Lab Topic: Virtual Base Class & Final]
+//Virtual Base Class & Final
 class Planet final : virtual public SpaceEntity {
     CelestialDetails details;
 public:
@@ -168,13 +162,13 @@ public:
     Astronaut(const string &name, const string &agency, int flights, const string &id)
         : SpaceEntity("Astronaut", name, id), agency(agency), spaceflights(flights) {}
 
-    // [Lab Topic: Basic-to-Class Type Casting] (const string -> Astronaut)
+    // Basic-to-Class Type Casting
     Astronaut(const string &name) : Astronaut(name, "Not listed", 0, "") {}
 
-    // [Lab Topic: Class-to-Basic Type Casting] (Astronaut -> int)
+    //Class-to-Basic Type Casting
     operator int() const { return spaceflights; }
 
-    // [Lab Topic: Class-to-Class Type Casting] (Astronaut -> SpaceEntity::Tag)
+    //Class-to-Class Type Casting
     operator SpaceEntity::Tag() const { return SpaceEntity::Tag(agency); }
 
     bool isValid() const { return !id.empty() && !name.empty() && spaceflights >= 0; }
@@ -188,7 +182,7 @@ public:
     void addCrewMember(const Astronaut &a) { addUnique(crew, a); }
 };
 
-// ---------- Multithreading (Runnable, Thread Class, Lifecycle, Sync) ----------
+//Multithreading
 
 class Runnable {
 public:
@@ -224,10 +218,10 @@ public:
 
             int flights = a;                      // Triggers Class-to-Basic casting
             SpaceEntity::Tag tag = a;             // Triggers Class-to-Class casting
-            SpaceEntity sliced = a;               // [Lab Topic: Object Slicing] (Derived copied to Base by value)
+            SpaceEntity sliced = a;               // Object Slicing
             (void)flights; (void)tag; (void)sliced;
 
-            lock_guard<mutex> lock(mtx);          // [Lab Topic: Thread Synchronization]
+            lock_guard<mutex> lock(mtx);          // Thread Synchronization
             bool dup = false;
             for (const auto &k : accepted) if (k == a) dup = true;
             if (a.isValid() && !dup) {
@@ -237,8 +231,6 @@ public:
         }
     }
 };
-
-// ---------- Factory & Main ----------
 
 unique_ptr<SpaceEntity> createEntity(const json &data) {
     string type = text(data, "type", "Planet");
