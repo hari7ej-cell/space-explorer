@@ -299,4 +299,4 @@ int main() {
         cerr << "C++ ERROR: " << error.what() << endl;
         return 1;
     }
-}0
+}
