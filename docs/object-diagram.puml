@@ -1,0 +1,59 @@
+@startuml
+object "artemis2 : Mission" as M1 {
+  id = "M-ART2"
+  name = "Artemis II"
+  launchDate = "2025-09-01"
+  status = "Active"
+}
+
+object "theMoon : Planet" as P1 {
+  id = "P-MOON01"
+  name = "The Moon"
+  massKg = 7.347e22
+  distanceFromSunKm = 149600000.0
+}
+
+object "reidWiseman : Astronaut" as A1 {
+  id = "A-RW01"
+  name = "Reid Wiseman"
+  agency = "NASA"
+  spaceflightsCount = 2
+}
+
+object "victorGlover : Astronaut" as A2 {
+  id = "A-VG01"
+  name = "Victor Glover"
+  agency = "NASA"
+  spaceflightsCount = 2
+}
+
+object "jeremyHansen : Astronaut" as A3 {
+  id = "A-JH01"
+  name = "Jeremy Hansen"
+  agency = "CSA"
+  spaceflightsCount = 1
+}
+
+object "artemisPatch : SpaceImage" as I1 {
+  id = "IMG-ART2-01"
+  title = "Artemis II Mission Patch"
+  mediaUrl = "https://www.nasa.gov/image-article/hello-world/"
+  isVideo = false
+}
+
+object "myBookmark : Bookmark" as B1 {
+  bookmarkId = "BK-8842"
+  dateAdded = "2026-08-18"
+}
+
+' Original astronaut aggregation
+M1 o-- A1
+M1 o-- A2
+M1 o-- A3
+
+' New relationships mapped from the Class Diagram
+M1 o-- P1 : explores >
+M1 *-- I1 : gallery >
+B1 --> M1 : references >
+
+@enduml

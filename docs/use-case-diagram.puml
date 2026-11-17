@@ -1,0 +1,46 @@
+@startuml
+top to bottom direction
+skinparam packageStyle rectangle
+skinparam usecase {
+  BackgroundColor #99CCFF
+  BorderColor black
+}
+
+actor "Registered User" as RegisteredUser
+actor "User (Visitor)" as Visitor
+actor Admin
+actor "Space API" as SpaceAPI
+actor Scheduler
+
+rectangle "Space Explorer" {
+    usecase "Search Space Information" as Search
+    usecase "Fetch Data from Extended API" as Fetch
+    usecase "View Details" as Details
+    usecase "View Planets" as Planets
+    usecase "View Missions" as Missions
+    usecase "View Astronauts" as Astronauts
+    usecase "View Space Images" as Images
+    usecase "Bookmark Items" as Bookmark
+    usecase "Manage Data (Users, Bookmarks)" as Manage
+}
+
+RegisteredUser -- Search
+RegisteredUser -- Details
+Visitor -- Details
+Admin -- Manage
+Admin -- Bookmark
+
+SpaceAPI -- Fetch
+Scheduler -- Fetch
+
+Search ..> Fetch : <<include>>
+Fetch ..> Details : <<include>>
+
+Missions ..> Details : <<extend>>
+Planets ..> Details : <<extend>>
+Astronauts ..> Details : <<extend>>
+Images ..> Planets : <<extend>>
+Images ..> Missions : <<extend>>
+Images ..> Astronauts : <<extend>>
+
+@enduml

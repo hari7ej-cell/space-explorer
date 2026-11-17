@@ -1,0 +1,77 @@
+@startuml
+skinparam classAttributeIconSize 0
+
+class SpaceEntity <<Abstract>> {
+  - id: String
+  - name: String
+  + getId(): String
+  + getName(): String
+  + {abstract} getSummary(): String
+}
+
+class Planet {
+  - massKg: double
+  - distanceFromSunKm: double
+  + getMassKg(): double
+  + getDistanceFromSunKm(): double
+  + getSummary(): String
+}
+
+class CelestialDetails {
+  - atmosphereComposition: String
+  - hasRings: boolean
+  + getAtmosphereComposition(): String
+  + isHasRings(): boolean
+}
+
+class Mission {
+  - launchDate: String
+  - status: String
+  + getLaunchDate(): String
+  + getStatus(): String
+  + getSummary(): String
+}
+
+class Astronaut {
+  - agency: String
+  - spaceflightsCount: int
+  + getAgency(): String
+  + getSpaceflightsCount(): int
+  + getSummary(): String
+}
+
+class SpaceImage {
+  - id: String
+  - title: String
+  - mediaUrl: String
+  - isVideo: boolean
+  + getTitle(): String
+  + getMediaUrl(): String
+  + isVideo(): boolean
+}
+
+class Bookmark {
+  - bookmarkId: String
+  - dateAdded: String
+  + getBookmarkId(): String
+  + getDateAdded(): String
+}
+
+SpaceEntity <|-- Planet
+SpaceEntity <|-- Mission
+SpaceEntity <|-- Astronaut
+
+Planet "1" *-- "1" CelestialDetails : has-details >
+Mission "1" o-- "1..*" Astronaut : assigns >
+
+' Mission knows which planet it is exploring
+Mission "*" o-- "0..1" Planet : explores >
+
+' Every SpaceEntity can have a gallery of images
+SpaceEntity "1" *-- "*" SpaceImage : gallery >
+
+' Bookmarks can save an entity or a specific image
+Bookmark "1..*" --> "1" SpaceEntity : references >
+Bookmark "1..*" --> "1" SpaceImage : references >
+
+@enduml
