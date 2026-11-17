@@ -93,8 +93,8 @@
 
             <div class="footer-column">
                 <h3>Connect</h3>
-                <a href="https://instagram.com/" target="_blank" rel="noopener noreferrer" class="social-link"><span class="social-icon">◎</span>Instagram</a>
-                <a href="mailto:spaceexplorer@example.com" class="social-link"><span class="social-icon">@</span>Email</a>
+                <a href="https://www.instagram.com/space_explorer11234?dlrf=eGk0YjR6dzI0aW1j" target="_blank" rel="noopener noreferrer" class="social-link"><span class="social-icon">◎</span>Instagram</a>
+                <a href="mailto:spaceexplorer.0101@gmail.com" class="social-link"><span class="social-icon">@</span>Email</a>
                 <a href="https://wa.me/919999999999" target="_blank" rel="noopener noreferrer" class="social-link"><span class="social-icon">◉</span>WhatsApp</a>
             </div>
         </div>

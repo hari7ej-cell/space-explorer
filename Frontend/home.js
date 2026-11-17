@@ -11,9 +11,24 @@ const API = SpaceSearch.API_BASE;
 // Missions come from missionData.js (the same list as the missions page).
 const FEATURED_MISSIONS = ["Artemis I", "Perseverance", "James Webb Space Telescope"];
 const FEATURED_ASTRONAUTS = [
-    ["Neil Armstrong", "NASA", "First person to walk on the Moon."],
-    ["Valentina Tereshkova", "Roscosmos", "First woman in space."],
-    ["Rakesh Sharma", "ISRO", "First Indian citizen in space."]
+    [
+        "Neil Armstrong",
+        "NASA",
+        "First person to walk on the Moon.",
+        "https://commons.wikimedia.org/wiki/Special:FilePath/Neil_Armstrong_pose.jpg?width=600"
+    ],
+    [
+        "Valentina Tereshkova",
+        "Roscosmos",
+        "First woman in space.",
+        "https://commons.wikimedia.org/wiki/Special:FilePath/RIAN_archive_612748_Valentina_Tereshkova.jpg?width=600"
+    ],
+    [
+        "Rakesh Sharma",
+        "ISRO",
+        "First Indian citizen in space.",
+        "https://commons.wikimedia.org/wiki/Special:FilePath/Rakesh_Sharma.jpg?width=600"
+    ]
 ];
 
 const allMissions = MISSION_GROUPS.flatMap(group => group.missions);
@@ -21,14 +36,29 @@ const detailLink = name => "planet-detail.html?entity=" + encodeURIComponent(nam
 
 document.getElementById("missionGrid").innerHTML = FEATURED_MISSIONS
     .map(title => allMissions.find(mission => mission.title === title))
+    .filter(Boolean)
     .map(mission => `
-        <a class="info-card" href="${missionDetailUrl(mission)}">
-            <span class="badge">${mission.type}</span><h3>${mission.title}</h3><p>${mission.description}</p>
+        <a class="info-card has-media" href="${missionDetailUrl(mission)}">
+            <div class="card-media">
+                <img src="${mission.image}" alt="${mission.title}" loading="lazy">
+            </div>
+            <div class="card-body">
+                <span class="badge">${mission.type}</span>
+                <h3>${mission.title}</h3>
+                <p>${mission.description}</p>
+            </div>
         </a>`).join("");
 
-document.getElementById("astronautGrid").innerHTML = FEATURED_ASTRONAUTS.map(([name, agency, text]) => `
-    <a class="info-card" href="${detailLink(name)}">
-        <div class="avatar">★</div><h3>${name}</h3><p>${text}</p><span class="badge">${agency}</span>
+document.getElementById("astronautGrid").innerHTML = FEATURED_ASTRONAUTS.map(([name, agency, text, image]) => `
+    <a class="info-card has-media" href="${detailLink(name)}">
+        <div class="card-media astronaut-media">
+            <img src="${image}" alt="${name}" loading="lazy" referrerpolicy="no-referrer">
+        </div>
+        <div class="card-body">
+            <span class="badge">${agency}</span>
+            <h3>${name}</h3>
+            <p>${text}</p>
+        </div>
     </a>`).join("");
 
 /* ---------- NASA image of the day ---------- */

@@ -35,16 +35,6 @@ function wikidataId(value) {
     return String(value || '').split('/').pop() || '';
 }
 
-function addUniqueValue(current, value, max = 250) {
-    const next = cleanText(value, max);
-    if (!next) return current;
-
-    const existing = current ? current.split(' | ') : [];
-    if (existing.includes(next)) return current;
-
-    return [...existing, next].join(' | ');
-}
-
 function getAge(birthDate, deathDate) {
     if (!birthDate) return null;
 

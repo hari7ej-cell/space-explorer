@@ -17,7 +17,6 @@ const signupForm = document.getElementById("signupForm");
 const signupLink = document.getElementById("signupLink");
 const backToLogin = document.getElementById("backToLogin");
 
-const googleButton = document.getElementById("googleButton");
 const authMessage = document.getElementById("authMessage");
 
 const usernameInput = document.getElementById("username");
@@ -153,11 +152,4 @@ loginForm?.addEventListener("submit", async (event) => {
         authMessage.textContent =
             "Cannot connect to the backend. Please check that the server is running.";
     }
-});
-
-/* ---------- Google Button (later) ---------- */
-
-googleButton?.addEventListener("click", () => {
-
-    console.log("Google login will be connected later.");
 });

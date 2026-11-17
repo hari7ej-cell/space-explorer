@@ -34,103 +34,6 @@ function isUsableImage(url) {
 
 /*
 ====================================================
-HERO IMAGE
-====================================================
-*/
-
-async function getHeroImage(entityName, articleHtml = "") {
-    const cacheKey = `hero:${entityName.toLowerCase()}`;
-
-    const cached = cacheGet(cacheKey);
-
-    if (cached) return cached;
-
-    let hero = null;
-
-    // First preference: Wikipedia's article image.
-    try {
-        const summary = await fetchJson(
-            `https://en.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(entityName)}`
-        );
-
-        const imageUrl =
-            summary.originalimage?.source ||
-            summary.thumbnail?.source;
-
-        if (isUsableImage(imageUrl)) {
-            hero = {
-                url: imageUrl,
-                title: summary.title || entityName,
-                caption: summary.description || "",
-                alt: summary.title || entityName,
-                source: {
-                    name: "Wikipedia",
-                    url: summary.content_urls?.desktop?.page ||
-                        `https://en.wikipedia.org/wiki/${encodeURIComponent(entityName)}`
-                }
-            };
-        }
-    } catch (error) {
-        console.warn("Wikipedia hero lookup failed:", error.message);
-    }
-
-    // Second preference: an image already present in the article.
-    if (!hero && articleHtml) {
-        try {
-            const cheerio = require("cheerio");
-            const $ = cheerio.load(articleHtml);
-
-            const candidate = $("figure img, .infobox img, img")
-                .toArray()
-                .map(element => {
-                    const image = $(element);
-
-                    return {
-                        url: image.attr("src") ||
-                            image.attr("data-src") ||
-                            image.attr("srcset")?.split(",")[0]?.trim().split(" ")[0] ||
-                            "",
-                        alt: image.attr("alt") || ""
-                    };
-                })
-                .find(image => {
-                    try {
-                        return isUsableImage(
-                            new URL(image.url, "https://en.wikipedia.org").href
-                        );
-                    } catch {
-                        return false;
-                    }
-                });
-
-            if (candidate) {
-                hero = {
-                    url: new URL(
-                        candidate.url,
-                        "https://en.wikipedia.org"
-                    ).href,
-                    title: candidate.alt || entityName,
-                    alt: candidate.alt || entityName,
-                    caption: "",
-                    source: {
-                        name: "Wikipedia",
-                        url: `https://en.wikipedia.org/wiki/${encodeURIComponent(entityName)}`
-                    }
-                };
-            }
-        } catch (error) {
-            console.warn("Article image extraction failed:", error.message);
-        }
-    }
-
-    cacheSet(cacheKey, hero);
-
-    return hero;
-}
-
-
-/*
-====================================================
 EXTRACT IMAGES ALREADY PRESENT IN ARTICLE SECTIONS
 ====================================================
 */
@@ -245,8 +148,7 @@ async function searchCommonsImage(entityName, topic) {
 
         const imageInfo = selected.imageinfo[0];
 
-
-const result = {
+        const result = {
             topicId: topic.id,
             title: selected.title,
             url: imageInfo.thumburl || imageInfo.url,
@@ -292,15 +194,12 @@ async function getTopicImages(entityName, topics) {
 
     const results = await Promise.all(
         selectedTopics.map(async topic => {
-
-            // Use a relevant image already inside the article.
             const articleImage = extractArticleImage(topic);
 
             if (articleImage) {
                 return articleImage;
             }
 
-            // Otherwise search Commons for a matching image.
             return searchCommonsImage(entityName, topic);
         })
     );
@@ -308,63 +207,6 @@ async function getTopicImages(entityName, topics) {
     return results.filter(Boolean);
 }
 
-
-/*
-====================================================
-NASA SEARCH: KEEP FOR EXISTING FEATURES
-====================================================
-*/
-
-async function searchNASAImages(searchTerm, limit = 1) {
-    const cacheKey =
-        `nasa:${searchTerm.toLowerCase()}:${limit}`;
-
-    const cached = cacheGet(cacheKey);
-
-    if (cached) return cached;
-
-    const url =
-        `https://images-api.nasa.gov/search?q=${encodeURIComponent(searchTerm)}&media_type=image`;
-
-    try {
-        const data = await fetchJson(url);
-
-        const items = data.collection?.items || [];
-
-        const results = items
-            .map(item => {
-                const metadata = item.data?.[0] || {};
-
-                const imageLink = item.links?.find(
-                    link => link.render === "image"
-                );
-
-                return {
-                    title: metadata.title || "NASA image",
-                    description: metadata.description || "",
-                    url: imageLink?.href || "",
-                    source: {
-                        name: "NASA",
-                        url: "https://images.nasa.gov/"
-                    }
-                };
-            })
-            .filter(item => isUsableImage(item.url))
-            .slice(0, limit);
-
-        cacheSet(cacheKey, results);
-
-        return results;
-
-    } catch (error) {
-        console.warn("NASA image search failed:", error.message);
-        return [];
-    }
-}
-
-
 module.exports = {
-    getHeroImage,
-    getTopicImages,
-    searchNASAImages
+    getTopicImages
 };

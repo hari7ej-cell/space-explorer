@@ -27,7 +27,7 @@ The backend is Node/Express, the frontend is plain HTML/CSS/JS, login goes throu
    Never commit this file. It's in `.gitignore`.
 3. Install packages (first time only):
    ```
-   npm install
+   npm.cmd install
    ```
 4. Start the server:
    ```
@@ -66,7 +66,7 @@ When the server starts it also checks whether the `.exe` is older than `cpp/Spac
 
 ## If something breaks
 
-- **`npm install` blocked on Windows** ("running scripts is disabled"): use Command Prompt instead of PowerShell, or run `Set-ExecutionPolicy -Scope CurrentUser RemoteSigned` in PowerShell.
+- **`npm install` blocked on Windows** ("running scripts is disabled"): use `npm.cmd install`, use Command Prompt instead of PowerShell, or run `Set-ExecutionPolicy -Scope CurrentUser RemoteSigned` in PowerShell.
 - **Pages show 404 on Mac/Linux:** folder names are case sensitive there. It should be `Frontend` with a capital F and `backend` all lowercase.
 - **Login fails:** check that `backend/.env` exists and the three Supabase values are right.
 - **"C++ executable was not found" or the exe won't run:** build it with the g++ command above.

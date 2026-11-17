@@ -2,7 +2,6 @@
 const express = require("express");
 const cors = require("cors");
 const path = require("path");
-const cheerio = require("cheerio");
 
 const {
     getLatestDiscovery
@@ -115,18 +114,11 @@ function getModel3D(entityName) {
     };
 }
 
-const routeTypes = new Set([
-    "planet", "galaxy", "astronaut", "mission", "black-hole",
-    "star", "moon", "asteroid", "comet", "deep-sky-object", "space-entity"
-]);
-
 // ======================================================
 // MAIN PLANET / SPACE ENTITY API
 // ======================================================
 
 app.get("/api/planet/:name", async (req, res) => {
-    const startTime = Date.now();
-
     try {
         const name = String(req.params.name || "").trim();
 
@@ -738,11 +730,6 @@ async function buildPlanet(name) {
     return result;
 }
 
-app.get("/:category/:name", (req, res, next) => {
-    if (!routeTypes.has(req.params.category)) return next();
-    res.sendFile(path.join(frontendDir, "planet-detail.html"));
-});
-
 app.get("/api/latest-discovery", async (req, res) => {
     try {
         const discovery = await getLatestDiscovery();
@@ -754,27 +741,6 @@ app.get("/api/latest-discovery", async (req, res) => {
             error: error.message
         });
     }
-});
-
-app.get("/api/cache", (req, res) => {
-    const planets = [];
-    for (const [name, value] of planetCache) {
-        planets.push({
-            name,
-            age: Date.now() - value.timestamp
-        });
-    }
-    res.json({
-        cachedPlanets: planets
-    });
-});
-
-app.delete("/api/cache", (req, res) => {
-    planetCache.clear();
-    wikiResponseCache.clear();
-    res.json({
-        message: "Planet cache cleared."
-    });
 });
 
 app.get("/api/health", (req, res) => {
