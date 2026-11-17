@@ -1,568 +1,292 @@
 #include <iostream>
+#include <memory>
 #include <string>
 #include <vector>
-#include <cctype>
+#include <thread>
+#include <mutex>
 #include "simple_json.hpp"
 
 using namespace std;
 using json = simplejson::json;
 
-class TopicInfo
-{
-private:
-    string id, title, shortTitle, content;
+// Templates
+template <typename T>
+void addUnique(vector<T> &list, const T &item) {
+    for (const auto &existing : list)
+        if (existing == item) return;
+    list.push_back(item);
+}
 
-public:
-    TopicInfo() {}
-    TopicInfo(const string &id, const string &title, const string &shortTitle, const string &content)
-    {
-        this->id = id;
-        this->title = title;
-        this->shortTitle = shortTitle;
-        this->content = content;
+string text(const json &obj, const string &key, const string &fallback = "") {
+    return obj.is_object() && obj.contains(key) && obj[key].is_string() ? obj[key].get<string>() : fallback;
+}
+
+double number(const json &obj, const string &key) {
+    return obj.is_object() && obj.contains(key) && obj[key].is_number() ? obj[key].get<double>() : 0.0;
+}
+
+string cleanText(const string &html) {
+    string out;
+    bool inTag = false, space = false;
+    for (unsigned char c : html) {
+        if (c == '<') inTag = true;
+        else if (c == '>') { inTag = false; space = !out.empty(); }
+        else if (!inTag) {
+            if (isspace(c)) space = !out.empty();
+            else { if (space) out += ' '; out += static_cast<char>(c); space = false; }
+        }
     }
+     return out;
+}
+
+class SpaceImage {
+    json data;
+public:
+    SpaceImage(const json &image) : data(image) {}
+    string url() const { return text(data, "url"); }
+    string topicId() const { return text(data, "topicId"); }
+    const json &raw() const { return data; }
+
+    //Operator Overloading using a Friend Function
+    friend bool operator==(const SpaceImage &a, const SpaceImage &b) {
+        return a.url() == b.url() && a.topicId() == b.topicId();
+     }
+};
+
+class TopicInfo {
+    string id, content;
+public:
+    TopicInfo(const string &id, const string &content) : id(id), content(content) {}
     string getId() const { return id; }
-    string getTitle() const { return title; }
-    string getShortTitle() const { return shortTitle; }
     string getContent() const { return content; }
-    void setContent(const string &content) { this->content = content; }
-    json toJSON() const
-    {
-        return json{{"id", id}, {"title", title}, {"shortTitle", shortTitle}, {"content", content}};
-    }
 };
 
-class SpaceImage
-{
-private:
-    string topicId, url, caption, source, sourceUrl;
-
-public:
-    SpaceImage() {}
-    SpaceImage(const string &topicId, const string &url, const string &caption,
-               const string &source, const string &sourceUrl)
-    {
-        this->topicId = topicId;
-        this->url = url;
-        this->caption = caption;
-        this->source = source;
-        this->sourceUrl = sourceUrl;
-    }
-    string getTopicId() const { return topicId; }
-    string getUrl() const { return url; }
-    string getCaption() const { return caption; }
-    string getSource() const { return source; }
-    string getSourceUrl() const { return sourceUrl; }
-    json toJSON() const
-    {
-        return json{
-            {"topicId", topicId}, {"url", url}, {"caption", caption}, {"source", {{"name", source}, {"url", sourceUrl}}}};
-    }
-};
-
-class CelestialDetails
-{
-private:
-    double mass, radius, distanceFromSun, gravity, temperature;
+class CelestialDetails {
+    double mass, radius, distanceFromSun;
     string atmosphere, composition;
     bool rings;
-    double rotationPeriod, orbitalPeriod;
-    vector<string> moons;
-
 public:
-    CelestialDetails()
-        : mass(0), radius(0), distanceFromSun(0), gravity(0), temperature(0),
-          rings(false), rotationPeriod(0), orbitalPeriod(0) {}
+    CelestialDetails(double m, double r, double d, const string &atm, const string &comp, bool rng)
+        : mass(m), radius(r), distanceFromSun(d), atmosphere(atm), composition(comp), rings(rng) {}
 
-    CelestialDetails(double mass, double radius, double distanceFromSun, double gravity,
-                     double temperature, const string &atmosphere, const string &composition,
-                     bool rings, double rotationPeriod, double orbitalPeriod,
-                     const vector<string> &moons)
-    {
-        this->mass = mass;
-        this->radius = radius;
-        this->distanceFromSun = distanceFromSun;
-        this->gravity = gravity;
-        this->temperature = temperature;
-        this->atmosphere = atmosphere;
-        this->composition = composition;
-        this->rings = rings;
-        this->rotationPeriod = rotationPeriod;
-        this->orbitalPeriod = orbitalPeriod;
-        this->moons = moons;
-    }
-    double getMass() const { return mass; }
-    double getRadius() const { return radius; }
-    double getDistanceFromSun() const { return distanceFromSun; }
-    double getGravity() const { return gravity; }
-    double getTemperature() const { return temperature; }
-    string getAtmosphere() const { return atmosphere; }
-    string getComposition() const { return composition; }
-    bool hasRings() const { return rings; }
-    double getRotationPeriod() const { return rotationPeriod; }
-    double getOrbitalPeriod() const { return orbitalPeriod; }
-    vector<string> getMoons() const { return moons; }
-    void addMoon(const string &moon) { moons.push_back(moon); }
-    json toJSON() const
-    {
-        return json{
-            {"mass", mass}, {"radius", radius}, {"distanceFromSun", distanceFromSun}, {"gravity", gravity}, {"temperature", temperature}, {"atmosphere", atmosphere}, {"composition", composition}, {"rings", rings}, {"rotationPeriod", rotationPeriod}, {"orbitalPeriod", orbitalPeriod}, {"moons", moons}};
-    }
+    CelestialDetails(double m, double r, double d, const string &comp, bool rng)
+        : CelestialDetails(m, r, d, "No atmosphere details.", comp, rng) {}
 };
 
-class SpaceEntity
-{
+// ---------- Entities ----------
+
+class SpaceEntity {
 protected:
-    string type, summary;
+    string type, name, id;
+    vector<TopicInfo> topics;
+    vector<SpaceImage> gallery;
+    static int totalEntities; // Static Variables
 
 public:
-    SpaceEntity() {}
-    SpaceEntity(const string &type, const string &summary)
-    {
-        this->type = type;
-        this->summary = summary;
-    }
-    string getType() const { return type; }
-    string getSummary() const { return summary; }
-    void setType(const string &type) { this->type = type; }
-    void setSummary(const string &summary) { this->summary = summary; }
-    virtual void display() const = 0;
+    //Nested Class
+    class Tag {
+    public:
+        string label;
+        Tag(const string &l = "General") : label(l) {}
+    };
+
+    SpaceEntity(const string &type, const string &name, const string &id = "")
+        : type(type), name(name), id(id) { totalEntities++; }
     virtual ~SpaceEntity() {}
-};
 
-class Planet : public SpaceEntity
-{
-private:
-    CelestialDetails details;
-    vector<TopicInfo> topics;
-    vector<SpaceImage> images;
+    //Static Functions
+    static int getTotalEntities() { return totalEntities; }
 
-public:
-    Planet() : SpaceEntity() {}
-    Planet(const string &type, const string &summary, const CelestialDetails &details)
-        : SpaceEntity(type, summary) { this->details = details; }
-    Planet(const string &type, const string &summary) : SpaceEntity(type, summary) {}
+    //"this" Pointer
+    string getType() const { return this->type; }
+    string getName() const { return this->name; }
+    string getId() const { return this->id; }
+
+    //Method Overloading
     void addTopic(const TopicInfo &topic) { topics.push_back(topic); }
-    void addImage(const SpaceImage &image) { images.push_back(image); }
-    void setDetails(const CelestialDetails &details) { this->details = details; }
-    CelestialDetails getDetails() const { return details; }
-    vector<TopicInfo> getTopics() const { return topics; }
-    vector<SpaceImage> getImages() const { return images; }
-    void display() const override
-    {
-        cout << type << "\nSummary: " << summary << endl;
+    void addTopic(const string &tId, const string &content) { topics.push_back(TopicInfo(tId, content)); }
+
+    void addImage(const SpaceImage &image) { addUnique(gallery, image); } // Uses template
+
+    //Virtual Function
+    virtual string getSummary() const {
+        for (const auto &topic : topics) {
+            if (topic.getId() != "overview") continue;
+            string content = cleanText(topic.getContent());
+            if (!content.empty()) return content.substr(0, 100);
+        }
+        return "Space entity information.";
     }
-    friend ostream &operator<<(ostream &output, const Planet &planet)
-    {
-        output << "Type: " << planet.type << "\nSummary: " << planet.summary;
-        return output;
+
+    // Stream Operators Overloading using a Friend Function
+    friend ostream &operator<<(ostream &os, const SpaceEntity &e) {
+        return os << e.type << ": " << e.name;
     }
-    bool operator==(const Planet &other) const
-    {
-        return type == other.type && summary == other.summary;
+    friend istream &operator>>(istream &is, SpaceEntity &e) {
+        return is >> e.name;
     }
-    json toJSON() const
-    {
-        json topicArray = json::array();
-        for (const auto &topic : topics)
-            topicArray.push_back(topic.toJSON());
-        json imageArray = json::array();
-        for (const auto &image : images)
-            imageArray.push_back(image.toJSON());
-        return json{{"type", type}, {"summary", summary}, {"details", details.toJSON()}, {"topics", topicArray}, {"images", imageArray}};
+
+    json heroImage(const string &wikipediaUrl) const {
+        const SpaceImage *pick = nullptr;
+        for (const auto &img : gallery) {
+            if (img.url().empty()) continue;
+            if (!pick) pick = &img;
+            if (img.topicId() == "overview") { pick = &img; break; }
+        }
+        if (!pick) return json(nullptr);
+
+        json hero = pick->raw();
+        if (text(hero, "title").empty()) hero["title"] = name;
+        if (text(hero, "alt").empty()) hero["alt"] = text(hero, "title", name);
+        if (!hero.contains("source")) hero["source"] = json{{"name", "Wikipedia"}, {"url", wikipediaUrl}};
+        return hero;
     }
 };
-class Astronaut : public SpaceEntity
-{
-private:
+
+int SpaceEntity::totalEntities = 0;
+
+//Virtual Base Class & Final
+class Planet final : virtual public SpaceEntity {
     CelestialDetails details;
-    vector<TopicInfo> topics;
-    vector<SpaceImage> images;
-
 public:
-    Astronaut() : SpaceEntity() {}
+    Planet(const string &type, const string &name, const CelestialDetails &details)
+        : SpaceEntity(type, name), details(details) {}
+    string getSummary() const override final { return SpaceEntity::getSummary(); }
+};
 
-    Astronaut(const string &type, const string &summary, const CelestialDetails &details)
-        : SpaceEntity(type, summary)
-    {
-        this->details = details;
-    }
+class Astronaut : virtual public SpaceEntity {
+    string agency;
+    int spaceflights;
+public:
+    Astronaut(const string &name, const string &agency, int flights, const string &id)
+        : SpaceEntity("Astronaut", name, id), agency(agency), spaceflights(flights) {}
 
-    Astronaut(const string &type, const string &summary)
-        : SpaceEntity(type, summary) {}
+    // Basic-to-Class Type Casting
+    Astronaut(const string &name) : Astronaut(name, "Not listed", 0, "") {}
 
-    void addTopic(const TopicInfo &topic)
-    {
-        topics.push_back(topic);
-    }
+    //Class-to-Basic Type Casting
+    operator int() const { return spaceflights; }
 
-    void addImage(const SpaceImage &image)
-    {
-        images.push_back(image);
-    }
+    //Class-to-Class Type Casting
+    operator SpaceEntity::Tag() const { return SpaceEntity::Tag(agency); }
 
-    void setDetails(const CelestialDetails &details)
-    {
-        this->details = details;
-    }
+    bool isValid() const { return !id.empty() && !name.empty() && spaceflights >= 0; }
+    bool operator==(const Astronaut &other) const { return id == other.id; }
+};
 
-    CelestialDetails getDetails() const
-    {
-        return details;
-    }
+class Mission : virtual public SpaceEntity {
+    vector<Astronaut> crew;
+public:
+    Mission(const string &type, const string &name) : SpaceEntity(type, name) {}
+    void addCrewMember(const Astronaut &a) { addUnique(crew, a); }
+};
 
-    vector<TopicInfo> getTopics() const
-    {
-        return topics;
-    }
+//Multithreading
 
-    vector<SpaceImage> getImages() const
-    {
-        return images;
-    }
+class Runnable {
+public:
+    virtual void run() = 0;
+    virtual ~Runnable() {}
+};
 
-    void display() const override
-    {
-        cout << "Astronaut\nType: " << type << "\nSummary: " << summary << endl;
-    }
+class Thread : public Runnable {
+    thread t;
+public:
+    void start() { t = thread(&Thread::run, this); }
+    void join() { if (t.joinable()) t.join(); }
+    static void sleep(int ms) { this_thread::sleep_for(chrono::milliseconds(ms)); }
+    static void yield() { this_thread::yield(); }
+    void run() override {}
+};
 
-    friend ostream &operator<<(ostream &output, const Astronaut &astronaut)
-    {
-        output << "Type: " << astronaut.type << "\nSummary: " << astronaut.summary;
-        return output;
-    }
+class ValidationWorker : public Thread {
+    const json &people;
+    vector<Astronaut> &accepted;
+    json &validIds;
+    mutex &mtx;
+public:
+    ValidationWorker(const json &p, vector<Astronaut> &acc, json &v, mutex &m)
+        : people(p), accepted(acc), validIds(v), mtx(m) {}
 
-    bool operator==(const Astronaut &other) const
-    {
-        return type == other.type && summary == other.summary;
-    }
+    void run() override {
+        yield();     // Thread method: yield()
+        sleep(1);    // Thread method: sleep()
+        for (const auto &p : people) {
+            Astronaut a(text(p, "name"), text(p, "agency", "Not listed"),
+                        static_cast<int>(number(p, "experience")), text(p, "id"));
 
-    json toJSON() const
-    {
-        json topicArray = json::array();
-        for (const auto &topic : topics)
-            topicArray.push_back(topic.toJSON());
+            int flights = a;                      // Triggers Class-to-Basic casting
+            SpaceEntity::Tag tag = a;             // Triggers Class-to-Class casting
+            SpaceEntity sliced = a;               // Object Slicing
+            (void)flights; (void)tag; (void)sliced;
 
-        json imageArray = json::array();
-        for (const auto &image : images)
-            imageArray.push_back(image.toJSON());
-
-        return json{
-            {"type", type},
-            {"summary", summary},
-            {"details", details.toJSON()},
-            {"topics", topicArray},
-            {"images", imageArray}};
+            lock_guard<mutex> lock(mtx);          // Thread Synchronization
+            bool dup = false;
+            for (const auto &k : accepted) if (k == a) dup = true;
+            if (a.isValid() && !dup) {
+                accepted.push_back(a);
+                validIds.push_back(a.getId());
+            }
+        }
     }
 };
-class Mission : public SpaceEntity
-{
-private:
-    CelestialDetails details;
-    vector<TopicInfo> topics;
-    vector<SpaceImage> images;
 
-public:
-    Mission() : SpaceEntity() {}
+unique_ptr<SpaceEntity> createEntity(const json &data) {
+    string type = text(data, "type", "Planet");
+    string name = text(data, "name", "Space Entity");
+    unique_ptr<SpaceEntity> entity;
 
-    Mission(const string &type, const string &summary, const CelestialDetails &details)
-        : SpaceEntity(type, summary)
-    {
-        this->details = details;
+    if (type == "Astronaut")
+        entity = make_unique<Astronaut>(name);
+    else if (type == "Mission" || type == "Spacecraft" || type == "Space Station")
+        entity = make_unique<Mission>(type, name);
+    else {
+        json d = data.contains("details") ? data["details"] : json::object();
+        entity = make_unique<Planet>(type, name, CelestialDetails(
+            number(d, "mass"), number(d, "radius"), number(d, "distanceFromSun"),
+            text(d, "atmosphere"), text(d, "composition"),
+            d.contains("rings") && d["rings"].is_boolean() && d["rings"].get<bool>()));
     }
-
-    Mission(const string &type, const string &summary)
-        : SpaceEntity(type, summary) {}
-
-    void addTopic(const TopicInfo &topic)
-    {
-        topics.push_back(topic);
-    }
-
-    void addImage(const SpaceImage &image)
-    {
-        images.push_back(image);
-    }
-
-    void setDetails(const CelestialDetails &details)
-    {
-        this->details = details;
-    }
-
-    CelestialDetails getDetails() const
-    {
-        return details;
-    }
-
-    vector<TopicInfo> getTopics() const
-    {
-        return topics;
-    }
-
-    vector<SpaceImage> getImages() const
-    {
-        return images;
-    }
-
-    void display() const override
-    {
-        cout << "Mission\nType: " << type << "\nSummary: " << summary << endl;
-    }
-
-    friend ostream &operator<<(ostream &output, const Mission &mission)
-    {
-        output << "Type: " << mission.type << "\nSummary: " << mission.summary;
-        return output;
-    }
-
-    bool operator==(const Mission &other) const
-    {
-        return type == other.type && summary == other.summary;
-    }
-
-    json toJSON() const
-    {
-        json topicArray = json::array();
-        for (const auto &topic : topics)
-            topicArray.push_back(topic.toJSON());
-
-        json imageArray = json::array();
-        for (const auto &image : images)
-            imageArray.push_back(image.toJSON());
-
-        return json{
-            {"type", type},
-            {"summary", summary},
-            {"details", details.toJSON()},
-            {"topics", topicArray},
-            {"images", imageArray}};
-    }
-};
-string safeString(const json &obj, const string &key, const string &fallback = "")
-{
-    if (!obj.is_object() || !obj.contains(key) || !obj[key].is_string())
-        return fallback;
-    return obj[key].get<string>();
-}
-
-double safeNumber(const json &obj, const string &key, double fallback = 0.0)
-{
-    if (!obj.is_object() || !obj.contains(key))
-        return fallback;
-
-    const json &value = obj[key];
-
-    if (value.is_number())
-        return value.get<double>();
-
-    if (value.is_string())
-    {
-        try
-        {
-            return stod(value.get<string>());
-        }
-        catch (...)
-        {
-            return fallback;
-        }
-    }
-
-    return fallback;
-}
-
-bool safeBool(const json &obj, const string &key, bool fallback = false)
-{
-    if (!obj.is_object() || !obj.contains(key))
-        return fallback;
-
-    const json &value = obj[key];
-
-    if (value.is_boolean())
-        return value.get<bool>();
-
-    if (value.is_string())
-    {
-        string text = value.get<string>();
-        for (char &c : text)
-            c = static_cast<char>(tolower(static_cast<unsigned char>(c)));
-
-        return text == "true" || text == "yes" || text == "1";
-    }
-
-    if (value.is_number())
-        return value.get<double>() != 0.0;
-
-    return fallback;
-}
-
-Planet createPlanetFromJSON(const json &data)
-{
-    string type = safeString(data, "type", "Planet");
-    string summary = safeString(data, "summary", "");
-
-    json d = json::object();
-    if (data.is_object() && data.contains("details") && data["details"].is_object())
-        d = data["details"];
-
-    vector<string> moons;
-
-    if (d.contains("moons") && d["moons"].is_array())
-    {
-        for (const auto &moon : d["moons"])
-        {
-            if (moon.is_string())
-                moons.push_back(moon.get<string>());
-        }
-    }
-
-    CelestialDetails details(
-        safeNumber(d, "mass"),
-        safeNumber(d, "radius"),
-        safeNumber(d, "distanceFromSun"),
-        safeNumber(d, "gravity"),
-        safeNumber(d, "temperature"),
-        safeString(d, "atmosphere"),
-        safeString(d, "composition"),
-        safeBool(d, "rings"),
-        safeNumber(d, "rotationPeriod"),
-        safeNumber(d, "orbitalPeriod"),
-        moons);
-
-    Planet planet(type, summary, details);
 
     if (data.contains("topics") && data["topics"].is_array())
-    {
-        for (const auto &topic : data["topics"])
-        {
-            if (!topic.is_object())
-                continue;
-
-            planet.addTopic(TopicInfo(
-                safeString(topic, "id"),
-                safeString(topic, "title"),
-                safeString(topic, "shortTitle"),
-                safeString(topic, "content")));
-        }
-    }
+        for (const auto &t : data["topics"])
+            if (t.is_object()) entity->addTopic(text(t, "id"), text(t, "content", text(t, "text")));
 
     if (data.contains("images") && data["images"].is_array())
-    {
-        for (const auto &image : data["images"])
-        {
-            if (!image.is_object())
-                continue;
+        for (const auto &img : data["images"])
+            if (img.is_object()) entity->addImage(SpaceImage(img));
 
-            json source = json::object();
-            if (image.contains("source") && image["source"].is_object())
-                source = image["source"];
-
-            planet.addImage(SpaceImage(
-                safeString(image, "topicId"),
-                safeString(image, "url"),
-                safeString(image, "caption"),
-                safeString(source, "name", "NASA"),
-                safeString(source, "url")));
-        }
-    }
-
-    return planet;
+    return entity;
 }
 
-
-string cleanText(const string &value)
-{
-    string result;
-    bool insideTag = false;
-    for (char c : value)
-    {
-        if (c == '<') { insideTag = true; continue; }
-        if (c == '>') { insideTag = false; result += ' '; continue; }
-        if (!insideTag) result += c;
-    }
-    string clean;
-    bool space = false;
-    for (unsigned char c : result)
-    {
-        if (isspace(c)) { if (!clean.empty()) space = true; }
-        else { if (space) clean += ' '; clean += static_cast<char>(c); space = false; }
-    }
-    return clean;
-}
-
-string makeSummary(const json &topics)
-{
-    if (!topics.is_array()) return "Space entity information.";
-    for (const auto &topic : topics)
-    {
-        if (topic.is_object() && safeString(topic, "id") == "overview")
-        {
-            string content = safeString(topic, "content");
-            if (content.empty()) content = safeString(topic, "text");
-            content = cleanText(content);
-            if (content.empty()) break;
-            if (content.size() > 100) content = content.substr(0, 100);
-            return content;
-        }
-    }
-    return "Space entity information.";
-}
-
-json selectHeroImage(const json &images, const string &name, const string &wikiURL)
-{
-    if (!images.is_array()) return nullptr;
-    const json *first = nullptr;
-    for (const auto &image : images)
-    {
-        if (!image.is_object() || safeString(image, "url").empty()) continue;
-        if (!first) first = &image;
-        if (safeString(image, "topicId") == "overview") { first = &image; break; }
-    }
-    if (!first) return nullptr;
-    json hero = *first;
-    if (safeString(hero, "title").empty()) hero["title"] = name;
-    if (safeString(hero, "alt").empty()) hero["alt"] = safeString(hero, "title", name);
-    if (!hero.contains("source")) hero["source"] = json{{"name", "Wikipedia"}, {"url", wikiURL}};
-    return hero;
-}
-
-int main()
-{
-    try
-    {
+int main() {
+    try {
         string input, line;
-        while (getline(cin, line))
-            input += line;
-        if (input.empty())
-        {
-            cerr << "No JSON input received." << endl;
-            return 1;
-        }
+        while (getline(cin, line)) input += line;
+
         json data = json::parse(input);
-        if (!data.is_object())
-        {
-            cerr << "Input JSON must be an object." << endl;
-            return 1;
+        if (!data.is_object()) throw runtime_error("Input JSON must be an object.");
+
+        if (data.contains("people") && data["people"].is_array()) {
+            vector<Astronaut> accepted;
+            json validIds = json::array();
+            mutex mtx;
+
+            // Run astronaut validation using our custom Thread & Runnable setup
+            ValidationWorker worker(data["people"], accepted, validIds, mtx);
+            worker.start();
+            worker.join();
+
+            cout << json{{"valid", validIds}}.dump();
+            return 0;
         }
 
-        if (!data.contains("details") || !data["details"].is_object())
-            data["details"] = json::object();
-
-        if (!data.contains("topics") || !data["topics"].is_array())
-            data["topics"] = json::array();
-
-        if (!data.contains("images") || !data["images"].is_array())
-            data["images"] = json::array();
-        Planet planet = createPlanetFromJSON(data);
-        json output = planet.toJSON();
-        output["summary"] = makeSummary(data["topics"]);
-        output["heroImage"] = selectHeroImage(data["images"],
-            safeString(data, "name", "Space Entity"),
-            safeString(data, "wikipediaUrl", ""));
-        cout << output.dump();
+        unique_ptr<SpaceEntity> entity = createEntity(data);
+        cout << json{{"type", entity->getType()},
+                     {"summary", entity->getSummary()},
+                     {"heroImage", entity->heroImage(text(data, "wikipediaUrl"))}}.dump();
         return 0;
-    }
-    catch (const exception &error)
-    {
+    } catch (const exception &error) {
         cerr << "C++ ERROR: " << error.what() << endl;
         return 1;
     }
