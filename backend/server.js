@@ -40,7 +40,7 @@ const app = express();
 
 app.use(cors());
 app.use(express.json());
-const frontendDir = path.join(__dirname, "../frontend");
+const frontendDir = path.join(__dirname, "../Frontend");
 app.use(express.static(frontendDir));
 
 // Login, home page data (image of the day, updates) and the astronaut directory
